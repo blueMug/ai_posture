@@ -32,31 +32,10 @@
           <view class="preview-shine"></view>
           <view class="mini-stage">
             <image
-              wx:if="{{pose.modelImage}}"
-              class="mini-model-image"
-              src="{{pose.modelImage}}"
-              mode="aspectFill"
-            ></image>
-            <image
-              wx:if="{{pose.modelImage}}"
-              class="mini-guide-image mini-guide-overlay"
-              src="{{pose.thumbnailImage || pose.guideImage}}"
-              mode="aspectFit"
-            ></image>
-            <image
-              wx:elif="{{pose.thumbnailImage || pose.guideImage}}"
               class="mini-guide-image"
               src="{{pose.thumbnailImage || pose.guideImage}}"
               mode="aspectFit"
             ></image>
-            <view
-              wx:else
-              wx:for="{{pose.parts}}"
-              wx:key="id"
-              wx:for-item="part"
-              class="mini-part {{part.type}}"
-              style="{{part.style}}"
-            >{{part.text}}</view>
           </view>
           <view class="badge">{{pose.badge}}</view>
         </view>

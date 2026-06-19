@@ -15,17 +15,9 @@
     <cover-view class="pose-stage">
       <cover-view class="pose-name">{{currentTemplate.name}}</cover-view>
       <cover-image
-        wx:if="{{currentTemplate.guideImage}}"
         class="pose-guide-image"
         src="{{currentTemplate.guideImage}}"
       ></cover-image>
-      <cover-view
-        wx:else
-        wx:for="{{currentTemplate.parts}}"
-        wx:key="id"
-        class="pose-part {{item.type}}"
-        style="{{item.style}}"
-      >{{item.text}}</cover-view>
     </cover-view>
 
     <cover-view class="bottom-panel safe-area-bottom">
