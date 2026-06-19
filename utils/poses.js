@@ -1,4 +1,7 @@
-const makeLine = (id, left, top, width, rotate, color = 'rgba(255, 233, 92, 0.92)') => ({
+const primaryLine = 'rgba(255, 255, 255, 0.62)'
+const secondaryLine = 'rgba(255, 255, 255, 0.34)'
+
+const makeLine = (id, left, top, width, rotate, color = primaryLine) => ({
   id,
   type: 'line',
   style: `left:${left}%;top:${top}%;width:${width}%;transform:rotate(${rotate}deg);background:${color};`
@@ -16,7 +19,32 @@ const makeHead = (id, left, top, size = 12) => ({
   style: `left:${left}%;top:${top}%;width:${size}%;height:${size}%;`
 })
 
-const poseTemplates = [
+const makeArc = (id, left, top, width, height, rotate = 0, opacity = 0.42) => ({
+  id,
+  type: 'arc',
+  style: `left:${left}%;top:${top}%;width:${width}%;height:${height}%;transform:rotate(${rotate}deg);border-color:rgba(255,255,255,${opacity});`
+})
+
+const makeFootGuide = (id, left, top, width, rotate = 0) => ({
+  id,
+  type: 'foot-guide',
+  style: `left:${left}%;top:${top}%;width:${width}%;transform:rotate(${rotate}deg);background:${secondaryLine};`
+})
+
+const addSoftGuides = (pose) => ({
+  ...pose,
+  parts: [
+    makeArc(`${pose.id}-face-orbit`, 41, 14, 18, 18, -8, 0.32),
+    makeArc(`${pose.id}-shoulder-curve`, 35, 30, 31, 15, 2, 0.36),
+    makeArc(`${pose.id}-torso-flow`, 42, 34, 23, 27, 7, 0.3),
+    makeArc(`${pose.id}-hip-curve`, 39, 50, 24, 13, -3, 0.32),
+    makeFootGuide(`${pose.id}-foot-left`, 40, 80, 17, 6),
+    makeFootGuide(`${pose.id}-foot-right`, 54, 80, 17, -6),
+    ...pose.parts
+  ]
+})
+
+const basePoseTemplates = [
   {
     id: 'front',
     categoryId: 'travel',
@@ -372,6 +400,8 @@ const poseTemplates = [
     ]
   }
 ]
+
+const poseTemplates = basePoseTemplates.map(addSoftGuides)
 
 const poseCategories = [
   {

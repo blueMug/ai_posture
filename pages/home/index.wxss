@@ -123,20 +123,37 @@
 }
 
 .mini-part.line {
-  height: 5rpx;
+  height: 3rpx;
   border-radius: 999rpx;
-  box-shadow: 0 0 10rpx rgba(0, 0, 0, 0.18);
+  box-shadow: 0 0 8rpx rgba(255, 255, 255, 0.18);
   transform-origin: left center;
 }
 
 .mini-part.joint {
   border-radius: 999rpx;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.72);
 }
 
 .mini-part.head {
   border-radius: 999rpx;
-  border: 5rpx solid rgba(255, 255, 255, 0.94);
+  border: 3rpx solid rgba(255, 255, 255, 0.64);
+  box-sizing: border-box;
+}
+
+.mini-part.arc {
+  border-width: 3rpx 0 0 3rpx;
+  border-style: solid;
+  border-radius: 999rpx 0 0 0;
+  box-shadow: 0 0 8rpx rgba(255, 255, 255, 0.12);
+  transform-origin: center center;
+  box-sizing: border-box;
+}
+
+.mini-part.foot-guide {
+  height: 2rpx;
+  border-radius: 999rpx;
+  box-shadow: 0 0 8rpx rgba(255, 255, 255, 0.12);
+  transform-origin: center center;
   box-sizing: border-box;
 }
 
