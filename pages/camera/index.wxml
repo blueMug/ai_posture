@@ -19,7 +19,7 @@
         wx:key="id"
         class="pose-part {{item.type}}"
         style="{{item.style}}"
-      ></cover-view>
+      >{{item.text}}</cover-view>
     </cover-view>
 
     <cover-view class="bottom-panel safe-area-bottom">

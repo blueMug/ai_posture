@@ -37,7 +37,7 @@
               wx:for-item="part"
               class="mini-part {{part.type}}"
               style="{{part.style}}"
-            ></view>
+            >{{part.text}}</view>
           </view>
           <view class="badge">{{pose.badge}}</view>
         </view>

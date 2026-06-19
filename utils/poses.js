@@ -31,7 +31,26 @@ const makeFootGuide = (id, left, top, width, rotate = 0) => ({
   style: `left:${left}%;top:${top}%;width:${width}%;transform:rotate(${rotate}deg);background:${secondaryLine};`
 })
 
-const addSoftGuides = (pose) => ({
+const makeMarkerLine = (id, left, top, width, rotate, opacity = 0.86) => ({
+  id,
+  type: 'marker-line',
+  style: `left:${left}%;top:${top}%;width:${width}%;transform:rotate(${rotate}deg);background:rgba(255,255,255,${opacity});`
+})
+
+const makeMarkerArc = (id, left, top, width, height, rotate = 0, opacity = 0.86) => ({
+  id,
+  type: 'marker-arc',
+  style: `left:${left}%;top:${top}%;width:${width}%;height:${height}%;transform:rotate(${rotate}deg);border-color:rgba(255,255,255,${opacity});`
+})
+
+const makeLabel = (id, text, left, top, rotate = 0, size = 5) => ({
+  id,
+  text,
+  type: 'guide-label',
+  style: `left:${left}%;top:${top}%;transform:rotate(${rotate}deg);font-size:${size}vw;`
+})
+
+const addSoftGuides = (pose) => pose.skipSoftGuides ? pose : ({
   ...pose,
   parts: [
     makeArc(`${pose.id}-face-orbit`, 41, 14, 18, 18, -8, 0.32),
@@ -195,6 +214,46 @@ const basePoseTemplates = [
       makeArc('cross-ankle', 51, 76, 12, 8, 10, 0.38),
       makeJoint('wave-dot', 75, 15, 3),
       makeJoint('cross-dot', 52, 68, 3)
+    ]
+  },
+  {
+    id: 'rooftop-selfie-arm',
+    categoryId: 'travel',
+    categoryName: '景点打卡',
+    name: '天台张臂自拍',
+    tip: '适合天台、城市高处、广角自拍',
+    description: '近景自拍构图，一只手伸向镜头，另一只手向远处打开，用粗白手绘线提示手臂和背景方向。',
+    badge: '手绘',
+    accent: '#f4f7ff',
+    gradient: 'linear-gradient(150deg, #ecf4ff 0%, #8ea4b8 100%)',
+    skipSoftGuides: true,
+    parts: [
+      makeMarkerArc('head-orbit-left', 34, 10, 30, 33, -10, 0.88),
+      makeMarkerArc('head-orbit-right', 45, 11, 26, 31, 16, 0.82),
+      makeMarkerLine('neck-left', 39, 40, 13, 116, 0.78),
+      makeMarkerLine('neck-right', 57, 40, 12, 64, 0.78),
+      makeMarkerArc('collar-left', 35, 42, 23, 15, -24, 0.7),
+      makeMarkerArc('collar-right', 50, 42, 22, 15, 28, 0.7),
+      makeMarkerLine('selfie-arm-a', 36, 48, 45, 188, 0.9),
+      makeMarkerLine('selfie-arm-b', 2, 56, 30, 192, 0.82),
+      makeMarkerArc('selfie-arm-curve', -7, 43, 25, 32, 32, 0.8),
+      makeMarkerLine('open-arm-upper', 58, 46, 28, 334, 0.88),
+      makeMarkerLine('open-arm-forearm', 78, 33, 18, 24, 0.84),
+      makeMarkerArc('open-hand-palm', 88, 30, 14, 15, -18, 0.86),
+      makeMarkerLine('open-finger-a', 93, 30, 8, 318, 0.82),
+      makeMarkerLine('open-finger-b', 94, 34, 8, 8, 0.82),
+      makeMarkerLine('open-finger-c', 93, 38, 8, 42, 0.76),
+      makeMarkerArc('waist-doodle', 43, 58, 22, 14, 5, 0.58),
+      makeMarkerLine('body-left', 42, 45, 20, 86, 0.62),
+      makeMarkerLine('body-right', 56, 45, 20, 96, 0.62),
+      makeLabel('left-label-1', '举', 8, 48, -12, 5.2),
+      makeLabel('left-label-2', '起', 16, 47, -10, 5.2),
+      makeLabel('left-label-3', '手', 25, 43, -35, 5.2),
+      makeLabel('left-label-4', '臂', 33, 38, 0, 5.2),
+      makeLabel('right-label-1', '放', 77, 55, 18, 4.8),
+      makeLabel('right-label-2', '松', 75, 63, 18, 4.8),
+      makeLabel('right-label-3', '张', 78, 71, 18, 4.8),
+      makeLabel('right-label-4', '开', 82, 79, 18, 4.8)
     ]
   },
   {

@@ -157,6 +157,30 @@
   box-sizing: border-box;
 }
 
+.mini-part.marker-line {
+  height: 4rpx;
+  border-radius: 999rpx;
+  box-shadow: 0 0 8rpx rgba(255, 255, 255, 0.22);
+  transform-origin: left center;
+}
+
+.mini-part.marker-arc {
+  border-width: 4rpx 4rpx 0 0;
+  border-style: solid;
+  border-radius: 999rpx 999rpx 0 0;
+  box-shadow: 0 0 8rpx rgba(255, 255, 255, 0.16);
+  transform-origin: center center;
+  box-sizing: border-box;
+}
+
+.mini-part.guide-label {
+  color: rgba(255, 255, 255, 0.92);
+  font-weight: 700;
+  line-height: 1;
+  text-shadow: 0 0 6rpx rgba(0, 0, 0, 0.18);
+  transform-origin: center center;
+}
+
 .badge {
   position: absolute;
   right: 14rpx;
