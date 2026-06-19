@@ -166,6 +166,62 @@ const poseTemplates = [
     guideImage: '/assets/poses/pos12_transparent.png',
     thumbnailImage: '/assets/poses/pos12_transparent.png',
     parts: []
+  },
+  {
+    id: 'pos13-standing-reference',
+    categoryId: 'standing',
+    categoryName: '站立穿搭',
+    name: '站姿轮廓 13',
+    tip: '适合扩展更多全身拍照姿势',
+    description: '新增 PNG 姿势轮廓模板，可在相机中作为全身站姿、人物比例和构图位置的参考。',
+    badge: '站姿',
+    accent: '#f4f7ff',
+    gradient: 'linear-gradient(150deg, #f4f7ff 0%, #7483a4 100%)',
+    guideImage: '/assets/poses/pos13_transparent.png',
+    thumbnailImage: '/assets/poses/pos13_transparent.png',
+    parts: []
+  },
+  {
+    id: 'pos14-standing-reference',
+    categoryId: 'standing',
+    categoryName: '站立穿搭',
+    name: '站姿轮廓 14',
+    tip: '适合单人照姿态和画面留白参考',
+    description: '新增 PNG 姿势轮廓模板，帮助在拍摄时快速对齐人物站位、动作幅度和画面比例。',
+    badge: '站姿',
+    accent: '#f4f7ff',
+    gradient: 'linear-gradient(150deg, #eef7f4 0%, #668374 100%)',
+    guideImage: '/assets/poses/pos14_transparent.png',
+    thumbnailImage: '/assets/poses/pos14_transparent.png',
+    parts: []
+  },
+  {
+    id: 'pos15-standing-reference',
+    categoryId: 'standing',
+    categoryName: '站立穿搭',
+    name: '站姿轮廓 15',
+    tip: '适合更多穿搭、街拍和旅行场景',
+    description: '新增 PNG 姿势轮廓模板，适合补充不同拍摄动作，并支持在相机中拖动、缩放对齐。',
+    badge: '站姿',
+    accent: '#f4f7ff',
+    gradient: 'linear-gradient(150deg, #fff4ef 0%, #987665 100%)',
+    guideImage: '/assets/poses/pos15_transparent.png',
+    thumbnailImage: '/assets/poses/pos15_transparent.png',
+    parts: []
+  },
+  {
+    id: 'pos16-standing-reference',
+    categoryId: 'standing',
+    categoryName: '站立穿搭',
+    name: '站姿轮廓 16',
+    tip: '适合新增姿势的拍摄引导',
+    description: '新增 PNG 姿势轮廓模板，可用于拍照时参考身体姿态、站位和整体构图。',
+    badge: '站姿',
+    accent: '#f4f7ff',
+    gradient: 'linear-gradient(150deg, #eef3ff 0%, #607795 100%)',
+    guideImage: '/assets/poses/pos16_transparent.png',
+    thumbnailImage: '/assets/poses/pos16_transparent.png',
+    parts: []
   }
 ]
 
