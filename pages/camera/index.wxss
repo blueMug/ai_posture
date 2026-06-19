@@ -74,45 +74,7 @@
   z-index: 6;
 }
 
-.line {
-  height: 5rpx;
-  border-radius: 999rpx;
-  box-shadow: 0 0 14rpx rgba(255, 255, 255, 0.28);
-  transform-origin: left center;
-}
-
-.joint {
-  border-radius: 999rpx;
-  background: rgba(255, 255, 255, 0.72);
-  box-shadow: 0 0 12rpx rgba(255, 255, 255, 0.36);
-}
-
-.head {
-  border-radius: 999rpx;
-  border: 5rpx solid rgba(255, 255, 255, 0.58);
-  box-shadow: 0 0 16rpx rgba(255, 255, 255, 0.28);
-  box-sizing: border-box;
-}
-
-.arc {
-  border-width: 4rpx 0 0 4rpx;
-  border-style: solid;
-  border-radius: 999rpx 0 0 0;
-  box-shadow: 0 0 12rpx rgba(255, 255, 255, 0.16);
-  transform-origin: center center;
-  box-sizing: border-box;
-}
-
-.foot-guide {
-  height: 3rpx;
-  border-radius: 999rpx;
-  box-shadow: 0 0 10rpx rgba(255, 255, 255, 0.16);
-  transform-origin: center center;
-  box-sizing: border-box;
-}
-
 .marker-line {
-  height: 8rpx;
   border-radius: 999rpx;
   box-shadow:
     0 0 2rpx rgba(255, 255, 255, 0.9),
