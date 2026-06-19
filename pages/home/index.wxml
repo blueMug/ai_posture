@@ -34,7 +34,7 @@
             <image
               class="mini-guide-image"
               src="{{pose.thumbnailImage || pose.guideImage}}"
-              mode="aspectFit"
+              mode="{{pose.thumbnailMode || 'aspectFit'}}"
             ></image>
           </view>
           <view class="badge">{{pose.badge}}</view>
