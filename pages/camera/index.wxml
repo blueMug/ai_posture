@@ -14,10 +14,26 @@
 
     <cover-view class="pose-stage">
       <cover-view class="pose-name">{{currentTemplate.name}}</cover-view>
-      <cover-image
-        class="pose-guide-image"
-        src="{{currentTemplate.guideImage}}"
-      ></cover-image>
+      <cover-view
+        wx:if="{{currentTemplate.guideImage}}"
+        class="pose-guide-box"
+        style="{{guideBoxStyle}}"
+        bindtouchstart="onGuideTouchStart"
+        catchtouchmove="onGuideTouchMove"
+        bindtouchend="onGuideTouchEnd"
+        bindtouchcancel="onGuideTouchEnd"
+      >
+        <cover-image
+          class="pose-guide-image"
+          src="{{currentTemplate.guideImage}}"
+        ></cover-image>
+      </cover-view>
+      <cover-view wx:if="{{currentTemplate.guideImage}}" class="guide-help">单指拖动，双指缩放</cover-view>
+      <cover-view wx:if="{{currentTemplate.guideImage}}" class="guide-tools">
+        <cover-view class="guide-tool-btn" bindtap="zoomGuideOut">-</cover-view>
+        <cover-view class="guide-tool-btn reset" bindtap="resetGuidePlacement">重置</cover-view>
+        <cover-view class="guide-tool-btn" bindtap="zoomGuideIn">+</cover-view>
+      </cover-view>
     </cover-view>
 
     <cover-view class="bottom-panel safe-area-bottom">
