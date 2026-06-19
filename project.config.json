@@ -12,8 +12,20 @@
         "value": "tools"
       },
       {
+        "type": "folder",
+        "value": "assets"
+      },
+      {
         "type": "file",
         "value": ".DS_Store"
+      },
+      {
+        "type": "file",
+        "value": ".gitignore"
+      },
+      {
+        "type": "file",
+        "value": "README.md"
       }
     ]
   },

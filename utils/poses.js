@@ -1,4 +1,14 @@
+const { assetUrl } = require('./assets')
 const { combinePairPoses } = require('./combinePairPoses')
+
+const SIMPLE_POSE_IDS = [
+  'pos1-standing-cross',
+  'pos2-walking-lookback',
+  'pos3-cross-leg-sit',
+  'pos4-back-hand-lift'
+]
+
+const pairPoses = combinePairPoses
 
 const poseTemplates = [
   {
@@ -225,7 +235,14 @@ const poseTemplates = [
     thumbnailImage: '/assets/poses/pos16_transparent.png',
     parts: []
   }
-].concat(combinePairPoses)
+]
+  .filter((pose) => SIMPLE_POSE_IDS.includes(pose.id))
+  .concat(pairPoses)
+  .map((pose) => ({
+    ...pose,
+    guideImage: assetUrl(pose.guideImage),
+    thumbnailImage: assetUrl(pose.thumbnailImage)
+  }))
 
 const categoryDefinitions = [
   {
