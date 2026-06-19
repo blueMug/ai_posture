@@ -4,6 +4,8 @@ const { poseTemplates, findPoseIndex } = require('../../utils/poses')
 const GUIDE_CONFIRM_STORAGE_KEY = 'keepGuideForConfirm'
 const CAMERA_MIN_ZOOM = 1
 const CAMERA_DEFAULT_MAX_ZOOM = 10
+const GUIDE_MAX_OFFSET_X = 120
+const GUIDE_MAX_OFFSET_Y = 160
 
 const hideTemplateGuide = (template) => ({
   ...template,
@@ -17,6 +19,12 @@ const getGuideToggleState = (template) => ({
   showModelToggle: Boolean(isModelPose(template) && template.thumbnailImage),
   modelToggleImage: isModelPose(template) ? template.thumbnailImage : ''
 })
+const getGuideBoxStyle = (offsetX, offsetY) => (
+  `transform: translate3d(${offsetX}px, ${offsetY}px, 0);`
+)
+const getPreviewGuideStyle = (offsetX, offsetY) => (
+  `left: 7vw; top: 13vh; width: 86vw; height: 58vh; transform: translate3d(${offsetX}px, ${offsetY}px, 0);`
+)
 
 Page({
   data: {
@@ -31,7 +39,10 @@ Page({
     guideLoadFailed: false,
     keepGuideForConfirm: false,
     showModelToggle: false,
-    modelToggleImage: ''
+    modelToggleImage: '',
+    guideOffsetX: 0,
+    guideOffsetY: 0,
+    guideBoxStyle: getGuideBoxStyle(0, 0)
   },
 
   onLoad(options = {}) {
@@ -48,6 +59,9 @@ Page({
       currentIndex: nextIndex,
       guideLoadFailed: false,
       currentTemplate: this.data.guideVisible ? template : hideTemplateGuide(template),
+      guideOffsetX: 0,
+      guideOffsetY: 0,
+      guideBoxStyle: getGuideBoxStyle(0, 0),
       ...getGuideToggleState(template)
     })
   },
@@ -90,6 +104,51 @@ Page({
       title: '轮廓图加载失败',
       icon: 'none'
     })
+  },
+
+  onGuideDragStart(event) {
+    const touch = event.touches && event.touches[0]
+
+    if (!touch || !this.data.currentTemplate.guideImage) {
+      this.guideDragState = null
+      return
+    }
+
+    this.guideDragState = {
+      startX: touch.pageX,
+      startY: touch.pageY,
+      baseOffsetX: this.data.guideOffsetX,
+      baseOffsetY: this.data.guideOffsetY
+    }
+  },
+
+  onGuideDragMove(event) {
+    const touch = event.touches && event.touches[0]
+
+    if (!touch || !this.guideDragState) {
+      return
+    }
+
+    const guideOffsetX = clamp(
+      this.guideDragState.baseOffsetX + touch.pageX - this.guideDragState.startX,
+      -GUIDE_MAX_OFFSET_X,
+      GUIDE_MAX_OFFSET_X
+    )
+    const guideOffsetY = clamp(
+      this.guideDragState.baseOffsetY + touch.pageY - this.guideDragState.startY,
+      -GUIDE_MAX_OFFSET_Y,
+      GUIDE_MAX_OFFSET_Y
+    )
+
+    this.setData({
+      guideOffsetX,
+      guideOffsetY,
+      guideBoxStyle: getGuideBoxStyle(guideOffsetX, guideOffsetY)
+    })
+  },
+
+  onGuideDragEnd() {
+    this.guideDragState = null
   },
 
   switchCamera() {
@@ -188,7 +247,7 @@ Page({
         app.globalData.previewGuide = shouldConfirmWithGuide
           ? {
               image: this.data.currentTemplate.guideImage,
-              style: 'left: 7vw; top: 13vh; width: 86vw; height: 58vh',
+              style: getPreviewGuideStyle(this.data.guideOffsetX, this.data.guideOffsetY),
               needsConfirm: true
             }
           : null

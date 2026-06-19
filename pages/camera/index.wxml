@@ -17,6 +17,11 @@
       <cover-view
         wx:if="{{currentTemplate.guideImage}}"
         class="pose-guide-box"
+        style="{{guideBoxStyle}}"
+        bindtouchstart="onGuideDragStart"
+        catchtouchmove="onGuideDragMove"
+        bindtouchend="onGuideDragEnd"
+        bindtouchcancel="onGuideDragEnd"
       >
         <cover-image
           class="pose-guide-image"
