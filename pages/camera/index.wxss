@@ -30,8 +30,7 @@
 }
 
 .ghost-btn,
-.small-btn,
-.round-btn {
+.small-btn {
   color: #ffffff;
   background: rgba(0, 0, 0, 0.36);
   border: 1rpx solid rgba(255, 255, 255, 0.36);
@@ -82,112 +81,11 @@
 
 .pose-guide-box {
   position: absolute;
+  left: 0;
+  top: 8%;
   z-index: 6;
-}
-
-.guide-help {
-  position: absolute;
-  left: 50%;
-  bottom: 230rpx;
-  transform: translateX(-50%);
-  z-index: 7;
-  padding: 10rpx 22rpx;
-  border-radius: 999rpx;
-  color: rgba(255, 255, 255, 0.82);
-  font-size: 22rpx;
-  background: rgba(0, 0, 0, 0.26);
-}
-
-.guide-presets {
-  position: absolute;
-  left: 50%;
-  bottom: 164rpx;
-  transform: translateX(-50%);
-  z-index: 8;
-  display: flex;
-  align-items: center;
-}
-
-.guide-preset-btn {
-  width: 76rpx;
-  height: 52rpx;
-  line-height: 52rpx;
-  border-radius: 26rpx;
-  color: #ffffff;
-  font-size: 21rpx;
-  text-align: center;
-  background: rgba(0, 0, 0, 0.34);
-  border: 1rpx solid rgba(255, 255, 255, 0.34);
-}
-
-.guide-preset-btn + .guide-preset-btn {
-  margin-left: 8rpx;
-}
-
-.guide-tools {
-  position: absolute;
-  left: 50%;
-  bottom: 104rpx;
-  transform: translateX(-50%);
-  z-index: 8;
-  display: flex;
-  align-items: center;
-}
-
-.guide-tool-btn {
-  width: 60rpx;
-  height: 52rpx;
-  line-height: 52rpx;
-  border-radius: 26rpx;
-  color: #ffffff;
-  font-size: 28rpx;
-  text-align: center;
-  background: rgba(0, 0, 0, 0.34);
-  border: 1rpx solid rgba(255, 255, 255, 0.34);
-}
-
-.guide-tool-btn + .guide-tool-btn {
-  margin-left: 12rpx;
-}
-
-.guide-tool-btn.reset {
-  width: 104rpx;
-  font-size: 22rpx;
-}
-
-.guide-move-tools {
-  position: absolute;
-  left: 50%;
-  bottom: 0;
-  transform: translateX(-50%);
-  z-index: 8;
-}
-
-.guide-move-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.guide-move-row + .guide-move-row {
-  margin-top: 8rpx;
-}
-
-.guide-move-btn {
-  width: 58rpx;
-  height: 44rpx;
-  line-height: 44rpx;
-  margin: 0 5rpx;
-  border-radius: 22rpx;
-  color: #ffffff;
-  font-size: 20rpx;
-  text-align: center;
-  background: rgba(0, 0, 0, 0.34);
-  border: 1rpx solid rgba(255, 255, 255, 0.34);
-}
-
-.guide-move-btn.placeholder {
-  opacity: 0;
+  width: 100%;
+  height: 88%;
 }
 
 .bottom-panel {
@@ -199,29 +97,6 @@
   padding: 28rpx 28rpx 44rpx;
   box-sizing: border-box;
   background: linear-gradient(0deg, rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0));
-}
-
-.template-switch {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 28rpx;
-}
-
-.round-btn {
-  width: 136rpx;
-  height: 60rpx;
-  line-height: 60rpx;
-  border-radius: 30rpx;
-  font-size: 24rpx;
-}
-
-.template-text {
-  flex: 1;
-  padding: 0 20rpx;
-  color: rgba(255, 255, 255, 0.88);
-  font-size: 24rpx;
-  text-align: center;
 }
 
 .shoot-row {
@@ -246,6 +121,35 @@
   text-align: center;
   background: rgba(0, 0, 0, 0.38);
   border: 1rpx solid rgba(255, 255, 255, 0.36);
+}
+
+.camera-zoom-row {
+  width: 252rpx;
+  height: 56rpx;
+  margin: 22rpx auto 0;
+  border-radius: 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(0, 0, 0, 0.34);
+  border: 1rpx solid rgba(255, 255, 255, 0.28);
+}
+
+.zoom-btn {
+  width: 72rpx;
+  height: 56rpx;
+  line-height: 56rpx;
+  color: #ffffff;
+  font-size: 34rpx;
+  text-align: center;
+}
+
+.zoom-text {
+  flex: 1;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 24rpx;
+  font-weight: 700;
+  text-align: center;
 }
 
 .confirm-toggle {

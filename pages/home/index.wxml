@@ -5,6 +5,24 @@
     <view class="subtitle">按场景挑一个拍照模板，进入相机后按照线条摆姿势，照片里不会保留引导线。</view>
   </view>
 
+  <view class="search-card">
+    <view class="search-icon">⌕</view>
+    <input
+      class="search-input"
+      value="{{searchKeyword}}"
+      placeholder="搜索站姿、坐姿、回眸、穿搭、街拍"
+      placeholder-class="search-placeholder"
+      confirm-type="search"
+      bindinput="onSearchInput"
+    />
+    <view wx:if="{{searchKeyword}}" class="search-clear" bindtap="clearSearch">清除</view>
+  </view>
+
+  <view wx:if="{{!hasSearchResult}}" class="empty-state">
+    <view class="empty-title">没有找到匹配姿势</view>
+    <view class="empty-desc">换个关键词试试，例如“站姿”“回眸”“半身”“穿搭”。</view>
+  </view>
+
   <view
     wx:for="{{poseCategories}}"
     wx:key="id"
