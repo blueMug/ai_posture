@@ -1,7 +1,13 @@
-.page,
-.camera {
+.page {
   width: 100vw;
   height: 100vh;
+  overflow: hidden;
+  background: #000000;
+}
+
+.camera {
+  width: 100vw;
+  height: calc(100vh - 300rpx);
 }
 
 .camera {
@@ -54,7 +60,7 @@
   left: 7vw;
   right: 7vw;
   top: 13vh;
-  bottom: 21vh;
+  bottom: 4vh;
   z-index: 5;
 }
 
@@ -87,15 +93,32 @@
   height: 88%;
 }
 
+.guide-error-tip {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 8;
+  transform: translate(-50%, -50%);
+  padding: 14rpx 24rpx;
+  border-radius: 999rpx;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 24rpx;
+  background: rgba(0, 0, 0, 0.48);
+  border: 1rpx solid rgba(255, 255, 255, 0.24);
+}
+
 .bottom-panel {
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 10;
+  z-index: 20;
+  min-height: 300rpx;
   padding: 28rpx 28rpx 44rpx;
   box-sizing: border-box;
-  background: linear-gradient(0deg, rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0));
+  background:
+    linear-gradient(0deg, rgba(0, 0, 0, 0.94), rgba(0, 0, 0, 0.82)),
+    #000000;
 }
 
 .shoot-row {
@@ -190,49 +213,17 @@
   border: 1rpx solid rgba(255, 255, 255, 0.28);
 }
 
+.zoom-slider {
+  flex: 1;
+  margin: 0 10rpx;
+}
+
 .zoom-label {
   width: 64rpx;
   color: rgba(255, 255, 255, 0.88);
   font-size: 22rpx;
   font-weight: 700;
   text-align: center;
-}
-
-.zoom-track {
-  position: relative;
-  width: 430rpx;
-  height: 72rpx;
-}
-
-.zoom-track-bg,
-.zoom-track-fill {
-  position: absolute;
-  left: 0;
-  top: 31rpx;
-  height: 10rpx;
-  border-radius: 999rpx;
-}
-
-.zoom-track-bg {
-  width: 100%;
-  background: rgba(255, 255, 255, 0.28);
-}
-
-.zoom-track-fill {
-  background: #ffe95c;
-}
-
-.zoom-thumb {
-  position: absolute;
-  top: 18rpx;
-  width: 36rpx;
-  height: 36rpx;
-  margin-left: -18rpx;
-  border-radius: 50%;
-  background: #ffffff;
-  border: 6rpx solid #ffe95c;
-  box-sizing: border-box;
-  box-shadow: 0 6rpx 18rpx rgba(0, 0, 0, 0.32);
 }
 
 .shutter {

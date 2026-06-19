@@ -4,7 +4,6 @@ const { poseTemplates, findPoseIndex } = require('../../utils/poses')
 const GUIDE_CONFIRM_STORAGE_KEY = 'keepGuideForConfirm'
 const CAMERA_MIN_ZOOM = 1
 const CAMERA_DEFAULT_MAX_ZOOM = 10
-const ZOOM_SLIDER_WIDTH_RPX = 430
 
 const hideTemplateGuide = (template) => ({
   ...template,
@@ -15,12 +14,6 @@ const hideTemplateGuide = (template) => ({
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max)
 
-const getPrimaryTouch = (event) => {
-  const touches = event.touches || []
-  const changedTouches = event.changedTouches || []
-  return touches[0] || changedTouches[0]
-}
-
 Page({
   data: {
     devicePosition: 'back',
@@ -30,14 +23,13 @@ Page({
     cameraZoom: CAMERA_MIN_ZOOM,
     cameraMaxZoom: CAMERA_DEFAULT_MAX_ZOOM,
     cameraZoomText: '1.0x',
-    cameraZoomPercent: 0,
     guideToggleTitle: '隐藏线条',
+    guideLoadFailed: false,
     keepGuideForConfirm: false
   },
 
   onLoad(options = {}) {
     this.cameraContext = wx.createCameraContext()
-    this.initZoomSliderMetrics()
     this.loadGuideConfirmSetting()
     this.setTemplate(findPoseIndex(options.poseId))
   },
@@ -46,6 +38,7 @@ Page({
     const nextIndex = (index + poseTemplates.length) % poseTemplates.length
     this.setData({
       currentIndex: nextIndex,
+      guideLoadFailed: false,
       currentTemplate: this.data.guideVisible
         ? poseTemplates[nextIndex]
         : hideTemplateGuide(poseTemplates[nextIndex])
@@ -77,6 +70,17 @@ Page({
     })
   },
 
+  onGuideImageError() {
+    this.setData({
+      guideLoadFailed: true
+    })
+
+    wx.showToast({
+      title: '轮廓图加载失败',
+      icon: 'none'
+    })
+  },
+
   switchCamera() {
     this.setData(
       {
@@ -103,26 +107,6 @@ Page({
     }
   },
 
-  initZoomSliderMetrics() {
-    const systemInfo = wx.getSystemInfoSync()
-    const sliderWidth = systemInfo.windowWidth * (ZOOM_SLIDER_WIDTH_RPX / 750)
-
-    this.zoomSliderMetrics = {
-      left: (systemInfo.windowWidth - sliderWidth) / 2,
-      width: sliderWidth
-    }
-  },
-
-  getCameraZoomPercent(cameraZoom) {
-    const range = this.data.cameraMaxZoom - CAMERA_MIN_ZOOM
-
-    if (range <= 0) {
-      return 0
-    }
-
-    return ((cameraZoom - CAMERA_MIN_ZOOM) / range) * 100
-  },
-
   setNativeCameraZoom(cameraZoom) {
     if (!this.cameraContext) {
       this.cameraContext = wx.createCameraContext()
@@ -141,8 +125,7 @@ Page({
     this.setData(
       {
         cameraZoom,
-        cameraZoomText: `${cameraZoom.toFixed(1)}x`,
-        cameraZoomPercent: this.getCameraZoomPercent(cameraZoom)
+        cameraZoomText: `${cameraZoom.toFixed(1)}x`
       },
       () => {
         this.setNativeCameraZoom(cameraZoom)
@@ -150,30 +133,12 @@ Page({
     )
   },
 
-  updateCameraZoomFromTouch(event) {
-    const touch = getPrimaryTouch(event)
-
-    if (!touch) {
-      return
-    }
-
-    if (!this.zoomSliderMetrics) {
-      this.initZoomSliderMetrics()
-    }
-
-    const { left, width } = this.zoomSliderMetrics
-    const ratio = clamp((touch.clientX - left) / width, 0, 1)
-    const nextZoom = CAMERA_MIN_ZOOM + (this.data.cameraMaxZoom - CAMERA_MIN_ZOOM) * ratio
-
-    this.setCameraZoom(nextZoom)
+  onCameraZoomChanging(event) {
+    this.setCameraZoom(Number(event.detail.value))
   },
 
-  onZoomSliderTouchStart(event) {
-    this.updateCameraZoomFromTouch(event)
-  },
-
-  onZoomSliderTouchMove(event) {
-    this.updateCameraZoomFromTouch(event)
+  onCameraZoomChange(event) {
+    this.setCameraZoom(Number(event.detail.value))
   },
 
   loadGuideConfirmSetting() {

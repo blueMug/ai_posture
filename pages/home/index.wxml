@@ -65,7 +65,12 @@
               class="mini-guide-image"
               src="{{pose.thumbnailImage || pose.guideImage}}"
               mode="{{pose.thumbnailMode || 'aspectFit'}}"
+              data-pose-id="{{pose.id}}"
+              binderror="onPoseImageError"
             ></image>
+            <view wx:if="{{failedPoseImages[pose.id]}}" class="mini-image-error">
+              图片加载失败
+            </view>
           </view>
           <view class="badge">{{pose.badge}}</view>
         </view>

@@ -23,43 +23,51 @@
         <cover-image
           class="pose-guide-image"
           src="{{currentTemplate.guideImage}}"
+          binderror="onGuideImageError"
         ></cover-image>
       </cover-view>
-    </cover-view>
-
-    <cover-view class="bottom-panel safe-area-bottom">
-      <cover-view class="shoot-row">
-        <cover-view
-          class="guide-toggle-btn {{guideVisible ? 'active' : 'muted'}}"
-          bindtap="toggleGuide"
-          aria-label="{{guideToggleTitle}}"
-        >
-          <cover-view class="eye-icon">
-            <cover-view class="eye-dot"></cover-view>
-            <cover-view wx:if="{{!guideVisible}}" class="eye-slash"></cover-view>
-          </cover-view>
-        </cover-view>
-        <cover-view class="shutter-group">
-          <cover-view class="shutter" bindtap="takePhoto">
-            <cover-view class="shutter-inner"></cover-view>
-          </cover-view>
-          <cover-view class="switch-icon-btn" bindtap="switchCamera">⟳</cover-view>
-        </cover-view>
-        <cover-view class="shoot-placeholder"></cover-view>
-      </cover-view>
-      <cover-view class="camera-zoom-row">
-        <cover-view class="zoom-label">1x</cover-view>
-        <cover-view
-          class="zoom-track"
-          catchtouchstart="onZoomSliderTouchStart"
-          catchtouchmove="onZoomSliderTouchMove"
-        >
-          <cover-view class="zoom-track-bg"></cover-view>
-          <cover-view class="zoom-track-fill" style="width: {{cameraZoomPercent}}%;"></cover-view>
-          <cover-view class="zoom-thumb" style="left: {{cameraZoomPercent}}%;"></cover-view>
-        </cover-view>
-        <cover-view class="zoom-label">{{cameraZoomText}}</cover-view>
+      <cover-view wx:if="{{guideLoadFailed}}" class="guide-error-tip">
+        轮廓加载失败，请检查图片域名
       </cover-view>
     </cover-view>
   </camera>
+
+  <view class="bottom-panel safe-area-bottom">
+    <view class="shoot-row">
+      <view
+        class="guide-toggle-btn {{guideVisible ? 'active' : 'muted'}}"
+        bindtap="toggleGuide"
+        aria-label="{{guideToggleTitle}}"
+      >
+        <view class="eye-icon">
+          <view class="eye-dot"></view>
+          <view wx:if="{{!guideVisible}}" class="eye-slash"></view>
+        </view>
+      </view>
+      <view class="shutter-group">
+        <view class="shutter" bindtap="takePhoto">
+          <view class="shutter-inner"></view>
+        </view>
+        <view class="switch-icon-btn" bindtap="switchCamera">⟳</view>
+      </view>
+      <view class="shoot-placeholder"></view>
+    </view>
+    <view class="camera-zoom-row">
+      <view class="zoom-label">1x</view>
+      <slider
+        class="zoom-slider"
+        min="1"
+        max="{{cameraMaxZoom}}"
+        step="0.1"
+        value="{{cameraZoom}}"
+        activeColor="#ffe95c"
+        backgroundColor="rgba(255, 255, 255, 0.26)"
+        block-color="#ffffff"
+        block-size="22"
+        bindchanging="onCameraZoomChanging"
+        bindchange="onCameraZoomChange"
+      />
+      <view class="zoom-label">{{cameraZoomText}}</view>
+    </view>
+  </view>
 </view>

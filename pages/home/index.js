@@ -34,6 +34,7 @@ Page({
     searchKeyword: '',
     poseCategories,
     hasSearchResult: true,
+    failedPoseImages: {},
     keepGuideForConfirm: false
   },
 
@@ -76,6 +77,18 @@ Page({
     wx.setStorageSync(GUIDE_CONFIRM_STORAGE_KEY, keepGuideForConfirm)
     this.setData({
       keepGuideForConfirm
+    })
+  },
+
+  onPoseImageError(event) {
+    const { poseId } = event.currentTarget.dataset
+
+    if (!poseId) {
+      return
+    }
+
+    this.setData({
+      [`failedPoseImages.${poseId}`]: true
     })
   },
 
