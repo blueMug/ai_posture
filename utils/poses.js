@@ -21,8 +21,8 @@ const poseTemplates = [
     badge: '站姿',
     accent: '#f4f7ff',
     gradient: 'linear-gradient(150deg, #eef2ff 0%, #7f8da3 100%)',
-    guideImage: '/assets/poses/pos1_transparent.png',
-    thumbnailImage: '/assets/poses/pos1_transparent.png',
+    guideImage: '/static/poses/pos1_transparent.png',
+    thumbnailImage: '/static/poses/pos1_transparent.png',
     parts: []
   },
   {
@@ -35,8 +35,8 @@ const poseTemplates = [
     badge: '走姿',
     accent: '#f4f7ff',
     gradient: 'linear-gradient(150deg, #f5f0e8 0%, #7f8a76 100%)',
-    guideImage: '/assets/poses/pos2_transparent.png',
-    thumbnailImage: '/assets/poses/pos2_transparent.png',
+    guideImage: '/static/poses/pos2_transparent.png',
+    thumbnailImage: '/static/poses/pos2_transparent.png',
     parts: []
   },
   {
@@ -49,8 +49,8 @@ const poseTemplates = [
     badge: '坐姿',
     accent: '#f4f7ff',
     gradient: 'linear-gradient(150deg, #f3eef8 0%, #86748f 100%)',
-    guideImage: '/assets/poses/pos3_transparent.png',
-    thumbnailImage: '/assets/poses/pos3_transparent.png',
+    guideImage: '/static/poses/pos3_transparent.png',
+    thumbnailImage: '/static/poses/pos3_transparent.png',
     parts: []
   },
   {
@@ -63,8 +63,8 @@ const poseTemplates = [
     badge: '背影',
     accent: '#f4f7ff',
     gradient: 'linear-gradient(150deg, #eef5ff 0%, #65758d 100%)',
-    guideImage: '/assets/poses/pos4_transparent.png',
-    thumbnailImage: '/assets/poses/pos4_transparent.png',
+    guideImage: '/static/poses/pos4_transparent.png',
+    thumbnailImage: '/static/poses/pos4_transparent.png',
     parts: []
   },
   {

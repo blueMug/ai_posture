@@ -1,5 +1,3 @@
-const { assetUrl } = require('./assets')
-
 const combinePairIds = [
   'combine1_r01_g01',
   'combine1_r01_g02',
@@ -49,8 +47,8 @@ const combinePairPoses = combinePairIds.map((pairId, index) => {
     badge: '真人',
     accent: '#f4f7ff',
     gradient: 'linear-gradient(150deg, #f7f1e8 0%, #6f665f 100%)',
-    guideImage: assetUrl(`/assets/pose_pairs/${folder}/${pairId}_contour_hd.png`),
-    thumbnailImage: assetUrl(`/assets/pose_pairs/${folder}/${pairId}_demo.png`),
+    guideImage: `/static/pose_pairs/${folder}/${pairId}_contour.png`,
+    thumbnailImage: `/static/pose_pairs/${folder}/${pairId}_demo.jpg`,
     thumbnailMode: 'aspectFill',
     parts: []
   }
