@@ -5,6 +5,7 @@ const GUIDE_MIN_SCALE = 0.35
 const GUIDE_MAX_SCALE = 2.6
 const GUIDE_SCALE_STEP = 0.2
 const GUIDE_PINCH_SENSITIVITY = 1.8
+const GUIDE_RESIZE_DRAG_DISTANCE = 220
 
 const hideTemplateGuide = (template) => ({
   ...template,
@@ -25,6 +26,12 @@ const getTouchCenter = (touches) => ({
   x: (touches[0].clientX + touches[1].clientX) / 2,
   y: (touches[0].clientY + touches[1].clientY) / 2
 })
+
+const getPrimaryTouch = (event) => {
+  const touches = event.touches || []
+  const changedTouches = event.changedTouches || []
+  return touches[0] || changedTouches[0]
+}
 
 Page({
   data: {
@@ -194,6 +201,45 @@ Page({
     }
   },
 
+  startResizeGesture(event) {
+    const touch = getPrimaryTouch(event)
+
+    if (!touch) {
+      return
+    }
+
+    this.guideGesture = {
+      type: 'resize',
+      startTouchX: touch.clientX,
+      startTouchY: touch.clientY,
+      startScale: this.data.guidePlacement.scale
+    }
+  },
+
+  onResizeTouchStart(event) {
+    this.startResizeGesture(event)
+  },
+
+  onResizeTouchMove(event) {
+    const touch = getPrimaryTouch(event)
+
+    if (!touch) {
+      return
+    }
+
+    if (!this.guideGesture || this.guideGesture.type !== 'resize') {
+      this.startResizeGesture(event)
+      return
+    }
+
+    const dragDistance = touch.clientX - this.guideGesture.startTouchX
+      + touch.clientY - this.guideGesture.startTouchY
+
+    this.updateGuidePlacement({
+      scale: this.guideGesture.startScale + dragDistance / GUIDE_RESIZE_DRAG_DISTANCE
+    })
+  },
+
   startPinchGesture(touches) {
     const placement = this.data.guidePlacement
     const startCenter = getTouchCenter(touches)
@@ -214,6 +260,7 @@ Page({
 
   onGuideTouchStart(event) {
     const touches = event.touches || []
+    const touch = getPrimaryTouch(event)
     const placement = this.data.guidePlacement
 
     if (touches.length >= 2) {
@@ -221,11 +268,11 @@ Page({
       return
     }
 
-    if (touches.length === 1) {
+    if (touch) {
       this.guideGesture = {
         type: 'drag',
-        startTouchX: touches[0].clientX,
-        startTouchY: touches[0].clientY,
+        startTouchX: touch.clientX,
+        startTouchY: touch.clientY,
         startX: placement.x,
         startY: placement.y
       }
@@ -269,9 +316,15 @@ Page({
     }
 
     if (touches.length === 1 && this.guideGesture && this.guideGesture.type === 'drag') {
+      const touch = getPrimaryTouch(event)
+
+      if (!touch) {
+        return
+      }
+
       this.updateGuidePlacement({
-        x: this.guideGesture.startX + touches[0].clientX - this.guideGesture.startTouchX,
-        y: this.guideGesture.startY + touches[0].clientY - this.guideGesture.startTouchY
+        x: this.guideGesture.startX + touch.clientX - this.guideGesture.startTouchX,
+        y: this.guideGesture.startY + touch.clientY - this.guideGesture.startTouchY
       })
     }
   },

@@ -18,17 +18,26 @@
         wx:if="{{currentTemplate.guideImage}}"
         class="pose-guide-box"
         style="{{guideBoxStyle}}"
+        catchtouchstart="onGuideTouchStart"
+        catchtouchmove="onGuideTouchMove"
+        catchtouchend="onGuideTouchEnd"
+        catchtouchcancel="onGuideTouchEnd"
       >
         <cover-image
           class="pose-guide-image"
           src="{{currentTemplate.guideImage}}"
-          catchtouchstart="onGuideTouchStart"
-          catchtouchmove="onGuideTouchMove"
+        ></cover-image>
+        <cover-view
+          class="resize-handle"
+          catchtouchstart="onResizeTouchStart"
+          catchtouchmove="onResizeTouchMove"
           catchtouchend="onGuideTouchEnd"
           catchtouchcancel="onGuideTouchEnd"
-        ></cover-image>
+        >
+          <cover-view class="resize-handle-dot"></cover-view>
+        </cover-view>
       </cover-view>
-      <cover-view wx:if="{{currentTemplate.guideImage}}" class="guide-help">单指拖动，双指缩放 {{guideScaleText}}</cover-view>
+      <cover-view wx:if="{{currentTemplate.guideImage}}" class="guide-help">拖动图片移动，拖右下角缩放 {{guideScaleText}}</cover-view>
       <cover-view wx:if="{{currentTemplate.guideImage}}" class="guide-presets">
         <cover-view
           wx:for="{{guideScalePresets}}"
