@@ -29,14 +29,23 @@
 
     <cover-view class="bottom-panel safe-area-bottom">
       <cover-view class="shoot-row">
-        <cover-view class="small-btn" bindtap="clearGuide">隐藏线条</cover-view>
+        <cover-view
+          class="guide-toggle-btn {{guideVisible ? 'active' : 'muted'}}"
+          bindtap="toggleGuide"
+          aria-label="{{guideToggleTitle}}"
+        >
+          <cover-view class="eye-icon">
+            <cover-view class="eye-dot"></cover-view>
+            <cover-view wx:if="{{!guideVisible}}" class="eye-slash"></cover-view>
+          </cover-view>
+        </cover-view>
         <cover-view class="shutter-group">
           <cover-view class="shutter" bindtap="takePhoto">
             <cover-view class="shutter-inner"></cover-view>
           </cover-view>
           <cover-view class="switch-icon-btn" bindtap="switchCamera">⟳</cover-view>
         </cover-view>
-        <cover-view class="small-btn" bindtap="showGuide">显示线条</cover-view>
+        <cover-view class="shoot-placeholder"></cover-view>
       </cover-view>
       <cover-view class="camera-zoom-row">
         <cover-view class="zoom-label">1x</cover-view>
@@ -50,13 +59,6 @@
           <cover-view class="zoom-thumb" style="left: {{cameraZoomPercent}}%;"></cover-view>
         </cover-view>
         <cover-view class="zoom-label">{{cameraZoomText}}</cover-view>
-      </cover-view>
-      <cover-view
-        class="confirm-toggle {{keepGuideForConfirm ? 'active' : ''}}"
-        bindtap="toggleKeepGuideForConfirm"
-      >
-        <cover-view class="toggle-dot"></cover-view>
-        <cover-view class="toggle-text">拍后轮廓确认</cover-view>
       </cover-view>
     </cover-view>
   </camera>

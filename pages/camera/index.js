@@ -1,6 +1,7 @@
 const app = getApp()
 const { poseTemplates, findPoseIndex } = require('../../utils/poses')
 
+const GUIDE_CONFIRM_STORAGE_KEY = 'keepGuideForConfirm'
 const CAMERA_MIN_ZOOM = 1
 const CAMERA_DEFAULT_MAX_ZOOM = 10
 const ZOOM_SLIDER_WIDTH_RPX = 430
@@ -30,12 +31,14 @@ Page({
     cameraMaxZoom: CAMERA_DEFAULT_MAX_ZOOM,
     cameraZoomText: '1.0x',
     cameraZoomPercent: 0,
+    guideToggleTitle: '隐藏线条',
     keepGuideForConfirm: false
   },
 
   onLoad(options = {}) {
     this.cameraContext = wx.createCameraContext()
     this.initZoomSliderMetrics()
+    this.loadGuideConfirmSetting()
     this.setTemplate(findPoseIndex(options.poseId))
   },
 
@@ -49,10 +52,19 @@ Page({
     })
   },
 
+  toggleGuide() {
+    if (this.data.guideVisible) {
+      this.clearGuide()
+    } else {
+      this.showGuide()
+    }
+  },
+
   showGuide() {
     this.setData({
       guideVisible: true,
-      currentTemplate: poseTemplates[this.data.currentIndex]
+      currentTemplate: poseTemplates[this.data.currentIndex],
+      guideToggleTitle: '隐藏线条'
     })
   },
 
@@ -60,7 +72,8 @@ Page({
     const currentTemplate = poseTemplates[this.data.currentIndex]
     this.setData({
       guideVisible: false,
-      currentTemplate: hideTemplateGuide(currentTemplate)
+      currentTemplate: hideTemplateGuide(currentTemplate),
+      guideToggleTitle: '显示线条'
     })
   },
 
@@ -163,9 +176,11 @@ Page({
     this.updateCameraZoomFromTouch(event)
   },
 
-  toggleKeepGuideForConfirm() {
+  loadGuideConfirmSetting() {
+    const keepGuideForConfirm = Boolean(wx.getStorageSync(GUIDE_CONFIRM_STORAGE_KEY))
+
     this.setData({
-      keepGuideForConfirm: !this.data.keepGuideForConfirm
+      keepGuideForConfirm
     })
   },
 

@@ -23,6 +23,18 @@
     <view class="empty-desc">换个关键词试试，例如“站姿”“回眸”“半身”“穿搭”。</view>
   </view>
 
+  <view class="setting-card">
+    <view class="setting-copy">
+      <view class="setting-title">拍后轮廓确认</view>
+      <view class="setting-desc">开启后，拍完会先用当前轮廓叠加预览，方便确认姿势是否对齐。</view>
+    </view>
+    <switch
+      color="#ffe95c"
+      checked="{{keepGuideForConfirm}}"
+      bindchange="onGuideConfirmChange"
+    />
+  </view>
+
   <view
     wx:for="{{poseCategories}}"
     wx:key="id"
