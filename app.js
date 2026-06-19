@@ -1,5 +1,6 @@
 App({
   globalData: {
-    photoPath: ''
+    photoPath: '',
+    previewGuide: null
   }
 })

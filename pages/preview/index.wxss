@@ -11,6 +11,12 @@
   height: 100vh;
 }
 
+.guide-preview {
+  position: absolute;
+  z-index: 1;
+  opacity: 0.92;
+}
+
 .top-bar {
   position: absolute;
   left: 0;
@@ -76,6 +82,35 @@
   background: #ffe95c;
 }
 
-.save-btn::after {
+.confirm-actions {
+  display: flex;
+  align-items: center;
+}
+
+.discard-btn,
+.accept-btn {
+  flex: 1;
+  height: 92rpx;
+  line-height: 92rpx;
+  margin: 0;
+  border-radius: 46rpx;
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.discard-btn {
+  margin-right: 20rpx;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.accept-btn {
+  color: #111111;
+  background: #ffe95c;
+}
+
+.save-btn::after,
+.discard-btn::after,
+.accept-btn::after {
   border: 0;
 }

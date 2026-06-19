@@ -9,7 +9,7 @@
     <cover-view class="top-bar">
       <cover-view class="ghost-btn" bindtap="backToHome">选姿势</cover-view>
       <cover-view class="title">姿势引导相机</cover-view>
-      <cover-view class="ghost-btn" bindtap="switchCamera">切换镜头</cover-view>
+      <cover-view class="top-placeholder"></cover-view>
     </cover-view>
 
     <cover-view class="pose-stage">
@@ -18,14 +18,14 @@
         wx:if="{{currentTemplate.guideImage}}"
         class="pose-guide-box"
         style="{{guideBoxStyle}}"
-        bindtouchstart="onGuideTouchStart"
-        catchtouchmove="onGuideTouchMove"
-        bindtouchend="onGuideTouchEnd"
-        bindtouchcancel="onGuideTouchEnd"
       >
         <cover-image
           class="pose-guide-image"
           src="{{currentTemplate.guideImage}}"
+          catchtouchstart="onGuideTouchStart"
+          catchtouchmove="onGuideTouchMove"
+          catchtouchend="onGuideTouchEnd"
+          catchtouchcancel="onGuideTouchEnd"
         ></cover-image>
       </cover-view>
       <cover-view wx:if="{{currentTemplate.guideImage}}" class="guide-help">单指拖动，双指缩放 {{guideScaleText}}</cover-view>
@@ -45,6 +45,8 @@
       </cover-view>
     </cover-view>
 
+    <cover-view class="camera-switch-float" bindtap="switchCamera">切换镜头</cover-view>
+
     <cover-view class="bottom-panel safe-area-bottom">
       <cover-view class="template-switch">
         <cover-view class="round-btn" bindtap="prevTemplate">上一个</cover-view>
@@ -58,6 +60,13 @@
           <cover-view class="shutter-inner"></cover-view>
         </cover-view>
         <cover-view class="small-btn" bindtap="showGuide">显示线条</cover-view>
+      </cover-view>
+      <cover-view
+        class="confirm-toggle {{keepGuideForConfirm ? 'active' : ''}}"
+        bindtap="toggleKeepGuideForConfirm"
+      >
+        <cover-view class="toggle-dot"></cover-view>
+        <cover-view class="toggle-text">拍后轮廓确认</cover-view>
       </cover-view>
     </cover-view>
   </camera>

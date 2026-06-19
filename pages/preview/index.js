@@ -2,7 +2,10 @@ const app = getApp()
 
 Page({
   data: {
-    photoPath: ''
+    photoPath: '',
+    guideImage: '',
+    guideStyle: '',
+    confirmWithGuide: false
   },
 
   onLoad() {
@@ -15,13 +18,29 @@ Page({
       return
     }
 
+    const previewGuide = app.globalData.previewGuide || {}
+
     this.setData({
-      photoPath
+      photoPath,
+      guideImage: previewGuide.image || '',
+      guideStyle: previewGuide.style || '',
+      confirmWithGuide: Boolean(previewGuide.needsConfirm && previewGuide.image)
     })
   },
 
   retake() {
+    app.globalData.photoPath = ''
+    app.globalData.previewGuide = null
     wx.navigateBack()
+  },
+
+  acceptPhoto() {
+    app.globalData.previewGuide = null
+    this.setData({
+      guideImage: '',
+      guideStyle: '',
+      confirmWithGuide: false
+    })
   },
 
   savePhoto() {
