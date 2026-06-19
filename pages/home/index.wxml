@@ -1,0 +1,56 @@
+<view class="page">
+  <view class="hero">
+    <view class="eyebrow">AI Posture Camera</view>
+    <view class="title">先选姿势，再打开相机</view>
+    <view class="subtitle">按场景挑一个拍照模板，进入相机后按照线条摆姿势，照片里不会保留引导线。</view>
+  </view>
+
+  <view
+    wx:for="{{poseCategories}}"
+    wx:key="id"
+    wx:for-item="category"
+    class="category"
+  >
+    <view class="category-head">
+      <view>
+        <view class="category-title">{{category.name}}</view>
+        <view class="category-subtitle">{{category.subtitle}}</view>
+      </view>
+      <view class="category-count">{{category.poses.length}} 个姿势</view>
+    </view>
+
+    <view class="pose-list">
+      <view
+        wx:for="{{category.poses}}"
+        wx:key="id"
+        wx:for-item="pose"
+        class="pose-card"
+        data-pose-id="{{pose.id}}"
+        bindtap="openCamera"
+      >
+        <view class="preview" style="background: {{pose.gradient}};">
+          <view class="preview-shine"></view>
+          <view class="mini-stage">
+            <view
+              wx:for="{{pose.parts}}"
+              wx:key="id"
+              wx:for-item="part"
+              class="mini-part {{part.type}}"
+              style="{{part.style}}"
+            ></view>
+          </view>
+          <view class="badge">{{pose.badge}}</view>
+        </view>
+
+        <view class="pose-info">
+          <view class="pose-title-row">
+            <view class="pose-name">{{pose.name}}</view>
+            <view class="pose-action">开始拍</view>
+          </view>
+          <view class="pose-tip">{{pose.tip}}</view>
+          <view class="pose-desc">{{pose.description}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

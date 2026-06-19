@@ -7,6 +7,7 @@
     binderror="onCameraError"
   >
     <cover-view class="top-bar">
+      <cover-view class="ghost-btn" bindtap="backToHome">选姿势</cover-view>
       <cover-view class="title">姿势引导相机</cover-view>
       <cover-view class="ghost-btn" bindtap="switchCamera">切换镜头</cover-view>
     </cover-view>
