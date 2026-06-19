@@ -85,27 +85,6 @@
   z-index: 6;
 }
 
-.resize-handle {
-  position: absolute;
-  right: -28rpx;
-  bottom: -28rpx;
-  z-index: 9;
-  width: 96rpx;
-  height: 96rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.resize-handle-dot {
-  width: 48rpx;
-  height: 48rpx;
-  border-radius: 999rpx;
-  background: rgba(255, 233, 92, 0.92);
-  border: 4rpx solid rgba(0, 0, 0, 0.42);
-  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.32);
-}
-
 .guide-help {
   position: absolute;
   left: 50%;

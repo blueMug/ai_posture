@@ -27,17 +27,8 @@
           class="pose-guide-image"
           src="{{currentTemplate.guideImage}}"
         ></cover-image>
-        <cover-view
-          class="resize-handle"
-          catchtouchstart="onResizeTouchStart"
-          catchtouchmove="onResizeTouchMove"
-          catchtouchend="onGuideTouchEnd"
-          catchtouchcancel="onGuideTouchEnd"
-        >
-          <cover-view class="resize-handle-dot"></cover-view>
-        </cover-view>
       </cover-view>
-      <cover-view wx:if="{{currentTemplate.guideImage}}" class="guide-help">拖动图片移动，拖右下角缩放 {{guideScaleText}}</cover-view>
+      <cover-view wx:if="{{currentTemplate.guideImage}}" class="guide-help">拖动图片移动，使用按钮缩放 {{guideScaleText}}</cover-view>
       <cover-view wx:if="{{currentTemplate.guideImage}}" class="guide-presets">
         <cover-view
           wx:for="{{guideScalePresets}}"

@@ -5,7 +5,6 @@ const GUIDE_MIN_SCALE = 0.35
 const GUIDE_MAX_SCALE = 2.6
 const GUIDE_SCALE_STEP = 0.2
 const GUIDE_PINCH_SENSITIVITY = 1.8
-const GUIDE_RESIZE_DRAG_DISTANCE = 220
 const GUIDE_MOVE_STEP = 18
 
 const hideTemplateGuide = (template) => ({
@@ -225,45 +224,6 @@ Page({
     if (!Number.isNaN(scale)) {
       this.setGuideScale(scale)
     }
-  },
-
-  startResizeGesture(event) {
-    const touch = getPrimaryTouch(event)
-
-    if (!touch) {
-      return
-    }
-
-    this.guideGesture = {
-      type: 'resize',
-      startTouchX: touch.clientX,
-      startTouchY: touch.clientY,
-      startScale: this.data.guidePlacement.scale
-    }
-  },
-
-  onResizeTouchStart(event) {
-    this.startResizeGesture(event)
-  },
-
-  onResizeTouchMove(event) {
-    const touch = getPrimaryTouch(event)
-
-    if (!touch) {
-      return
-    }
-
-    if (!this.guideGesture || this.guideGesture.type !== 'resize') {
-      this.startResizeGesture(event)
-      return
-    }
-
-    const dragDistance = touch.clientX - this.guideGesture.startTouchX
-      + touch.clientY - this.guideGesture.startTouchY
-
-    this.updateGuidePlacement({
-      scale: this.guideGesture.startScale + dragDistance / GUIDE_RESIZE_DRAG_DISTANCE
-    })
   },
 
   startPinchGesture(touches) {
