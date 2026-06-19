@@ -1,9 +1,10 @@
 const app = getApp()
 const { poseTemplates, findPoseIndex } = require('../../utils/poses')
 
-const GUIDE_MIN_SCALE = 0.55
-const GUIDE_MAX_SCALE = 1.8
-const GUIDE_SCALE_STEP = 0.1
+const GUIDE_MIN_SCALE = 0.35
+const GUIDE_MAX_SCALE = 2.6
+const GUIDE_SCALE_STEP = 0.2
+const GUIDE_PINCH_SENSITIVITY = 1.8
 
 const hideTemplateGuide = (template) => ({
   ...template,
@@ -38,7 +39,8 @@ Page({
       height: 0,
       scale: 1
     },
-    guideBoxStyle: ''
+    guideBoxStyle: '',
+    guideScaleText: '100%'
   },
 
   onLoad(options = {}) {
@@ -125,7 +127,8 @@ Page({
 
     this.setData({
       guidePlacement: placement,
-      guideBoxStyle: this.makeGuideBoxStyle(placement)
+      guideBoxStyle: this.makeGuideBoxStyle(placement),
+      guideScaleText: `${Math.round(placement.scale * 100)}%`
     })
   },
 
@@ -133,7 +136,8 @@ Page({
     const placement = this.getDefaultGuidePlacement()
     this.setData({
       guidePlacement: placement,
-      guideBoxStyle: this.makeGuideBoxStyle(placement)
+      guideBoxStyle: this.makeGuideBoxStyle(placement),
+      guideScaleText: `${Math.round(placement.scale * 100)}%`
     })
   },
 
@@ -160,19 +164,37 @@ Page({
     })
   },
 
+  setSmallGuide() {
+    this.setGuideScale(0.75)
+  },
+
+  setNormalGuide() {
+    this.setGuideScale(1)
+  },
+
+  setLargeGuide() {
+    this.setGuideScale(1.35)
+  },
+
+  startPinchGesture(touches) {
+    const placement = this.data.guidePlacement
+
+    this.guideGesture = {
+      type: 'pinch',
+      startDistance: Math.max(getTouchDistance(touches), 1),
+      startCenter: getTouchCenter(touches),
+      startX: placement.x,
+      startY: placement.y,
+      startScale: placement.scale
+    }
+  },
+
   onGuideTouchStart(event) {
     const touches = event.touches || []
     const placement = this.data.guidePlacement
 
     if (touches.length >= 2) {
-      this.guideGesture = {
-        type: 'pinch',
-        startDistance: Math.max(getTouchDistance(touches), 1),
-        startCenter: getTouchCenter(touches),
-        startX: placement.x,
-        startY: placement.y,
-        startScale: placement.scale
-      }
+      this.startPinchGesture(touches)
       return
     }
 
@@ -190,14 +212,20 @@ Page({
   onGuideTouchMove(event) {
     const touches = event.touches || []
 
-    if (!this.guideGesture || touches.length === 0) {
+    if (touches.length === 0) {
+      return
+    }
+
+    if (touches.length >= 2 && (!this.guideGesture || this.guideGesture.type !== 'pinch')) {
+      this.startPinchGesture(touches)
       return
     }
 
     if (touches.length >= 2 && this.guideGesture.type === 'pinch') {
       const currentDistance = getTouchDistance(touches)
       const currentCenter = getTouchCenter(touches)
-      const scaleRatio = currentDistance / this.guideGesture.startDistance
+      const distanceRatio = currentDistance / this.guideGesture.startDistance
+      const scaleRatio = 1 + (distanceRatio - 1) * GUIDE_PINCH_SENSITIVITY
 
       this.updateGuidePlacement({
         x: this.guideGesture.startX + currentCenter.x - this.guideGesture.startCenter.x,
