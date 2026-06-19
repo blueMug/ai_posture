@@ -193,6 +193,20 @@ const poseTemplates = [
     guideImage: '/assets/extracted/baidu_pose_v4_head_body_hand_silhouette.png',
     thumbnailImage: '/assets/extracted/baidu_pose_v4_head_body_hand_silhouette.png',
     parts: []
+  },
+  {
+    id: 'tiktok-contour-image',
+    categoryId: 'extracted',
+    categoryName: '图片提取',
+    name: '上传轮廓图测试',
+    tip: '使用用户提供的轮廓图直接叠加',
+    description: '该模板直接使用图片文件作为相机引导层。当前素材没有透明通道，真机叠加会有遮挡；后续替换为透明 PNG 后效果最佳。',
+    badge: '图片',
+    accent: '#f4f7ff',
+    gradient: 'linear-gradient(150deg, #eef2ff 0%, #7f8da3 100%)',
+    guideImage: '/assets/poses/tiktok-contour-pose.png',
+    thumbnailImage: '/assets/poses/tiktok-contour-pose.png',
+    parts: []
   }
 ]
 
