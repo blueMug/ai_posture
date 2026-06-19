@@ -1,0 +1,14 @@
+<view class="page">
+  <image class="photo" src="{{photoPath}}" mode="aspectFit"></image>
+
+  <view class="top-bar">
+    <view class="back-btn" bindtap="retake">重拍</view>
+    <view class="title">照片预览</view>
+    <view class="placeholder"></view>
+  </view>
+
+  <view class="bottom-panel safe-area-bottom">
+    <view class="hint">姿势线条只用于拍摄引导，不会出现在照片里。</view>
+    <button class="save-btn" bindtap="savePhoto">保存到相册</button>
+  </view>
+</view>

@@ -1,0 +1,20 @@
+{
+  "pages": [
+    "pages/camera/index",
+    "pages/preview/index"
+  ],
+  "window": {
+    "navigationStyle": "custom",
+    "backgroundColor": "#111111",
+    "backgroundTextStyle": "light"
+  },
+  "permission": {
+    "scope.camera": {
+      "desc": "用于拍摄带姿势引导的照片"
+    },
+    "scope.writePhotosAlbum": {
+      "desc": "用于将拍摄照片保存到相册"
+    }
+  },
+  "sitemapLocation": "sitemap.json"
+}

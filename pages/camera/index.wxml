@@ -1,0 +1,40 @@
+<view class="page">
+  <camera
+    class="camera"
+    device-position="{{devicePosition}}"
+    flash="off"
+    resolution="high"
+    binderror="onCameraError"
+  >
+    <cover-view class="top-bar">
+      <cover-view class="title">姿势引导相机</cover-view>
+      <cover-view class="ghost-btn" bindtap="switchCamera">切换镜头</cover-view>
+    </cover-view>
+
+    <cover-view class="pose-stage">
+      <cover-view class="pose-name">{{currentTemplate.name}}</cover-view>
+      <cover-view
+        wx:for="{{currentTemplate.parts}}"
+        wx:key="id"
+        class="pose-part {{item.type}}"
+        style="{{item.style}}"
+      ></cover-view>
+    </cover-view>
+
+    <cover-view class="bottom-panel safe-area-bottom">
+      <cover-view class="template-switch">
+        <cover-view class="round-btn" bindtap="prevTemplate">上一个</cover-view>
+        <cover-view class="template-text">{{currentTemplate.tip}}</cover-view>
+        <cover-view class="round-btn" bindtap="nextTemplate">下一个</cover-view>
+      </cover-view>
+
+      <cover-view class="shoot-row">
+        <cover-view class="small-btn" bindtap="clearGuide">隐藏线条</cover-view>
+        <cover-view class="shutter" bindtap="takePhoto">
+          <cover-view class="shutter-inner"></cover-view>
+        </cover-view>
+        <cover-view class="small-btn" bindtap="showGuide">显示线条</cover-view>
+      </cover-view>
+    </cover-view>
+  </camera>
+</view>

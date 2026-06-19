@@ -1,0 +1,159 @@
+.page,
+.camera {
+  width: 100vw;
+  height: 100vh;
+}
+
+.camera {
+  display: block;
+}
+
+.top-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 10;
+  height: 160rpx;
+  padding: 72rpx 32rpx 0;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0));
+}
+
+.title {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.ghost-btn,
+.small-btn,
+.round-btn {
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.36);
+  border: 1rpx solid rgba(255, 255, 255, 0.36);
+  text-align: center;
+}
+
+.ghost-btn {
+  min-width: 144rpx;
+  height: 64rpx;
+  line-height: 64rpx;
+  border-radius: 32rpx;
+  font-size: 24rpx;
+}
+
+.pose-stage {
+  position: absolute;
+  left: 7vw;
+  right: 7vw;
+  top: 13vh;
+  bottom: 21vh;
+  z-index: 5;
+}
+
+.pose-name {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  padding: 12rpx 28rpx;
+  border-radius: 999rpx;
+  color: #111111;
+  font-size: 26rpx;
+  font-weight: 600;
+  background: rgba(255, 233, 92, 0.9);
+}
+
+.pose-part {
+  position: absolute;
+  z-index: 6;
+}
+
+.line {
+  height: 8rpx;
+  border-radius: 999rpx;
+  box-shadow: 0 0 18rpx rgba(255, 233, 92, 0.68);
+  transform-origin: left center;
+}
+
+.joint {
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 0 16rpx rgba(255, 255, 255, 0.75);
+}
+
+.head {
+  border-radius: 999rpx;
+  border: 8rpx solid rgba(255, 233, 92, 0.92);
+  box-shadow: 0 0 22rpx rgba(255, 233, 92, 0.65);
+  box-sizing: border-box;
+}
+
+.bottom-panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  padding: 28rpx 28rpx 44rpx;
+  box-sizing: border-box;
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0));
+}
+
+.template-switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28rpx;
+}
+
+.round-btn {
+  width: 136rpx;
+  height: 60rpx;
+  line-height: 60rpx;
+  border-radius: 30rpx;
+  font-size: 24rpx;
+}
+
+.template-text {
+  flex: 1;
+  padding: 0 20rpx;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 24rpx;
+  text-align: center;
+}
+
+.shoot-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.small-btn {
+  width: 152rpx;
+  height: 58rpx;
+  line-height: 58rpx;
+  border-radius: 29rpx;
+  font-size: 24rpx;
+}
+
+.shutter {
+  width: 132rpx;
+  height: 132rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shutter-inner {
+  width: 104rpx;
+  height: 104rpx;
+  border-radius: 999rpx;
+  background: #ffffff;
+}
