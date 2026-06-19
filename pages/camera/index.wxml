@@ -52,6 +52,18 @@
         <cover-view class="guide-tool-btn reset" bindtap="resetGuidePlacement">重置</cover-view>
         <cover-view class="guide-tool-btn" bindtap="zoomGuideIn">+</cover-view>
       </cover-view>
+      <cover-view wx:if="{{currentTemplate.guideImage}}" class="guide-move-tools">
+        <cover-view class="guide-move-row">
+          <cover-view class="guide-move-btn placeholder"></cover-view>
+          <cover-view class="guide-move-btn" bindtap="moveGuideUp">上</cover-view>
+          <cover-view class="guide-move-btn placeholder"></cover-view>
+        </cover-view>
+        <cover-view class="guide-move-row">
+          <cover-view class="guide-move-btn" bindtap="moveGuideLeft">左</cover-view>
+          <cover-view class="guide-move-btn" bindtap="moveGuideDown">下</cover-view>
+          <cover-view class="guide-move-btn" bindtap="moveGuideRight">右</cover-view>
+        </cover-view>
+      </cover-view>
     </cover-view>
 
     <cover-view class="camera-switch-float" bindtap="switchCamera">切换镜头</cover-view>

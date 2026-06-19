@@ -6,6 +6,7 @@ const GUIDE_MAX_SCALE = 2.6
 const GUIDE_SCALE_STEP = 0.2
 const GUIDE_PINCH_SENSITIVITY = 1.8
 const GUIDE_RESIZE_DRAG_DISTANCE = 220
+const GUIDE_MOVE_STEP = 18
 
 const hideTemplateGuide = (template) => ({
   ...template,
@@ -177,6 +178,31 @@ Page({
 
   zoomGuideOut() {
     this.setGuideScale(this.data.guidePlacement.scale - GUIDE_SCALE_STEP)
+  },
+
+  moveGuideUp() {
+    this.moveGuideBy(0, -GUIDE_MOVE_STEP)
+  },
+
+  moveGuideDown() {
+    this.moveGuideBy(0, GUIDE_MOVE_STEP)
+  },
+
+  moveGuideLeft() {
+    this.moveGuideBy(-GUIDE_MOVE_STEP, 0)
+  },
+
+  moveGuideRight() {
+    this.moveGuideBy(GUIDE_MOVE_STEP, 0)
+  },
+
+  moveGuideBy(deltaX, deltaY) {
+    const placement = this.data.guidePlacement
+
+    this.updateGuidePlacement({
+      x: placement.x + deltaX,
+      y: placement.y + deltaY
+    })
   },
 
   setGuideScale(nextScale) {
