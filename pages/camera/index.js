@@ -8,11 +8,15 @@ const CAMERA_DEFAULT_MAX_ZOOM = 10
 const hideTemplateGuide = (template) => ({
   ...template,
   guideImage: '',
-  thumbnailImage: '',
   parts: []
 })
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max)
+const isModelPose = (template) => template && template.categoryId === 'model-pairs'
+const getGuideToggleState = (template) => ({
+  showModelToggle: Boolean(isModelPose(template) && template.thumbnailImage),
+  modelToggleImage: isModelPose(template) ? template.thumbnailImage : ''
+})
 
 Page({
   data: {
@@ -25,7 +29,9 @@ Page({
     cameraZoomText: '1.0x',
     guideToggleTitle: '隐藏线条',
     guideLoadFailed: false,
-    keepGuideForConfirm: false
+    keepGuideForConfirm: false,
+    showModelToggle: false,
+    modelToggleImage: ''
   },
 
   onLoad(options = {}) {
@@ -36,12 +42,13 @@ Page({
 
   setTemplate(index) {
     const nextIndex = (index + poseTemplates.length) % poseTemplates.length
+    const template = poseTemplates[nextIndex]
+
     this.setData({
       currentIndex: nextIndex,
       guideLoadFailed: false,
-      currentTemplate: this.data.guideVisible
-        ? poseTemplates[nextIndex]
-        : hideTemplateGuide(poseTemplates[nextIndex])
+      currentTemplate: this.data.guideVisible ? template : hideTemplateGuide(template),
+      ...getGuideToggleState(template)
     })
   },
 
@@ -54,10 +61,13 @@ Page({
   },
 
   showGuide() {
+    const currentTemplate = poseTemplates[this.data.currentIndex]
+
     this.setData({
       guideVisible: true,
-      currentTemplate: poseTemplates[this.data.currentIndex],
-      guideToggleTitle: '隐藏线条'
+      currentTemplate,
+      guideToggleTitle: '隐藏线条',
+      ...getGuideToggleState(currentTemplate)
     })
   },
 
@@ -66,7 +76,8 @@ Page({
     this.setData({
       guideVisible: false,
       currentTemplate: hideTemplateGuide(currentTemplate),
-      guideToggleTitle: '显示线条'
+      guideToggleTitle: '显示线条',
+      ...getGuideToggleState(currentTemplate)
     })
   },
 

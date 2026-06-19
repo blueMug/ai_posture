@@ -35,11 +35,19 @@
   <view class="bottom-panel safe-area-bottom">
     <view class="shoot-row">
       <view
-        class="guide-toggle-btn {{guideVisible ? 'active' : 'muted'}}"
+        class="guide-toggle-btn {{guideVisible ? 'active' : 'muted'}} {{showModelToggle ? 'model-toggle-btn' : ''}}"
         bindtap="toggleGuide"
         aria-label="{{guideToggleTitle}}"
       >
-        <view class="eye-icon">
+        <block wx:if="{{showModelToggle}}">
+          <image
+            class="model-toggle-image"
+            src="{{modelToggleImage}}"
+            mode="aspectFill"
+          ></image>
+          <view wx:if="{{!guideVisible}}" class="model-toggle-mask">轮廓关</view>
+        </block>
+        <view wx:else class="eye-icon">
           <view class="eye-dot"></view>
           <view wx:if="{{!guideVisible}}" class="eye-slash"></view>
         </view>
