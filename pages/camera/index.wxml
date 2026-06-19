@@ -39,9 +39,17 @@
         <cover-view class="small-btn" bindtap="showGuide">显示线条</cover-view>
       </cover-view>
       <cover-view class="camera-zoom-row">
-        <cover-view class="zoom-btn" bindtap="zoomCameraOut">-</cover-view>
-        <cover-view class="zoom-text">{{cameraZoomText}}</cover-view>
-        <cover-view class="zoom-btn" bindtap="zoomCameraIn">+</cover-view>
+        <cover-view class="zoom-label">1x</cover-view>
+        <cover-view
+          class="zoom-track"
+          catchtouchstart="onZoomSliderTouchStart"
+          catchtouchmove="onZoomSliderTouchMove"
+        >
+          <cover-view class="zoom-track-bg"></cover-view>
+          <cover-view class="zoom-track-fill" style="width: {{cameraZoomPercent}}%;"></cover-view>
+          <cover-view class="zoom-thumb" style="left: {{cameraZoomPercent}}%;"></cover-view>
+        </cover-view>
+        <cover-view class="zoom-label">{{cameraZoomText}}</cover-view>
       </cover-view>
       <cover-view
         class="confirm-toggle {{keepGuideForConfirm ? 'active' : ''}}"

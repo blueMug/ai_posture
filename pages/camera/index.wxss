@@ -124,10 +124,12 @@
 }
 
 .camera-zoom-row {
-  width: 252rpx;
-  height: 56rpx;
+  width: 590rpx;
+  height: 72rpx;
   margin: 22rpx auto 0;
-  border-radius: 28rpx;
+  padding: 0 20rpx;
+  border-radius: 36rpx;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -135,21 +137,49 @@
   border: 1rpx solid rgba(255, 255, 255, 0.28);
 }
 
-.zoom-btn {
-  width: 72rpx;
-  height: 56rpx;
-  line-height: 56rpx;
-  color: #ffffff;
-  font-size: 34rpx;
+.zoom-label {
+  width: 64rpx;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 22rpx;
+  font-weight: 700;
   text-align: center;
 }
 
-.zoom-text {
-  flex: 1;
-  color: rgba(255, 255, 255, 0.88);
-  font-size: 24rpx;
-  font-weight: 700;
-  text-align: center;
+.zoom-track {
+  position: relative;
+  width: 430rpx;
+  height: 72rpx;
+}
+
+.zoom-track-bg,
+.zoom-track-fill {
+  position: absolute;
+  left: 0;
+  top: 31rpx;
+  height: 10rpx;
+  border-radius: 999rpx;
+}
+
+.zoom-track-bg {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.zoom-track-fill {
+  background: #ffe95c;
+}
+
+.zoom-thumb {
+  position: absolute;
+  top: 18rpx;
+  width: 36rpx;
+  height: 36rpx;
+  margin-left: -18rpx;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 6rpx solid #ffe95c;
+  box-sizing: border-box;
+  box-shadow: 0 6rpx 18rpx rgba(0, 0, 0, 0.32);
 }
 
 .confirm-toggle {
