@@ -9,9 +9,7 @@
     binderror="onCameraError"
   >
     <cover-view class="top-bar">
-      <cover-view class="ghost-btn" bindtap="backToHome">选姿势</cover-view>
       <cover-view class="title">姿势引导相机</cover-view>
-      <cover-view class="top-placeholder"></cover-view>
     </cover-view>
 
     <cover-view class="pose-stage">
@@ -58,7 +56,7 @@
         </view>
         <view class="switch-icon-btn" bindtap="switchCamera">⟳</view>
       </view>
-      <view class="shoot-placeholder"></view>
+      <view class="select-pose-btn" bindtap="backToHome">选姿势</view>
     </view>
     <view class="camera-zoom-row">
       <view class="zoom-label">1x</view>

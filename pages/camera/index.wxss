@@ -25,7 +25,7 @@
   box-sizing: border-box;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   background: linear-gradient(180deg, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0));
 }
 
@@ -33,26 +33,6 @@
   font-size: 34rpx;
   font-weight: 600;
   color: #ffffff;
-}
-
-.ghost-btn {
-  color: #ffffff;
-  background: rgba(0, 0, 0, 0.36);
-  border: 1rpx solid rgba(255, 255, 255, 0.36);
-  text-align: center;
-}
-
-.ghost-btn {
-  min-width: 144rpx;
-  height: 64rpx;
-  line-height: 64rpx;
-  border-radius: 32rpx;
-  font-size: 24rpx;
-}
-
-.top-placeholder {
-  width: 144rpx;
-  height: 64rpx;
 }
 
 .pose-stage {
@@ -128,7 +108,7 @@
 }
 
 .guide-toggle-btn,
-.shoot-placeholder {
+.select-pose-btn {
   width: 84rpx;
   height: 84rpx;
 }
@@ -178,6 +158,19 @@
   font-size: 18rpx;
   text-align: center;
   background: rgba(0, 0, 0, 0.58);
+}
+
+.select-pose-btn {
+  width: 108rpx;
+  height: 68rpx;
+  line-height: 68rpx;
+  border-radius: 999rpx;
+  color: #ffffff;
+  font-size: 24rpx;
+  font-weight: 700;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.38);
+  border: 1rpx solid rgba(255, 255, 255, 0.36);
 }
 
 .eye-icon {
