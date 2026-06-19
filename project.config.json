@@ -1,5 +1,6 @@
 {
   "description": "AI Posture camera guide mini program",
+  "miniprogramRoot": "./",
   "packOptions": {
     "ignore": []
   },
