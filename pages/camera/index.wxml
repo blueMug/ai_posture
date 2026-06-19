@@ -57,8 +57,6 @@
       </cover-view>
     </cover-view>
 
-    <cover-view class="camera-switch-float" bindtap="switchCamera">切换镜头</cover-view>
-
     <cover-view class="bottom-panel safe-area-bottom">
       <cover-view class="template-switch">
         <cover-view class="round-btn" bindtap="prevTemplate">上一个</cover-view>
@@ -68,8 +66,11 @@
 
       <cover-view class="shoot-row">
         <cover-view class="small-btn" bindtap="clearGuide">隐藏线条</cover-view>
-        <cover-view class="shutter" bindtap="takePhoto">
-          <cover-view class="shutter-inner"></cover-view>
+        <cover-view class="shutter-group">
+          <cover-view class="shutter" bindtap="takePhoto">
+            <cover-view class="shutter-inner"></cover-view>
+          </cover-view>
+          <cover-view class="switch-icon-btn" bindtap="switchCamera">⟳</cover-view>
         </cover-view>
         <cover-view class="small-btn" bindtap="showGuide">显示线条</cover-view>
       </cover-view>
