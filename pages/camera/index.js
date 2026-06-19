@@ -40,7 +40,15 @@ Page({
       scale: 1
     },
     guideBoxStyle: '',
-    guideScaleText: '100%'
+    guideScaleText: '100%',
+    guideScalePresets: [
+      { label: '50%', scale: 0.5 },
+      { label: '75%', scale: 0.75 },
+      { label: '100%', scale: 1 },
+      { label: '125%', scale: 1.25 },
+      { label: '150%', scale: 1.5 },
+      { label: '200%', scale: 2 }
+    ]
   },
 
   onLoad(options = {}) {
@@ -164,16 +172,11 @@ Page({
     })
   },
 
-  setSmallGuide() {
-    this.setGuideScale(0.75)
-  },
-
-  setNormalGuide() {
-    this.setGuideScale(1)
-  },
-
-  setLargeGuide() {
-    this.setGuideScale(1.35)
+  setGuideScalePreset(event) {
+    const scale = Number(event.currentTarget.dataset.scale)
+    if (!Number.isNaN(scale)) {
+      this.setGuideScale(scale)
+    }
   },
 
   startPinchGesture(touches) {

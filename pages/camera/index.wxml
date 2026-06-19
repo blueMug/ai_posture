@@ -30,9 +30,13 @@
       </cover-view>
       <cover-view wx:if="{{currentTemplate.guideImage}}" class="guide-help">单指拖动，双指缩放 {{guideScaleText}}</cover-view>
       <cover-view wx:if="{{currentTemplate.guideImage}}" class="guide-presets">
-        <cover-view class="guide-preset-btn" bindtap="setSmallGuide">小</cover-view>
-        <cover-view class="guide-preset-btn" bindtap="setNormalGuide">标准</cover-view>
-        <cover-view class="guide-preset-btn" bindtap="setLargeGuide">大</cover-view>
+        <cover-view
+          wx:for="{{guideScalePresets}}"
+          wx:key="label"
+          class="guide-preset-btn"
+          data-scale="{{item.scale}}"
+          bindtap="setGuideScalePreset"
+        >{{item.label}}</cover-view>
       </cover-view>
       <cover-view wx:if="{{currentTemplate.guideImage}}" class="guide-tools">
         <cover-view class="guide-tool-btn" bindtap="zoomGuideOut">-</cover-view>

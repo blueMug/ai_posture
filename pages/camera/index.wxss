@@ -104,19 +104,19 @@
 }
 
 .guide-preset-btn {
-  width: 84rpx;
+  width: 76rpx;
   height: 52rpx;
   line-height: 52rpx;
   border-radius: 26rpx;
   color: #ffffff;
-  font-size: 22rpx;
+  font-size: 21rpx;
   text-align: center;
   background: rgba(0, 0, 0, 0.34);
   border: 1rpx solid rgba(255, 255, 255, 0.34);
 }
 
 .guide-preset-btn + .guide-preset-btn {
-  margin-left: 12rpx;
+  margin-left: 8rpx;
 }
 
 .guide-tools {
