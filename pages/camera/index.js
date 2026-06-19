@@ -1,6 +1,13 @@
 const app = getApp()
 const { poseTemplates, findPoseIndex } = require('../../utils/poses')
 
+const hideTemplateGuide = (template) => ({
+  ...template,
+  guideImage: '',
+  thumbnailImage: '',
+  parts: []
+})
+
 Page({
   data: {
     devicePosition: 'back',
@@ -20,7 +27,7 @@ Page({
       currentIndex: nextIndex,
       currentTemplate: this.data.guideVisible
         ? poseTemplates[nextIndex]
-        : { ...poseTemplates[nextIndex], parts: [] }
+        : hideTemplateGuide(poseTemplates[nextIndex])
     })
   },
 
@@ -43,7 +50,7 @@ Page({
     const currentTemplate = poseTemplates[this.data.currentIndex]
     this.setData({
       guideVisible: false,
-      currentTemplate: { ...currentTemplate, parts: [] }
+      currentTemplate: hideTemplateGuide(currentTemplate)
     })
   },
 

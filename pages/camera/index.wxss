@@ -74,6 +74,16 @@
   z-index: 6;
 }
 
+.pose-guide-image {
+  position: absolute;
+  left: 0;
+  top: 6%;
+  z-index: 6;
+  width: 100%;
+  height: 88%;
+  opacity: 0.92;
+}
+
 .marker-line {
   border-radius: 999rpx;
   box-shadow:

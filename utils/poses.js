@@ -178,6 +178,21 @@ const poseTemplates = [
       makeLabel('leg-label-2', '交', 31, 73, -42, 4.2),
       makeLabel('leg-label-3', '叠', 27, 79, -42, 4.2)
     ]
+  },
+  {
+    id: 'leaning-flower-extracted',
+    categoryId: 'extracted',
+    categoryName: '图片提取',
+    name: '侧身捧花倾斜',
+    tip: '适合花束、半身、轻微侧倾构图',
+    description: '从示例图片提取并清洁化的姿势轮廓：保留头部占位、颈肩、身体曲线和手部提示，避免把头发外沿当作主轮廓。',
+    badge: '提取',
+    accent: '#f4f7ff',
+    gradient: 'linear-gradient(150deg, #e6f7ef 0%, #6f9a73 100%)',
+    modelImage: '/assets/extracted/baidu_pose_source.jpeg',
+    guideImage: '/assets/extracted/baidu_pose_v4_head_body_hand_silhouette.png',
+    thumbnailImage: '/assets/extracted/baidu_pose_v4_head_body_hand_silhouette.png',
+    parts: []
   }
 ]
 
@@ -193,6 +208,12 @@ const poseCategories = [
     name: '休闲坐姿',
     subtitle: '长椅、花店、公园和街角',
     poses: poseTemplates.filter((pose) => pose.categoryId === 'leisure')
+  },
+  {
+    id: 'extracted',
+    name: '图片提取',
+    subtitle: '由人物照片生成的轮廓模板',
+    poses: poseTemplates.filter((pose) => pose.categoryId === 'extracted')
   }
 ]
 

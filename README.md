@@ -9,6 +9,7 @@
 - 点击姿势后再打开相机
 - 原生相机全屏预览
 - 3 套固定轮廓引导模板
+- 支持图片提取型透明 PNG 姿势轮廓模板
 - 模板左右切换
 - 前后摄像头切换
 - 显示或隐藏姿势线条
@@ -29,3 +30,13 @@
 - 姿势线条只在拍摄预览时显示，不会合成到最终照片里。
 - 暂不做人像识别、姿势识别或实时纠偏提示。
 - 姿势模板只保留轮廓型表达，不再维护骨架、关节点或人体关键点线条。
+
+## 图片姿势提取
+
+离线提取工具放在 `tools/`：
+
+```bash
+python3 tools/extract_pose_outline.py assets/extracted/baidu_pose_source.jpeg --id demo_pose
+```
+
+脚本会输出透明底 PNG、SVG 和 JSON 模板。当前默认使用 OpenCV GrabCut 作为兜底分割，效果只适合调试；产品级需要把 `tools/extract_pose_outline.py` 中的 `segment_person()` 替换为 MODNet、SAM/SAM2 或 MediaPipe ImageSegmenter 等模型，并结合 Pose/Hands 关键点做规则化轮廓。
