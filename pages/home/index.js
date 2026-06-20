@@ -1,5 +1,6 @@
 const { poseTemplates, poseCategories } = require('../../utils/poses')
 const { cachePoseCategories } = require('../../utils/imageCache')
+const { adSlots } = require('../../utils/adConfig')
 
 const GALLERY_TARGET_CATEGORY_KEY = 'galleryTargetCategoryId'
 const RECOMMEND_LIMIT_PER_CATEGORY = 4
@@ -133,7 +134,8 @@ Page({
     searchKeyword: '',
     poseCategories: [],
     hasSearchResult: true,
-    failedPoseImages: {}
+    failedPoseImages: {},
+    adSlot: adSlots.homeRecommendBottom
   },
 
   onLoad() {
