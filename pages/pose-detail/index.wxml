@@ -1,0 +1,31 @@
+<view class="page">
+  <view class="top-bar">
+    <view class="back-btn" bindtap="backToHome">返回</view>
+    <view class="title">真人姿势大图</view>
+    <view class="placeholder"></view>
+  </view>
+
+  <view class="content">
+    <view class="copy">
+      <view class="pose-name">{{pose.name}}</view>
+      <view class="pose-tip">{{pose.tip}}</view>
+      <view class="pose-desc">{{pose.description}}</view>
+    </view>
+
+    <view class="photo-card" style="background: {{pose.gradient}};">
+      <view class="photo-glow"></view>
+      <image
+        class="pose-photo"
+        src="{{displayImage}}"
+        mode="aspectFit"
+        bindtap="openCamera"
+        binderror="onImageError"
+      ></image>
+      <view class="tap-tip">点击大图进入拍照</view>
+    </view>
+  </view>
+
+  <view class="bottom-panel safe-area-bottom">
+    <button class="shoot-btn" bindtap="openCamera">开始拍</button>
+  </view>
+</view>

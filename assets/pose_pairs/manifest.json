@@ -1,162 +1,27 @@
 [
   {
-    "id": "combine1_r01_g01",
-    "demo": "combine_pairs/combine1/combine1_r01_g01_demo.png",
-    "contour": "combine_pairs/combine1/combine1_r01_g01_contour_hd.png"
+    "id": "custom1_r01_g01",
+    "demo": "pose_pairs/custom1/custom1_r01_g01_demo.png",
+    "contour": "pose_pairs/custom1/custom1_r01_g01_contour_hd.png"
   },
   {
-    "id": "combine1_r01_g02",
-    "demo": "combine_pairs/combine1/combine1_r01_g02_demo.png",
-    "contour": "combine_pairs/combine1/combine1_r01_g02_contour_hd.png"
+    "id": "custom2_r01_g01",
+    "demo": "pose_pairs/custom2/custom2_r01_g01_demo.png",
+    "contour": "pose_pairs/custom2/custom2_r01_g01_contour_hd.png"
   },
   {
-    "id": "combine1_r02_g01",
-    "demo": "combine_pairs/combine1/combine1_r02_g01_demo.png",
-    "contour": "combine_pairs/combine1/combine1_r02_g01_contour_hd.png"
+    "id": "custom3_r01_g01",
+    "demo": "pose_pairs/custom3/custom3_r01_g01_demo.png",
+    "contour": "pose_pairs/custom3/custom3_r01_g01_contour_hd.png"
   },
   {
-    "id": "combine1_r02_g02",
-    "demo": "combine_pairs/combine1/combine1_r02_g02_demo.png",
-    "contour": "combine_pairs/combine1/combine1_r02_g02_contour_hd.png"
+    "id": "custom4_r01_g01",
+    "demo": "pose_pairs/custom4/custom4_r01_g01_demo.png",
+    "contour": "pose_pairs/custom4/custom4_r01_g01_contour_hd.png"
   },
   {
-    "id": "combine1_r03_g01",
-    "demo": "combine_pairs/combine1/combine1_r03_g01_demo.png",
-    "contour": "combine_pairs/combine1/combine1_r03_g01_contour_hd.png"
-  },
-  {
-    "id": "combine1_r03_g02",
-    "demo": "combine_pairs/combine1/combine1_r03_g02_demo.png",
-    "contour": "combine_pairs/combine1/combine1_r03_g02_contour_hd.png"
-  },
-  {
-    "id": "combine2_r01_g01",
-    "demo": "combine_pairs/combine2/combine2_r01_g01_demo.png",
-    "contour": "combine_pairs/combine2/combine2_r01_g01_contour_hd.png"
-  },
-  {
-    "id": "combine2_r01_g02",
-    "demo": "combine_pairs/combine2/combine2_r01_g02_demo.png",
-    "contour": "combine_pairs/combine2/combine2_r01_g02_contour_hd.png"
-  },
-  {
-    "id": "combine2_r02_g01",
-    "demo": "combine_pairs/combine2/combine2_r02_g01_demo.png",
-    "contour": "combine_pairs/combine2/combine2_r02_g01_contour_hd.png"
-  },
-  {
-    "id": "combine2_r02_g02",
-    "demo": "combine_pairs/combine2/combine2_r02_g02_demo.png",
-    "contour": "combine_pairs/combine2/combine2_r02_g02_contour_hd.png"
-  },
-  {
-    "id": "combine2_r03_g01",
-    "demo": "combine_pairs/combine2/combine2_r03_g01_demo.png",
-    "contour": "combine_pairs/combine2/combine2_r03_g01_contour_hd.png"
-  },
-  {
-    "id": "combine2_r03_g02",
-    "demo": "combine_pairs/combine2/combine2_r03_g02_demo.png",
-    "contour": "combine_pairs/combine2/combine2_r03_g02_contour_hd.png"
-  },
-  {
-    "id": "combine3_r01_g01",
-    "demo": "combine_pairs/combine3/combine3_r01_g01_demo.png",
-    "contour": "combine_pairs/combine3/combine3_r01_g01_contour_hd.png"
-  },
-  {
-    "id": "combine3_r01_g02",
-    "demo": "combine_pairs/combine3/combine3_r01_g02_demo.png",
-    "contour": "combine_pairs/combine3/combine3_r01_g02_contour_hd.png"
-  },
-  {
-    "id": "combine3_r02_g01",
-    "demo": "combine_pairs/combine3/combine3_r02_g01_demo.png",
-    "contour": "combine_pairs/combine3/combine3_r02_g01_contour_hd.png"
-  },
-  {
-    "id": "combine3_r02_g02",
-    "demo": "combine_pairs/combine3/combine3_r02_g02_demo.png",
-    "contour": "combine_pairs/combine3/combine3_r02_g02_contour_hd.png"
-  },
-  {
-    "id": "combine3_r03_g01",
-    "demo": "combine_pairs/combine3/combine3_r03_g01_demo.png",
-    "contour": "combine_pairs/combine3/combine3_r03_g01_contour_hd.png"
-  },
-  {
-    "id": "combine3_r03_g02",
-    "demo": "combine_pairs/combine3/combine3_r03_g02_demo.png",
-    "contour": "combine_pairs/combine3/combine3_r03_g02_contour_hd.png"
-  },
-  {
-    "id": "combine4_r01_g01",
-    "demo": "combine_pairs/combine4/combine4_r01_g01_demo.png",
-    "contour": "combine_pairs/combine4/combine4_r01_g01_contour_hd.png"
-  },
-  {
-    "id": "combine4_r01_g02",
-    "demo": "combine_pairs/combine4/combine4_r01_g02_demo.png",
-    "contour": "combine_pairs/combine4/combine4_r01_g02_contour_hd.png"
-  },
-  {
-    "id": "combine4_r02_g01",
-    "demo": "combine_pairs/combine4/combine4_r02_g01_demo.png",
-    "contour": "combine_pairs/combine4/combine4_r02_g01_contour_hd.png"
-  },
-  {
-    "id": "combine4_r02_g02",
-    "demo": "combine_pairs/combine4/combine4_r02_g02_demo.png",
-    "contour": "combine_pairs/combine4/combine4_r02_g02_contour_hd.png"
-  },
-  {
-    "id": "combine4_r03_g01",
-    "demo": "combine_pairs/combine4/combine4_r03_g01_demo.png",
-    "contour": "combine_pairs/combine4/combine4_r03_g01_contour_hd.png"
-  },
-  {
-    "id": "combine4_r03_g02",
-    "demo": "combine_pairs/combine4/combine4_r03_g02_demo.png",
-    "contour": "combine_pairs/combine4/combine4_r03_g02_contour_hd.png"
-  },
-  {
-    "id": "combine5_r01_g01",
-    "demo": "combine_pairs/combine5/combine5_r01_g01_demo.png",
-    "contour": "combine_pairs/combine5/combine5_r01_g01_contour_hd.png"
-  },
-  {
-    "id": "combine5_r01_g02",
-    "demo": "combine_pairs/combine5/combine5_r01_g02_demo.png",
-    "contour": "combine_pairs/combine5/combine5_r01_g02_contour_hd.png"
-  },
-  {
-    "id": "combine5_r02_g01",
-    "demo": "combine_pairs/combine5/combine5_r02_g01_demo.png",
-    "contour": "combine_pairs/combine5/combine5_r02_g01_contour_hd.png"
-  },
-  {
-    "id": "combine5_r02_g02",
-    "demo": "combine_pairs/combine5/combine5_r02_g02_demo.png",
-    "contour": "combine_pairs/combine5/combine5_r02_g02_contour_hd.png"
-  },
-  {
-    "id": "combine5_r03_g01",
-    "demo": "combine_pairs/combine5/combine5_r03_g01_demo.png",
-    "contour": "combine_pairs/combine5/combine5_r03_g01_contour_hd.png"
-  },
-  {
-    "id": "combine5_r03_g02",
-    "demo": "combine_pairs/combine5/combine5_r03_g02_demo.png",
-    "contour": "combine_pairs/combine5/combine5_r03_g02_contour_hd.png"
-  },
-  {
-    "id": "combine5_r04_g01",
-    "demo": "combine_pairs/combine5/combine5_r04_g01_demo.png",
-    "contour": "combine_pairs/combine5/combine5_r04_g01_contour_hd.png"
-  },
-  {
-    "id": "combine5_r04_g02",
-    "demo": "combine_pairs/combine5/combine5_r04_g02_demo.png",
-    "contour": "combine_pairs/combine5/combine5_r04_g02_contour_hd.png"
+    "id": "custom5_r01_g01",
+    "demo": "pose_pairs/custom5/custom5_r01_g01_demo.png",
+    "contour": "pose_pairs/custom5/custom5_r01_g01_contour_hd.png"
   }
 ]

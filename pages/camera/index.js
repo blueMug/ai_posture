@@ -8,6 +8,8 @@ const CAMERA_MIN_ZOOM = 1
 const CAMERA_DEFAULT_MAX_ZOOM = 10
 const GUIDE_MAX_OFFSET_X = 120
 const GUIDE_MAX_OFFSET_Y = 160
+const GUIDE_MODE_OUTLINE = 'outline'
+const GUIDE_MODE_PHOTO = 'photo'
 
 const hideTemplateGuide = (template) => ({
   ...template,
@@ -17,15 +19,48 @@ const hideTemplateGuide = (template) => ({
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max)
 const isModelPose = (template) => template && template.categoryId === 'model-pairs'
-const getGuideToggleState = (template) => ({
-  showModelToggle: Boolean(isModelPose(template) && template.thumbnailImage),
-  modelToggleImage: isModelPose(template) ? template.thumbnailImage : ''
-})
+const canUseModelPhotoGuide = (template) => Boolean(isModelPose(template) && template.modelImage)
+const normalizeGuideMode = (template, guideMode) => (
+  guideMode === GUIDE_MODE_PHOTO && canUseModelPhotoGuide(template)
+    ? GUIDE_MODE_PHOTO
+    : GUIDE_MODE_OUTLINE
+)
+const getActiveGuideImage = (template, guideMode) => (
+  normalizeGuideMode(template, guideMode) === GUIDE_MODE_PHOTO
+    ? template.modelImage
+    : template.guideImage
+)
+const getGuideModeState = (template, guideMode) => {
+  const nextGuideMode = normalizeGuideMode(template, guideMode)
+
+  return {
+    guideMode: nextGuideMode,
+    guideModeText: nextGuideMode === GUIDE_MODE_PHOTO ? '半透明照片' : '轮廓',
+    guideImageClass: nextGuideMode === GUIDE_MODE_PHOTO ? 'photo-guide-image' : 'outline-guide-image',
+    outlineModeActiveClass: nextGuideMode === GUIDE_MODE_OUTLINE ? 'active' : '',
+    photoModeActiveClass: nextGuideMode === GUIDE_MODE_PHOTO ? 'active' : '',
+    showGuideModeSwitch: canUseModelPhotoGuide(template),
+    showModelToggle: Boolean(isModelPose(template) && template.thumbnailImage),
+    modelToggleImage: isModelPose(template) ? template.thumbnailImage : ''
+  }
+}
+const applyGuideMode = (template, guideVisible, guideMode) => {
+  const nextGuideMode = normalizeGuideMode(template, guideMode)
+
+  if (!guideVisible) {
+    return hideTemplateGuide(template)
+  }
+
+  return {
+    ...template,
+    guideImage: getActiveGuideImage(template, nextGuideMode)
+  }
+}
 const getGuideBoxStyle = (offsetX, offsetY) => (
   `transform: translate3d(${offsetX}px, ${offsetY}px, 0);`
 )
-const getPreviewGuideStyle = (offsetX, offsetY) => (
-  `left: 7vw; top: 13vh; width: 86vw; height: 58vh; transform: translate3d(${offsetX}px, ${offsetY}px, 0);`
+const getPreviewGuideStyle = (offsetX, offsetY, guideMode) => (
+  `left: 7vw; top: 13vh; width: 86vw; height: 58vh; opacity: ${guideMode === GUIDE_MODE_PHOTO ? 0.42 : 0.92}; transform: translate3d(${offsetX}px, ${offsetY}px, 0);`
 )
 
 Page({
@@ -40,6 +75,12 @@ Page({
     guideToggleTitle: '隐藏线条',
     guideLoadFailed: false,
     keepGuideForConfirm: false,
+    guideMode: GUIDE_MODE_OUTLINE,
+    guideModeText: '轮廓',
+    guideImageClass: 'outline-guide-image',
+    outlineModeActiveClass: 'active',
+    photoModeActiveClass: '',
+    showGuideModeSwitch: false,
     showModelToggle: false,
     modelToggleImage: '',
     guideOffsetX: 0,
@@ -56,15 +97,16 @@ Page({
   setTemplate(index) {
     const nextIndex = (index + poseTemplates.length) % poseTemplates.length
     const template = poseTemplates[nextIndex]
+    const guideModeState = getGuideModeState(template, this.data.guideMode)
 
     this.setData({
       currentIndex: nextIndex,
       guideLoadFailed: false,
-      currentTemplate: this.data.guideVisible ? template : hideTemplateGuide(template),
+      currentTemplate: applyGuideMode(template, this.data.guideVisible, guideModeState.guideMode),
       guideOffsetX: 0,
       guideOffsetY: 0,
       guideBoxStyle: getGuideBoxStyle(0, 0),
-      ...getGuideToggleState(template)
+      ...guideModeState
     })
   },
 
@@ -78,22 +120,37 @@ Page({
 
   showGuide() {
     const currentTemplate = poseTemplates[this.data.currentIndex]
+    const guideModeState = getGuideModeState(currentTemplate, this.data.guideMode)
 
     this.setData({
       guideVisible: true,
-      currentTemplate,
+      currentTemplate: applyGuideMode(currentTemplate, true, guideModeState.guideMode),
       guideToggleTitle: '隐藏线条',
-      ...getGuideToggleState(currentTemplate)
+      ...guideModeState
     })
   },
 
   clearGuide() {
     const currentTemplate = poseTemplates[this.data.currentIndex]
+    const guideModeState = getGuideModeState(currentTemplate, this.data.guideMode)
+
     this.setData({
       guideVisible: false,
       currentTemplate: hideTemplateGuide(currentTemplate),
       guideToggleTitle: '显示线条',
-      ...getGuideToggleState(currentTemplate)
+      ...guideModeState
+    })
+  },
+
+  switchGuideMode(event) {
+    const mode = event.currentTarget.dataset.mode
+    const currentTemplate = poseTemplates[this.data.currentIndex]
+    const guideModeState = getGuideModeState(currentTemplate, mode)
+
+    this.setData({
+      guideLoadFailed: false,
+      currentTemplate: applyGuideMode(currentTemplate, this.data.guideVisible, guideModeState.guideMode),
+      ...guideModeState
     })
   },
 
@@ -255,7 +312,11 @@ Page({
         app.globalData.previewGuide = shouldConfirmWithGuide
           ? {
               image: this.data.currentTemplate.guideImage,
-              style: getPreviewGuideStyle(this.data.guideOffsetX, this.data.guideOffsetY),
+              style: getPreviewGuideStyle(
+                this.data.guideOffsetX,
+                this.data.guideOffsetY,
+                this.data.guideMode
+              ),
               needsConfirm: true
             }
           : null

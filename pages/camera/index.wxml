@@ -24,7 +24,7 @@
         bindtouchcancel="onGuideDragEnd"
       >
         <cover-image
-          class="pose-guide-image"
+          class="pose-guide-image {{guideImageClass}}"
           src="{{currentTemplate.guideImage}}"
           binderror="onGuideImageError"
         ></cover-image>
@@ -48,7 +48,7 @@
             src="{{modelToggleImage}}"
             mode="aspectFill"
           ></image>
-          <view wx:if="{{!guideVisible}}" class="model-toggle-mask">轮廓关</view>
+          <view class="model-toggle-mask">{{guideVisible ? guideModeText : '引导关'}}</view>
         </block>
         <view wx:else class="eye-icon">
           <view class="eye-dot"></view>
@@ -79,6 +79,18 @@
         bindchange="onCameraZoomChange"
       />
       <view class="zoom-label">{{cameraZoomText}}</view>
+    </view>
+    <view wx:if="{{showGuideModeSwitch}}" class="guide-mode-switch">
+      <view
+        class="guide-mode-option {{outlineModeActiveClass}}"
+        data-mode="outline"
+        bindtap="switchGuideMode"
+      >轮廓</view>
+      <view
+        class="guide-mode-option {{photoModeActiveClass}}"
+        data-mode="photo"
+        bindtap="switchGuideMode"
+      >半透明照片</view>
     </view>
   </view>
 </view>

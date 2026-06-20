@@ -1,4 +1,4 @@
-const { poseCategories } = require('../../utils/poses')
+const { poseTemplates, poseCategories } = require('../../utils/poses')
 
 const GUIDE_CONFIRM_STORAGE_KEY = 'keepGuideForConfirm'
 
@@ -92,8 +92,30 @@ Page({
     })
   },
 
+  openPoseDetail(event) {
+    const { poseId } = event.currentTarget.dataset
+    const pose = poseTemplates.find((item) => item.id === poseId)
+
+    if (!poseId) {
+      return
+    }
+
+    if (!pose || pose.categoryId !== 'model-pairs') {
+      this.openCamera(event)
+      return
+    }
+
+    wx.navigateTo({
+      url: `/pages/pose-detail/index?poseId=${poseId}`
+    })
+  },
+
   openCamera(event) {
     const { poseId } = event.currentTarget.dataset
+
+    if (!poseId) {
+      return
+    }
 
     wx.navigateTo({
       url: `/pages/camera/index?poseId=${poseId}`

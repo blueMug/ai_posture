@@ -56,9 +56,14 @@
         wx:for-item="pose"
         class="pose-card"
         data-pose-id="{{pose.id}}"
-        bindtap="openCamera"
+        bindtap="openPoseDetail"
       >
-        <view class="preview" style="background: {{pose.gradient}};">
+        <view
+          class="preview"
+          style="background: {{pose.gradient}};"
+          data-pose-id="{{pose.id}}"
+          catchtap="openPoseDetail"
+        >
           <view class="preview-shine"></view>
           <view class="mini-stage">
             <image
@@ -73,12 +78,17 @@
             </view>
           </view>
           <view class="badge">{{pose.badge}}</view>
+          <view wx:if="{{pose.categoryId == 'model-pairs'}}" class="preview-tip">看大图</view>
         </view>
 
         <view class="pose-info">
           <view class="pose-title-row">
             <view class="pose-name">{{pose.name}}</view>
-            <view class="pose-action">开始拍</view>
+            <view
+              class="pose-action"
+              data-pose-id="{{pose.id}}"
+              catchtap="openCamera"
+            >开始拍</view>
           </view>
           <view class="pose-tip">{{pose.tip}}</view>
           <view class="pose-desc">{{pose.description}}</view>
