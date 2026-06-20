@@ -10,6 +10,24 @@
     <view class="hero-desc">每行两张真人示例，点击照片看大图，点“拍”直接进入相机。</view>
   </view>
 
+  <view class="search-card">
+    <view class="search-icon">⌕</view>
+    <input
+      class="search-input"
+      value="{{searchKeyword}}"
+      placeholder="搜索半身、全身、街拍、背影、咖啡"
+      placeholder-class="search-placeholder"
+      confirm-type="search"
+      bindinput="onSearchInput"
+    />
+    <view wx:if="{{searchKeyword}}" class="search-clear" bindtap="clearSearch">清除</view>
+  </view>
+
+  <view wx:if="{{!hasSearchResult}}" class="empty-state">
+    <view class="empty-title">没有找到匹配照片</view>
+    <view class="empty-desc">换个关键词试试，例如“半身”“全身”“街拍”“背影”。</view>
+  </view>
+
   <view
     wx:for="{{poseCategories}}"
     wx:key="id"
