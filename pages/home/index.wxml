@@ -23,6 +23,14 @@
     <view class="empty-desc">换个关键词试试，例如“站姿”“回眸”“半身”“穿搭”。</view>
   </view>
 
+  <view class="gallery-entry" bindtap="openPoseGallery">
+    <view class="gallery-entry-copy">
+      <view class="gallery-entry-title">按分类快速预览</view>
+      <view class="gallery-entry-desc">每行两张真人照片，少看文字，先挑感觉。</view>
+    </view>
+    <view class="gallery-entry-action">进入</view>
+  </view>
+
   <view class="setting-card">
     <view class="setting-copy">
       <view class="setting-title">拍后轮廓确认</view>

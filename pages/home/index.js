@@ -73,6 +73,12 @@ Page({
     })
   },
 
+  openPoseGallery() {
+    wx.navigateTo({
+      url: '/pages/pose-gallery/index'
+    })
+  },
+
   onGuideConfirmChange(event) {
     const keepGuideForConfirm = Boolean(event.detail.value)
 

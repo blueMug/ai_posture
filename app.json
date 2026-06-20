@@ -1,6 +1,7 @@
 {
   "pages": [
     "pages/home/index",
+    "pages/pose-gallery/index",
     "pages/pose-detail/index",
     "pages/camera/index",
     "pages/preview/index"

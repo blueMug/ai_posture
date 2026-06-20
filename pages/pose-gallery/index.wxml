@@ -1,0 +1,54 @@
+<view class="page">
+  <view class="top-bar">
+    <view class="back-btn" bindtap="backToHome">返回</view>
+    <view class="title">姿势速览</view>
+    <view class="placeholder"></view>
+  </view>
+
+  <view class="hero">
+    <view class="hero-title">按分类快速挑照片</view>
+    <view class="hero-desc">每行两张真人示例，点击照片看大图，点“拍”直接进入相机。</view>
+  </view>
+
+  <view
+    wx:for="{{poseCategories}}"
+    wx:key="id"
+    wx:for-item="category"
+    class="category"
+  >
+    <view class="category-head">
+      <view>
+        <view class="category-title">{{category.name}}</view>
+        <view class="category-subtitle">{{category.poses.length}} 个姿势</view>
+      </view>
+    </view>
+
+    <view class="photo-grid">
+      <view
+        wx:for="{{category.poses}}"
+        wx:key="id"
+        wx:for-item="pose"
+        class="photo-card"
+        data-pose-id="{{pose.id}}"
+        bindtap="openPoseDetail"
+      >
+        <image
+          class="pose-photo"
+          src="{{pose.thumbnailImage || pose.modelImage || pose.detailImage}}"
+          mode="aspectFill"
+          data-pose-id="{{pose.id}}"
+          binderror="onPoseImageError"
+        ></image>
+        <view wx:if="{{failedPoseImages[pose.id]}}" class="image-error">图片加载失败</view>
+        <view class="photo-info">
+          <view class="pose-name">{{pose.name}}</view>
+          <view
+            class="shoot-chip"
+            data-pose-id="{{pose.id}}"
+            catchtap="openCamera"
+          >拍</view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>
