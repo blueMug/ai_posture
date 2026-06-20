@@ -1,4 +1,5 @@
 const { poseTemplates, findPoseIndex } = require('../../utils/poses')
+const { cacheImage } = require('../../utils/imageCache')
 
 const getPose = (poseId) => poseTemplates[findPoseIndex(poseId)]
 
@@ -11,11 +12,18 @@ Page({
 
   onLoad(options = {}) {
     const pose = getPose(options.poseId)
+    const displayImage = pose.detailImage || pose.thumbnailImage || pose.guideImage
 
     this.setData({
       poseId: pose.id,
       pose,
-      displayImage: pose.detailImage || pose.thumbnailImage || pose.guideImage
+      displayImage: ''
+    })
+
+    cacheImage(displayImage).then((cachedImage) => {
+      this.setData({
+        displayImage: cachedImage
+      })
     })
   },
 

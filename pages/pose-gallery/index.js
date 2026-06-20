@@ -1,4 +1,5 @@
 const { poseCategories } = require('../../utils/poses')
+const { cachePoseCategories } = require('../../utils/imageCache')
 
 const normalizeKeyword = (value) => String(value || '').trim().toLowerCase()
 
@@ -30,26 +31,54 @@ const filterPoseCategories = (keyword) => {
 Page({
   data: {
     searchKeyword: '',
-    poseCategories,
+    poseCategories: [],
     hasSearchResult: true,
     failedPoseImages: {}
+  },
+
+  onLoad() {
+    this.setPoseCategories(poseCategories, {
+      hasSearchResult: true
+    })
+  },
+
+  setPoseCategories(nextCategories, extraData = {}) {
+    const requestId = (this.poseCategoryRequestId || 0) + 1
+    this.poseCategoryRequestId = requestId
+
+    if (!nextCategories.length) {
+      this.setData({
+        ...extraData,
+        poseCategories: nextCategories
+      })
+      return
+    }
+
+    cachePoseCategories(nextCategories, ['thumbnailImage']).then((cachedCategories) => {
+      if (this.poseCategoryRequestId !== requestId) {
+        return
+      }
+
+      this.setData({
+        ...extraData,
+        poseCategories: cachedCategories
+      })
+    })
   },
 
   onSearchInput(event) {
     const searchKeyword = event.detail.value
     const nextCategories = filterPoseCategories(searchKeyword)
 
-    this.setData({
+    this.setPoseCategories(nextCategories, {
       searchKeyword,
-      poseCategories: nextCategories,
       hasSearchResult: nextCategories.length > 0
     })
   },
 
   clearSearch() {
-    this.setData({
+    this.setPoseCategories(poseCategories, {
       searchKeyword: '',
-      poseCategories,
       hasSearchResult: true
     })
   },

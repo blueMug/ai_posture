@@ -1,7 +1,9 @@
 const app = getApp()
 const { poseTemplates, findPoseIndex } = require('../../utils/poses')
+const { cacheImageFields } = require('../../utils/imageCache')
 
 const GUIDE_CONFIRM_STORAGE_KEY = 'keepGuideForConfirm'
+const CACHE_TEMPLATE_IMAGE_FIELDS = ['guideImage', 'thumbnailImage', 'modelImage']
 const HOME_PAGE_ROUTE = 'pages/home/index'
 const HOME_PAGE_URL = `/${HOME_PAGE_ROUTE}`
 const CAMERA_MIN_ZOOM = 1
@@ -67,7 +69,7 @@ Page({
   data: {
     devicePosition: 'back',
     currentIndex: 0,
-    currentTemplate: poseTemplates[0],
+    currentTemplate: hideTemplateGuide(poseTemplates[0]),
     guideVisible: true,
     cameraZoom: CAMERA_MIN_ZOOM,
     cameraMaxZoom: CAMERA_DEFAULT_MAX_ZOOM,
@@ -97,16 +99,25 @@ Page({
   setTemplate(index) {
     const nextIndex = (index + poseTemplates.length) % poseTemplates.length
     const template = poseTemplates[nextIndex]
-    const guideModeState = getGuideModeState(template, this.data.guideMode)
+    const requestId = (this.templateRequestId || 0) + 1
+    this.templateRequestId = requestId
 
-    this.setData({
-      currentIndex: nextIndex,
-      guideLoadFailed: false,
-      currentTemplate: applyGuideMode(template, this.data.guideVisible, guideModeState.guideMode),
-      guideOffsetX: 0,
-      guideOffsetY: 0,
-      guideBoxStyle: getGuideBoxStyle(0, 0),
-      ...guideModeState
+    cacheImageFields(template, CACHE_TEMPLATE_IMAGE_FIELDS).then((cachedTemplate) => {
+      if (this.templateRequestId !== requestId) {
+        return
+      }
+
+      const guideModeState = getGuideModeState(cachedTemplate, this.data.guideMode)
+
+      this.setData({
+        currentIndex: nextIndex,
+        guideLoadFailed: false,
+        currentTemplate: applyGuideMode(cachedTemplate, this.data.guideVisible, guideModeState.guideMode),
+        guideOffsetX: 0,
+        guideOffsetY: 0,
+        guideBoxStyle: getGuideBoxStyle(0, 0),
+        ...guideModeState
+      })
     })
   },
 
@@ -120,18 +131,21 @@ Page({
 
   showGuide() {
     const currentTemplate = poseTemplates[this.data.currentIndex]
-    const guideModeState = getGuideModeState(currentTemplate, this.data.guideMode)
 
-    this.setData({
-      guideVisible: true,
-      currentTemplate: applyGuideMode(currentTemplate, true, guideModeState.guideMode),
-      guideToggleTitle: '隐藏线条',
-      ...guideModeState
+    cacheImageFields(currentTemplate, CACHE_TEMPLATE_IMAGE_FIELDS).then((cachedTemplate) => {
+      const guideModeState = getGuideModeState(cachedTemplate, this.data.guideMode)
+
+      this.setData({
+        guideVisible: true,
+        currentTemplate: applyGuideMode(cachedTemplate, true, guideModeState.guideMode),
+        guideToggleTitle: '隐藏线条',
+        ...guideModeState
+      })
     })
   },
 
   clearGuide() {
-    const currentTemplate = poseTemplates[this.data.currentIndex]
+    const currentTemplate = this.data.currentTemplate
     const guideModeState = getGuideModeState(currentTemplate, this.data.guideMode)
 
     this.setData({
@@ -145,12 +159,15 @@ Page({
   switchGuideMode(event) {
     const mode = event.currentTarget.dataset.mode
     const currentTemplate = poseTemplates[this.data.currentIndex]
-    const guideModeState = getGuideModeState(currentTemplate, mode)
 
-    this.setData({
-      guideLoadFailed: false,
-      currentTemplate: applyGuideMode(currentTemplate, this.data.guideVisible, guideModeState.guideMode),
-      ...guideModeState
+    cacheImageFields(currentTemplate, CACHE_TEMPLATE_IMAGE_FIELDS).then((cachedTemplate) => {
+      const guideModeState = getGuideModeState(cachedTemplate, mode)
+
+      this.setData({
+        guideLoadFailed: false,
+        currentTemplate: applyGuideMode(cachedTemplate, this.data.guideVisible, guideModeState.guideMode),
+        ...guideModeState
+      })
     })
   },
 
