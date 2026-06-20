@@ -1,6 +1,8 @@
 const { poseCategories } = require('../../utils/poses')
 const { cachePoseCategories } = require('../../utils/imageCache')
 
+const GALLERY_TARGET_CATEGORY_KEY = 'galleryTargetCategoryId'
+
 const normalizeKeyword = (value) => String(value || '').trim().toLowerCase()
 
 const getPoseSearchText = (pose, category) => [
@@ -44,7 +46,21 @@ Page({
     })
   },
 
-  setPoseCategories(nextCategories, extraData = {}) {
+  onShow() {
+    const targetCategoryId = wx.getStorageSync(GALLERY_TARGET_CATEGORY_KEY)
+
+    if (!targetCategoryId) {
+      return
+    }
+
+    wx.removeStorageSync(GALLERY_TARGET_CATEGORY_KEY)
+    this.setPoseCategories(poseCategories, {
+      searchKeyword: '',
+      hasSearchResult: true
+    }, targetCategoryId)
+  },
+
+  setPoseCategories(nextCategories, extraData = {}, targetCategoryId = '') {
     const requestId = (this.poseCategoryRequestId || 0) + 1
     this.poseCategoryRequestId = requestId
 
@@ -63,6 +79,10 @@ Page({
         return
       }
 
+      const activeCategoryId = cachedCategories.some((category) => category.id === targetCategoryId)
+        ? targetCategoryId
+        : cachedCategories[0].id
+
       this.setData({
         ...extraData,
         poseCategories: cachedCategories,
@@ -71,8 +91,26 @@ Page({
           name: category.name,
           count: category.poses.length
         })),
-        activeCategoryId: cachedCategories[0].id
+        activeCategoryId
+      }, () => {
+        if (targetCategoryId) {
+          wx.nextTick(() => {
+            this.scrollToCategoryId(activeCategoryId)
+          })
+        }
       })
+    })
+  },
+
+  scrollToCategoryId(categoryId) {
+    if (!categoryId) {
+      return
+    }
+
+    wx.pageScrollTo({
+      selector: `#gallery-category-${categoryId}`,
+      offsetTop: 16,
+      duration: 240
     })
   },
 
@@ -87,11 +125,7 @@ Page({
       activeCategoryId: categoryId
     })
 
-    wx.pageScrollTo({
-      selector: `#gallery-category-${categoryId}`,
-      offsetTop: 16,
-      duration: 240
-    })
+    this.scrollToCategoryId(categoryId)
   },
 
   onSearchInput(event) {

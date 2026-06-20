@@ -1,7 +1,7 @@
 <view class="page">
   <view class="top-bar">
     <view class="back-btn" bindtap="backToHome">返回</view>
-    <view class="title">真人姿势大图</view>
+    <view class="title">姿势详情</view>
     <view class="placeholder"></view>
   </view>
 
@@ -21,11 +21,11 @@
         bindtap="openCamera"
         binderror="onImageError"
       ></image>
-      <view class="tap-tip">点击大图进入拍照</view>
+      <view class="tap-tip">点图拍照</view>
     </view>
   </view>
 
   <view class="bottom-panel safe-area-bottom">
-    <button class="shoot-btn" bindtap="openCamera">开始拍</button>
+    <button class="shoot-btn" bindtap="openCamera">拍照</button>
   </view>
 </view>

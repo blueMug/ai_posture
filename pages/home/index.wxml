@@ -1,16 +1,10 @@
 <view class="page">
-  <view class="hero">
-    <view class="eyebrow">AI Posture Camera</view>
-    <view class="title">先选姿势，再打开相机</view>
-    <view class="subtitle">按场景挑一个拍照模板，进入相机后按照线条摆姿势，照片里不会保留引导线。</view>
-  </view>
-
   <view class="search-card">
     <view class="search-icon">⌕</view>
     <input
       class="search-input"
       value="{{searchKeyword}}"
-      placeholder="搜索站姿、坐姿、回眸、穿搭、街拍"
+      placeholder="搜索半身、自拍、全身、背影"
       placeholder-class="search-placeholder"
       confirm-type="search"
       bindinput="onSearchInput"
@@ -19,8 +13,8 @@
   </view>
 
   <view wx:if="{{!hasSearchResult}}" class="empty-state">
-    <view class="empty-title">没有找到匹配姿势</view>
-    <view class="empty-desc">换个关键词试试，例如“站姿”“回眸”“半身”“穿搭”。</view>
+    <view class="empty-title">没有匹配姿势</view>
+    <view class="empty-desc">试试“半身”“自拍”“全身”“背影”。</view>
   </view>
 
   <view
@@ -31,10 +25,18 @@
   >
     <view class="category-head">
       <view>
-        <view class="category-title">{{category.name}}</view>
+        <view
+          class="category-title"
+          data-category-id="{{category.id}}"
+          bindtap="openCategory"
+        >{{category.name}}</view>
         <view class="category-subtitle">{{category.subtitle}}</view>
       </view>
-      <view class="category-count">{{category.poses.length}} 个姿势</view>
+      <view
+        class="category-count"
+        data-category-id="{{category.id}}"
+        bindtap="openCategory"
+      >共 {{category.totalPoseCount}} 个</view>
     </view>
 
     <view class="pose-list">
@@ -66,7 +68,7 @@
             </view>
           </view>
           <view class="badge">{{pose.badge}}</view>
-          <view wx:if="{{pose.modelImage && pose.detailImage}}" class="preview-tip">看大图</view>
+          <view wx:if="{{pose.modelImage && pose.detailImage}}" class="preview-tip">大图</view>
         </view>
 
         <view class="pose-info">
@@ -76,7 +78,7 @@
               class="pose-action"
               data-pose-id="{{pose.id}}"
               catchtap="openCamera"
-            >开始拍</view>
+            >拍照</view>
           </view>
           <view class="pose-tip">{{pose.tip}}</view>
           <view class="pose-desc">{{pose.description}}</view>

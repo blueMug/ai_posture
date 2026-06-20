@@ -85,17 +85,5 @@
       />
       <view class="zoom-label">{{cameraZoomText}}</view>
     </view>
-    <view wx:if="{{showGuideModeSwitch}}" class="guide-mode-switch">
-      <view
-        class="guide-mode-option {{outlineModeActiveClass}}"
-        data-mode="outline"
-        bindtap="switchGuideMode"
-      >轮廓</view>
-      <view
-        class="guide-mode-option {{photoModeActiveClass}}"
-        data-mode="photo"
-        bindtap="switchGuideMode"
-      >半透明照片</view>
-    </view>
   </view>
 </view>

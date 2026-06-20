@@ -15,7 +15,7 @@
   </view>
 
   <view wx:if="{{confirmWithGuide}}" class="bottom-panel safe-area-bottom">
-    <view class="hint">请确认姿势和轮廓是否对齐。接受后会去掉轮廓，只保存原照片。</view>
+    <view class="hint">确认轮廓对齐后保存原照片。</view>
     <view class="confirm-actions">
       <button class="discard-btn" bindtap="retake">放弃</button>
       <button class="accept-btn" bindtap="acceptPhoto">接受</button>
@@ -23,7 +23,7 @@
   </view>
 
   <view wx:else class="bottom-panel safe-area-bottom">
-    <view class="hint">姿势线条只用于拍摄引导，不会出现在照片里。</view>
+    <view class="hint">轮廓不会出现在照片里。</view>
     <button class="save-btn" bindtap="savePhoto">保存到相册</button>
   </view>
 </view>

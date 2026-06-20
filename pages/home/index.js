@@ -1,6 +1,7 @@
 const { poseTemplates, poseCategories } = require('../../utils/poses')
 const { cachePoseCategories } = require('../../utils/imageCache')
 
+const GALLERY_TARGET_CATEGORY_KEY = 'galleryTargetCategoryId'
 const RECOMMEND_LIMIT_PER_CATEGORY = 4
 const RECOMMEND_CATEGORY_CONFIGS = [
   {
@@ -82,7 +83,8 @@ const buildRecommendCategories = (keyword = '') => {
         ...sourceCategory,
         id: config.sourceId,
         name: config.name,
-        subtitle: config.subtitle
+        subtitle: config.subtitle,
+        totalPoseCount: sourceCategory.poses ? sourceCategory.poses.length : 0
       }
       const poses = config.poseIds
         .map((poseId) => poseTemplateMap.get(poseId))
@@ -203,6 +205,19 @@ Page({
 
     wx.navigateTo({
       url: `/pages/camera/index?poseId=${poseId}`
+    })
+  },
+
+  openCategory(event) {
+    const { categoryId } = event.currentTarget.dataset
+
+    if (!categoryId) {
+      return
+    }
+
+    wx.setStorageSync(GALLERY_TARGET_CATEGORY_KEY, categoryId)
+    wx.switchTab({
+      url: '/pages/pose-gallery/index'
     })
   }
 })

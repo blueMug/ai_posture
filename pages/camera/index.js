@@ -3,6 +3,7 @@ const { poseTemplates, findPoseIndex } = require('../../utils/poses')
 const { cacheImageFields } = require('../../utils/imageCache')
 
 const GUIDE_CONFIRM_STORAGE_KEY = 'keepGuideForConfirm'
+const GUIDE_MODE_STORAGE_KEY = 'cameraGuideMode'
 const CACHE_TEMPLATE_IMAGE_FIELDS = ['guideImage', 'thumbnailImage', 'modelImage']
 const HOME_PAGE_ROUTE = 'pages/home/index'
 const HOME_PAGE_URL = `/${HOME_PAGE_ROUTE}`
@@ -22,6 +23,11 @@ const hideTemplateGuide = (template) => ({
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max)
 const isModelPose = (template) => Boolean(template && template.modelImage)
 const canUseModelPhotoGuide = (template) => Boolean(isModelPose(template) && template.modelImage)
+const getStoredGuideMode = () => (
+  wx.getStorageSync(GUIDE_MODE_STORAGE_KEY) === GUIDE_MODE_PHOTO
+    ? GUIDE_MODE_PHOTO
+    : GUIDE_MODE_OUTLINE
+)
 const normalizeGuideMode = (template, guideMode) => (
   guideMode === GUIDE_MODE_PHOTO && canUseModelPhotoGuide(template)
     ? GUIDE_MODE_PHOTO
@@ -39,9 +45,6 @@ const getGuideModeState = (template, guideMode) => {
     guideMode: nextGuideMode,
     guideModeText: nextGuideMode === GUIDE_MODE_PHOTO ? '半透明照片' : '轮廓',
     guideImageClass: nextGuideMode === GUIDE_MODE_PHOTO ? 'photo-guide-image' : 'outline-guide-image',
-    outlineModeActiveClass: nextGuideMode === GUIDE_MODE_OUTLINE ? 'active' : '',
-    photoModeActiveClass: nextGuideMode === GUIDE_MODE_PHOTO ? 'active' : '',
-    showGuideModeSwitch: canUseModelPhotoGuide(template),
     showModelToggle: Boolean(isModelPose(template) && template.thumbnailImage),
     modelToggleImage: isModelPose(template) ? template.thumbnailImage : ''
   }
@@ -80,9 +83,6 @@ Page({
     guideMode: GUIDE_MODE_OUTLINE,
     guideModeText: '轮廓',
     guideImageClass: 'outline-guide-image',
-    outlineModeActiveClass: 'active',
-    photoModeActiveClass: '',
-    showGuideModeSwitch: false,
     showModelToggle: false,
     modelToggleImage: '',
     guideOffsetX: 0,
@@ -92,11 +92,23 @@ Page({
 
   onLoad(options = {}) {
     this.cameraContext = wx.createCameraContext()
-    this.loadGuideConfirmSetting()
-    this.setTemplate(findPoseIndex(options.poseId))
+    const guideSettings = this.loadGuideSettings()
+
+    this.setTemplate(findPoseIndex(options.poseId), guideSettings.guideMode)
   },
 
-  setTemplate(index) {
+  onShow() {
+    const nextGuideMode = getStoredGuideMode()
+    const guideModeChanged = nextGuideMode !== this.data.guideMode
+
+    this.loadGuideSettings()
+
+    if (guideModeChanged && this.hasTemplateLoaded) {
+      this.refreshCurrentGuide(nextGuideMode)
+    }
+  },
+
+  setTemplate(index, guideMode = this.data.guideMode) {
     const nextIndex = (index + poseTemplates.length) % poseTemplates.length
     const template = poseTemplates[nextIndex]
     const requestId = (this.templateRequestId || 0) + 1
@@ -107,7 +119,7 @@ Page({
         return
       }
 
-      const guideModeState = getGuideModeState(cachedTemplate, this.data.guideMode)
+      const guideModeState = getGuideModeState(cachedTemplate, guideMode)
 
       this.setData({
         currentIndex: nextIndex,
@@ -117,6 +129,8 @@ Page({
         guideOffsetY: 0,
         guideBoxStyle: getGuideBoxStyle(0, 0),
         ...guideModeState
+      }, () => {
+        this.hasTemplateLoaded = true
       })
     })
   },
@@ -156,12 +170,11 @@ Page({
     })
   },
 
-  switchGuideMode(event) {
-    const mode = event.currentTarget.dataset.mode
+  refreshCurrentGuide(guideMode = this.data.guideMode) {
     const currentTemplate = poseTemplates[this.data.currentIndex]
 
     cacheImageFields(currentTemplate, CACHE_TEMPLATE_IMAGE_FIELDS).then((cachedTemplate) => {
-      const guideModeState = getGuideModeState(cachedTemplate, mode)
+      const guideModeState = getGuideModeState(cachedTemplate, guideMode)
 
       this.setData({
         guideLoadFailed: false,
@@ -287,12 +300,16 @@ Page({
     this.setCameraZoom(Number(event.detail.value))
   },
 
-  loadGuideConfirmSetting() {
+  loadGuideSettings() {
     const keepGuideForConfirm = Boolean(wx.getStorageSync(GUIDE_CONFIRM_STORAGE_KEY))
+    const guideMode = getStoredGuideMode()
+    const guideSettings = {
+      keepGuideForConfirm,
+      guideMode
+    }
 
-    this.setData({
-      keepGuideForConfirm
-    })
+    this.setData(guideSettings)
+    return guideSettings
   },
 
   backToHome() {

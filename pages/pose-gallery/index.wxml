@@ -1,13 +1,8 @@
 <view class="page">
   <view class="top-bar">
     <view class="placeholder"></view>
-    <view class="title">姿势速览</view>
+    <view class="title">姿势分类</view>
     <view class="placeholder"></view>
-  </view>
-
-  <view class="hero">
-    <view class="hero-title">按分类快速挑照片</view>
-    <view class="hero-desc">每行两张真人示例，点击照片看大图，点“拍”直接进入相机。</view>
   </view>
 
   <view class="search-card">
@@ -24,8 +19,8 @@
   </view>
 
   <view wx:if="{{!hasSearchResult}}" class="empty-state">
-    <view class="empty-title">没有找到匹配照片</view>
-    <view class="empty-desc">换个关键词试试，例如“半身”“全身”“街拍”“背影”。</view>
+    <view class="empty-title">没有匹配照片</view>
+    <view class="empty-desc">试试“半身”“全身”“街拍”“背影”。</view>
   </view>
 
   <scroll-view
@@ -60,7 +55,7 @@
     <view class="category-head">
       <view>
         <view class="category-title">{{category.name}}</view>
-        <view class="category-subtitle">{{category.poses.length}} 个姿势</view>
+        <view class="category-subtitle">{{category.poses.length}} 个</view>
       </view>
     </view>
 
