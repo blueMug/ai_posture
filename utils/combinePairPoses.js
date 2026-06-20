@@ -8,7 +8,19 @@ const combinePairIds = [
   'custom7_r01_g01',
   'custom8_r01_g01',
   'custom9_r01_g01',
-  'custom10_r01_g01'
+  'custom10_r01_g01',
+  'custom11_r01_g01',
+  'custom12_r01_g01',
+  'custom13_r01_g01',
+  'custom14_r01_g01',
+  'custom15_r01_g01',
+  'custom16_r01_g01',
+  'custom17_r01_g01',
+  'custom18_r01_g01',
+  'custom19_r01_g01',
+  'custom20_r01_g01',
+  'custom21_r01_g01',
+  'custom22_r01_g01'
 ]
 
 const poseMetadataOverrides = {
@@ -101,6 +113,114 @@ const poseMetadataOverrides = {
     description: '背影站立于山顶，重心落于左腿，右腿向后踢起；右臂高举、左臂向侧方舒展，适合拍青春自由、开放有表现力的旅行背影照。',
     badge: '全身',
     gradient: 'linear-gradient(150deg, #f2ddbf 0%, #66725b 100%)'
+  },
+  custom11_r01_g01: {
+    categoryId: 'travel-back',
+    categoryName: '旅行背影',
+    name: '回眸撩发背影',
+    tip: '推荐户外背影、长裙写真、温柔抓拍',
+    description: '背影微侧站立，头部轻柔回眸望向镜头方向；右手抬起轻触耳侧发丝，左手自然垂放，适合拍不经意抓拍感的温柔户外人像。',
+    badge: '全身',
+    gradient: 'linear-gradient(150deg, #efe4d4 0%, #6f725d 100%)'
+  },
+  custom12_r01_g01: {
+    categoryId: 'travel-back',
+    categoryName: '旅行背影',
+    name: '短发逆光回眸',
+    tip: '推荐都市街拍、逆光背影、松弛感全身照',
+    description: '背对镜头站在暖调街道中，身体微侧、头部回眸微笑；右手轻触衣领，左手自然垂放，适合拍松弛优雅的都市逆光背影照。',
+    badge: '全身',
+    gradient: 'linear-gradient(150deg, #f1dfc4 0%, #806f5e 100%)'
+  },
+  custom13_r01_g01: {
+    categoryId: 'travel-back',
+    categoryName: '旅行背影',
+    name: '湖畔草帽回眸',
+    tip: '推荐湖畔日落、长裙背影、旅行氛围照',
+    description: '背对镜头站在湖心栈桥上，身体微侧、头部轻柔回眸；双手在身后握着宽檐草帽，适合拍自然舒展的湖畔日落背影照。',
+    badge: '全身',
+    gradient: 'linear-gradient(150deg, #f2c7a4 0%, #4e5363 100%)'
+  },
+  custom14_r01_g01: {
+    categoryId: 'travel-back',
+    categoryName: '旅行背影',
+    name: '山海遮阳回眸',
+    tip: '推荐山海旅行、黄金时段、草坡背影照',
+    description: '背对镜头站在俯瞰大海的草坡山丘上，身体微侧、头部回眸微笑；一手抬起搭在眉间遮挡阳光，适合拍随性优雅的山海旅行背影照。',
+    badge: '全身',
+    gradient: 'linear-gradient(150deg, #f1c6b6 0%, #6f7f79 100%)'
+  },
+  custom15_r01_g01: {
+    categoryId: 'travel-back',
+    categoryName: '旅行背影',
+    name: '古巷提篮回眸',
+    tip: '推荐古镇旅行、清晨街拍、松弛背影照',
+    description: '背对镜头漫步在古镇鹅卵石小巷中，身体微侧、头部回眸微笑；一手提着编织小篮，另一手轻拢耳畔碎发，适合拍闲适从容的旅行街拍照。',
+    badge: '全身',
+    gradient: 'linear-gradient(150deg, #d6d7bd 0%, #6d7466 100%)'
+  },
+  custom16_r01_g01: {
+    categoryId: 'travel-back',
+    categoryName: '旅行背影',
+    name: '露台披肩回眸',
+    tip: '推荐屋顶露台、都市夜景、冷暖氛围照',
+    description: '背对镜头站在暮色屋顶露台上，身体微侧、头部轻柔回眸；一手搭在栏杆上，另一手挽着披肩自然垂落，适合拍优雅从容的都市夜景人像。',
+    badge: '全身',
+    gradient: 'linear-gradient(150deg, #d8c2b2 0%, #2e3d5f 100%)'
+  },
+  custom17_r01_g01: {
+    categoryId: 'travel-back',
+    categoryName: '旅行背影',
+    name: '海边提鞋回眸',
+    tip: '推荐海边日出、长裙背影、梦幻旅行照',
+    description: '背对镜头站在清晨沙滩上，身体微侧、头部轻柔回眸；一手提着平底凉鞋，另一手提起裙角避开浅浪，适合拍轻盈自然的海边日出人像。',
+    badge: '全身',
+    gradient: 'linear-gradient(150deg, #f3b7aa 0%, #6fa6b4 100%)'
+  },
+  custom18_r01_g01: {
+    categoryId: 'portrait-half',
+    categoryName: '半身写真',
+    name: '自拍侧身撩发',
+    tip: '推荐半身自拍、撩发动作、柔和侧光照',
+    description: '半身自拍构图，身体微侧、头部自然倾斜；一手轻触耳侧发丝，肘部展开形成柔和三角构图，适合拍松弛自然的撩发半身照。',
+    badge: '半身',
+    gradient: 'linear-gradient(150deg, #f2ddd3 0%, #7d6d68 100%)'
+  },
+  custom19_r01_g01: {
+    categoryId: 'portrait-half',
+    categoryName: '半身写真',
+    name: '侧身远眺撩发',
+    tip: '推荐半身写真、侧身撩发、随性抓拍感',
+    description: '半身构图中身体向左微侧约30度，右手抬起轻搭耳侧发丝，面部朝向镜头左前方、目光柔和望向远处，适合拍松弛不刻意的侧身撩发照。',
+    badge: '半身',
+    gradient: 'linear-gradient(150deg, #f0e0d5 0%, #7b6f68 100%)'
+  },
+  custom20_r01_g01: {
+    categoryId: 'portrait-half',
+    categoryName: '半身写真',
+    name: '窗光浅笑撩发',
+    tip: '推荐半身自拍、室内窗光、自然浅笑照',
+    description: '半身自拍构图，身体微侧、头部自然倾斜约15度；一手轻触耳侧发丝，眼神柔和直视镜头，适合拍室内窗光下松弛自然的撩发半身照。',
+    badge: '半身',
+    gradient: 'linear-gradient(150deg, #f1ddd4 0%, #7a6d66 100%)'
+  },
+  custom21_r01_g01: {
+    categoryId: 'portrait-half',
+    categoryName: '半身写真',
+    name: '午后窗边撩发',
+    tip: '推荐半身自拍、午后窗光、明亮笑意照',
+    description: '半身自拍构图，身体微侧、头部自然倾斜；一手轻触耳侧发丝，面向镜头露出明亮放松的笑意，适合拍午后窗边自然光下的生动抓拍感。',
+    badge: '半身',
+    gradient: 'linear-gradient(150deg, #f4dfd4 0%, #806f66 100%)'
+  },
+  custom22_r01_g01: {
+    categoryId: 'portrait-half',
+    categoryName: '半身写真',
+    name: '咖啡馆端杯撩发',
+    tip: '推荐咖啡馆写真、端杯道具、生活感半身照',
+    description: '半身构图中身体微侧面向镜头，左手端着咖啡置于胸前，右手将发丝别到耳后；柔和直视配合温暖微笑，适合拍随性有生活气息的咖啡馆人像。',
+    badge: '半身',
+    gradient: 'linear-gradient(150deg, #d7e2ec 0%, #8b6f58 100%)'
   }
 }
 
@@ -121,7 +241,7 @@ const combinePairPoses = combinePairIds.map((pairId, index) => {
     guideImage: `/static/pose_pairs/${folder}/${pairId}_contour.png`,
     thumbnailImage: `/static/pose_thumbs/${folder}/${pairId}_thumb.jpg`,
     modelImage: `/static/pose_pairs/${folder}/${pairId}_demo.jpg`,
-    detailImage: `/assets/pose_pairs/${folder}/${pairId}_demo.png`,
+    detailImage: `/static/pose_pairs/${folder}/${pairId}_demo.jpg`,
     thumbnailMode: 'aspectFill',
     parts: [],
     ...poseMetadataOverrides[pairId]

@@ -32,6 +32,8 @@ Page({
   data: {
     searchKeyword: '',
     poseCategories: [],
+    categoryNavs: [],
+    activeCategoryId: '',
     hasSearchResult: true,
     failedPoseImages: {}
   },
@@ -49,7 +51,9 @@ Page({
     if (!nextCategories.length) {
       this.setData({
         ...extraData,
-        poseCategories: nextCategories
+        poseCategories: nextCategories,
+        categoryNavs: [],
+        activeCategoryId: ''
       })
       return
     }
@@ -61,8 +65,32 @@ Page({
 
       this.setData({
         ...extraData,
-        poseCategories: cachedCategories
+        poseCategories: cachedCategories,
+        categoryNavs: cachedCategories.map((category) => ({
+          id: category.id,
+          name: category.name,
+          count: category.poses.length
+        })),
+        activeCategoryId: cachedCategories[0].id
       })
+    })
+  },
+
+  scrollToCategory(event) {
+    const { categoryId } = event.currentTarget.dataset
+
+    if (!categoryId) {
+      return
+    }
+
+    this.setData({
+      activeCategoryId: categoryId
+    })
+
+    wx.pageScrollTo({
+      selector: `#gallery-category-${categoryId}`,
+      offsetTop: 16,
+      duration: 240
     })
   },
 

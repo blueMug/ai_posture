@@ -28,11 +28,34 @@
     <view class="empty-desc">换个关键词试试，例如“半身”“全身”“街拍”“背影”。</view>
   </view>
 
+  <scroll-view
+    wx:if="{{hasSearchResult}}"
+    class="category-nav"
+    scroll-x
+    enhanced
+    show-scrollbar="{{false}}"
+  >
+    <view class="category-nav-inner">
+      <view
+        wx:for="{{categoryNavs}}"
+        wx:key="id"
+        wx:for-item="category"
+        class="category-nav-chip {{activeCategoryId == category.id ? 'active' : ''}}"
+        data-category-id="{{category.id}}"
+        bindtap="scrollToCategory"
+      >
+        <text>{{category.name}}</text>
+        <text class="category-nav-count">{{category.count}}</text>
+      </view>
+    </view>
+  </scroll-view>
+
   <view
     wx:for="{{poseCategories}}"
     wx:key="id"
     wx:for-item="category"
     class="category"
+    id="gallery-category-{{category.id}}"
   >
     <view class="category-head">
       <view>
