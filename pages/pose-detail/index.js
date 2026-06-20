@@ -25,6 +25,16 @@ Page({
         displayImage: cachedImage
       })
     })
+
+    this.prefetchGuideImage(pose)
+  },
+
+  prefetchGuideImage(pose) {
+    if (!pose || !pose.guideImage) {
+      return
+    }
+
+    cacheImage(pose.guideImage)
   },
 
   backToHome() {
