@@ -3,6 +3,8 @@ const { cachePoseCategories } = require('../../utils/imageCache')
 
 const GALLERY_TARGET_CATEGORY_KEY = 'galleryTargetCategoryId'
 const RECOMMEND_LIMIT_PER_CATEGORY = 4
+const DEFAULT_PAGE_TOP_PX = 110
+const MENU_BUTTON_GAP_PX = 24
 const RECOMMEND_CATEGORY_CONFIGS = [
   {
     sourceId: 'portrait-half',
@@ -111,8 +113,23 @@ const filterPoseCategories = (keyword) => {
   return buildRecommendCategories(keyword)
 }
 
+const getPageTopStyle = () => {
+  if (typeof wx.getMenuButtonBoundingClientRect !== 'function') {
+    return `padding-top: ${DEFAULT_PAGE_TOP_PX}px;`
+  }
+
+  const menuButtonRect = wx.getMenuButtonBoundingClientRect()
+  const menuButtonBottom = Number(menuButtonRect && menuButtonRect.bottom)
+  const pageTop = menuButtonBottom > 0
+    ? menuButtonBottom + MENU_BUTTON_GAP_PX
+    : DEFAULT_PAGE_TOP_PX
+
+  return `padding-top: ${pageTop}px;`
+}
+
 Page({
   data: {
+    pageTopStyle: `padding-top: ${DEFAULT_PAGE_TOP_PX}px;`,
     searchKeyword: '',
     poseCategories: [],
     hasSearchResult: true,
@@ -120,6 +137,9 @@ Page({
   },
 
   onLoad() {
+    this.setData({
+      pageTopStyle: getPageTopStyle()
+    })
     this.setPoseCategories(buildRecommendCategories(), {
       hasSearchResult: true
     })
