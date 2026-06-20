@@ -35,4 +35,11 @@
       bindchange="onGuideConfirmChange"
     />
   </view>
+
+  <view wx:if="{{adSlot.visible}}" class="ad-card">
+    <ad
+      unit-id="{{adSlot.unitId}}"
+      ad-type="{{adSlot.adType}}"
+    ></ad>
+  </view>
 </view>

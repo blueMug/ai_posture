@@ -1,5 +1,6 @@
 const { poseCategories } = require('../../utils/poses')
 const { cachePoseCategories } = require('../../utils/imageCache')
+const { adSlots } = require('../../utils/adConfig')
 
 const GALLERY_TARGET_CATEGORY_KEY = 'galleryTargetCategoryId'
 const DEFAULT_PAGE_TOP_PX = 90
@@ -54,7 +55,8 @@ Page({
     categoryNavs: [],
     activeCategoryId: '',
     hasSearchResult: true,
-    failedPoseImages: {}
+    failedPoseImages: {},
+    adSlot: adSlots.poseGalleryFeed
   },
 
   onLoad() {

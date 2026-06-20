@@ -23,6 +23,13 @@
       ></image>
       <view class="tap-tip">点图拍照</view>
     </view>
+
+    <view wx:if="{{adSlot.visible}}" class="ad-card">
+      <ad
+        unit-id="{{adSlot.unitId}}"
+        ad-type="{{adSlot.adType}}"
+      ></ad>
+    </view>
   </view>
 
   <view class="bottom-panel safe-area-bottom">

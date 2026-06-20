@@ -2,6 +2,7 @@ const GUIDE_CONFIRM_STORAGE_KEY = 'keepGuideForConfirm'
 const GUIDE_MODE_STORAGE_KEY = 'cameraGuideMode'
 const GUIDE_MODE_OUTLINE = 'outline'
 const GUIDE_MODE_PHOTO = 'photo'
+const { adSlots } = require('../../utils/adConfig')
 
 const normalizeGuideMode = (guideMode) => (
   guideMode === GUIDE_MODE_PHOTO ? GUIDE_MODE_PHOTO : GUIDE_MODE_OUTLINE
@@ -10,7 +11,8 @@ const normalizeGuideMode = (guideMode) => (
 Page({
   data: {
     keepGuideForConfirm: false,
-    guideMode: GUIDE_MODE_OUTLINE
+    guideMode: GUIDE_MODE_OUTLINE,
+    adSlot: adSlots.profileBanner
   },
 
   onLoad() {
