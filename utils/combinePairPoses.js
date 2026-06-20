@@ -20,7 +20,8 @@ const combinePairIds = [
   'custom19_r01_g01',
   'custom20_r01_g01',
   'custom21_r01_g01',
-  'custom22_r01_g01'
+  'custom22_r01_g01',
+  'custom23_r01_g01'
 ]
 
 const poseMetadataOverrides = {
@@ -221,6 +222,15 @@ const poseMetadataOverrides = {
     description: '半身构图中身体微侧面向镜头，左手端着咖啡置于胸前，右手将发丝别到耳后；柔和直视配合温暖微笑，适合拍随性有生活气息的咖啡馆人像。',
     badge: '半身',
     gradient: 'linear-gradient(150deg, #d7e2ec 0%, #8b6f58 100%)'
+  },
+  custom23_r01_g01: {
+    categoryId: 'portrait-half',
+    categoryName: '半身写真',
+    name: '夕阳胸上自拍',
+    tip: '推荐胸上自拍、夕阳逆光、自然笑容照',
+    description: '紧凑胸上自拍构图，画面不出现手部或手机，仅通过肩膀微抬暗示自拍；头部微偏、长发垂落肩头，适合拍夕阳逆光下自然真诚的半身自拍感。',
+    badge: '半身',
+    gradient: 'linear-gradient(150deg, #f2c49b 0%, #7e6659 100%)'
   }
 }
 
