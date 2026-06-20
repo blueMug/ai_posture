@@ -9,7 +9,7 @@
     <input
       class="search-input"
       value="{{searchKeyword}}"
-      placeholder="搜索半身、自拍、全身、背影"
+      placeholder="搜索自拍、穿搭、旅行、街拍、背影"
       placeholder-class="search-placeholder"
       confirm-type="search"
       bindinput="onSearchInput"

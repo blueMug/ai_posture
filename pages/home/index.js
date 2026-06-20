@@ -9,7 +9,7 @@ const RECOMMEND_CATEGORY_CONFIGS = [
   {
     sourceId: 'portrait-half',
     name: '半身照',
-    subtitle: '精选近景半身、肩颈线条和温柔写真',
+    subtitle: '半身写真、头像、肩颈线条和近景拍照姿势',
     poseIds: [
       'pair-custom1-r01-g01',
       'pair-custom3-r01-g01',
@@ -20,7 +20,7 @@ const RECOMMEND_CATEGORY_CONFIGS = [
   {
     sourceId: 'selfie',
     name: '自拍照',
-    subtitle: '适合手机自拍、窗边自然光和亲近感构图',
+    subtitle: '手机自拍、窗边自然光、咖啡馆自拍和半身参考',
     poseIds: [
       'pair-custom18-r01-g01',
       'pair-custom20-r01-g01',
@@ -30,8 +30,8 @@ const RECOMMEND_CATEGORY_CONFIGS = [
   },
   {
     sourceId: 'outfit-standing',
-    name: '全身照',
-    subtitle: '精选显比例、穿搭展示和自然站姿',
+    name: '全身照/穿搭',
+    subtitle: '全身照、穿搭展示、显比例和户外站姿参考',
     poseIds: [
       'pair-custom4-r01-g01',
       'pair-custom6-r01-g01',
@@ -41,8 +41,8 @@ const RECOMMEND_CATEGORY_CONFIGS = [
   },
   {
     sourceId: 'travel-back',
-    name: '背影照',
-    subtitle: '适合旅行、山海、湖畔和回眸背影',
+    name: '旅行/背影',
+    subtitle: '旅行拍照、景点打卡、山海湖畔和回眸背影',
     poseIds: [
       'pair-custom10-r01-g01',
       'pair-custom13-r01-g01',

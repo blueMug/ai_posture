@@ -15,43 +15,43 @@ const categoryDefinitions = [
   {
     id: 'portrait-half',
     name: '半身照',
-    subtitle: '适合头像、肩颈线条、温柔写真和近景情绪照',
+    subtitle: '适合头像、半身写真、肩颈线条和近景拍照姿势',
     poseNumbers: [1, 2, 3, 5, 18, 19, 20, 21, 22]
   },
   {
     id: 'selfie',
     name: '自拍照',
-    subtitle: '适合手机自拍、窗边自然光和轻松亲近的半身构图',
+    subtitle: '适合手机自拍、窗边自然光、咖啡馆自拍和亲近感构图',
     poseNumbers: [18, 20, 21, 1, 2, 5]
   },
   {
     id: 'hair-hand',
     name: '撩发托腮',
-    subtitle: '适合手部有动作的照片，减少站着不知道手放哪的尴尬',
+    subtitle: '适合撩发、托腮、手部动作和半身拍照姿势',
     poseNumbers: [2, 3, 5, 11, 15, 18, 19, 20, 21, 22]
   },
   {
     id: 'outfit-standing',
-    name: '全身穿搭',
-    subtitle: '适合显比例、长裙、通勤穿搭和户外全身照',
+    name: '全身照/穿搭',
+    subtitle: '适合全身照、显比例、长裙、通勤穿搭和户外拍照',
     poseNumbers: [4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
   },
   {
     id: 'street-commute',
-    name: '街拍通勤',
-    subtitle: '适合咖啡、通勤、西装、古巷和城市街道抓拍',
+    name: '街拍照',
+    subtitle: '适合城市街拍、咖啡馆、通勤、西装和古巷抓拍',
     poseNumbers: [7, 9, 12, 15, 16, 22, 6]
   },
   {
     id: 'look-back',
     name: '回眸侧身',
-    subtitle: '适合侧身显瘦、回头看镜头和背影转身的自然抓拍',
+    subtitle: '适合回眸、侧身显瘦、背影转身和自然抓拍',
     poseNumbers: [1, 6, 10, 11, 12, 13, 14, 15, 16, 17, 19]
   },
   {
     id: 'travel-back',
-    name: '旅行背影',
-    subtitle: '适合景点、山顶、湖畔、海边和更有表现力的旅行照',
+    name: '旅行/景点',
+    subtitle: '适合旅行拍照、景点打卡、山顶、湖畔、海边和背影照',
     poseNumbers: [10, 11, 12, 13, 14, 15, 16, 17]
   }
 ]

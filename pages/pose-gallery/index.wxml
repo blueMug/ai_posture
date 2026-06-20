@@ -10,7 +10,7 @@
     <input
       class="search-input"
       value="{{searchKeyword}}"
-      placeholder="搜索半身、全身、街拍、背影、咖啡"
+      placeholder="搜索半身、全身、自拍、景点、咖啡"
       placeholder-class="search-placeholder"
       confirm-type="search"
       bindinput="onSearchInput"
@@ -20,7 +20,7 @@
 
   <view wx:if="{{!hasSearchResult}}" class="empty-state">
     <view class="empty-title">没有匹配照片</view>
-    <view class="empty-desc">试试“半身”“全身”“街拍”“背影”。</view>
+    <view class="empty-desc">试试“半身”“自拍”“景点”“咖啡”。</view>
   </view>
 
   <scroll-view

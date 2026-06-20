@@ -70,7 +70,9 @@ Page({
     const poseId = this.data.poseId
 
     return {
-      title: pose.name ? `试试这个拍照姿势：${pose.name}` : '试试这个拍照姿势',
+      title: pose.name
+        ? `拍姿势相机｜${pose.name} 拍照姿势参考`
+        : '拍姿势相机｜自拍穿搭旅行拍照姿势参考',
       path: `/pages/pose-detail/index?poseId=${poseId}`,
       imageUrl: pose.thumbnailImage || pose.detailImage || pose.guideImage || ''
     }
