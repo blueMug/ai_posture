@@ -2,8 +2,9 @@ const combinePairIds = [
   'custom1_r01_g01',
   'custom2_r01_g01',
   'custom3_r01_g01',
-  'custom4_r01_g01',
-  'custom5_r01_g01'
+  'custom5_r01_g01',
+  'custom6_r01_g01',
+  'custom7_r01_g01'
 ]
 
 const poseMetadataOverrides = {
@@ -31,14 +32,6 @@ const poseMetadataOverrides = {
     gradient: 'linear-gradient(150deg, #f5f3ef 0%, #7f7a73 100%)',
     detailImage: '/static/pose_pairs/custom3/custom3_r01_g01_demo.jpg'
   },
-  custom4_r01_g01: {
-    name: '微侧温柔回正',
-    tip: '推荐侧身显瘦、温柔半身、柔光写真',
-    description: '身体微侧约20度，肩膀自然下沉，头部轻轻回正看向镜头；下巴微收配合柔和浅笑，适合拍自然显瘦的温柔半身照。',
-    badge: '半身',
-    gradient: 'linear-gradient(150deg, #f4efe8 0%, #7e7168 100%)',
-    detailImage: '/static/pose_pairs/custom4/custom4_r01_g01_demo.jpg'
-  },
   custom5_r01_g01: {
     name: '侧身撩发抬眸',
     tip: '推荐温柔毛衣照、撩发半身、灵动眼神照',
@@ -46,6 +39,22 @@ const poseMetadataOverrides = {
     badge: '半身',
     gradient: 'linear-gradient(150deg, #f7f0e7 0%, #8b7664 100%)',
     detailImage: '/static/pose_pairs/custom5/custom5_r01_g01_demo.jpg'
+  },
+  custom6_r01_g01: {
+    name: '回眸显腿长',
+    tip: '推荐全身穿搭、逆光街拍、显比例站姿',
+    description: '全身微侧站立，一脚前伸点地拉长腿部线条，一手叉腰、一手自然下垂；头部回眸看向镜头，适合拍自信温柔的高腰穿搭照。',
+    badge: '全身',
+    gradient: 'linear-gradient(150deg, #f6eadc 0%, #8a6d55 100%)',
+    detailImage: '/static/pose_pairs/custom6/custom6_r01_g01_demo.jpg'
+  },
+  custom7_r01_g01: {
+    name: '咖啡街拍行走',
+    tip: '推荐都市街拍、行走抓拍、休闲通勤穿搭',
+    description: '全身自然行走姿态，一手握咖啡杯垂于身侧，另一手随步伐轻摆；低眸再抬眸看向镜头，适合拍随性自在的都市街拍感。',
+    badge: '全身',
+    gradient: 'linear-gradient(150deg, #eef0ed 0%, #5f6760 100%)',
+    detailImage: '/static/pose_pairs/custom7/custom7_r01_g01_demo.jpg'
   }
 }
 

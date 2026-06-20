@@ -15,13 +15,18 @@
     "contour": "pose_pairs/custom3/custom3_r01_g01_contour_hd.png"
   },
   {
-    "id": "custom4_r01_g01",
-    "demo": "pose_pairs/custom4/custom4_r01_g01_demo.png",
-    "contour": "pose_pairs/custom4/custom4_r01_g01_contour_hd.png"
-  },
-  {
     "id": "custom5_r01_g01",
     "demo": "pose_pairs/custom5/custom5_r01_g01_demo.png",
     "contour": "pose_pairs/custom5/custom5_r01_g01_contour_hd.png"
+  },
+  {
+    "id": "custom6_r01_g01",
+    "demo": "pose_pairs/custom6/custom6_r01_g01_demo.png",
+    "contour": "pose_pairs/custom6/custom6_r01_g01_contour_hd.png"
+  },
+  {
+    "id": "custom7_r01_g01",
+    "demo": "pose_pairs/custom7/custom7_r01_g01_demo.png",
+    "contour": "pose_pairs/custom7/custom7_r01_g01_contour_hd.png"
   }
 ]
