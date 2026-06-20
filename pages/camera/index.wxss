@@ -59,12 +59,24 @@
 }
 
 .pose-guide-image {
+  position: absolute;
+  left: 0;
+  top: 0;
   width: 100%;
   height: 100%;
 }
 
+.pose-guide-main {
+  z-index: 2;
+}
+
+.pose-guide-boost {
+  z-index: 1;
+  opacity: 0.78;
+}
+
 .outline-guide-image {
-  opacity: 0.92;
+  opacity: 1;
 }
 
 .photo-guide-image {

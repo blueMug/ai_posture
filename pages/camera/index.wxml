@@ -24,7 +24,12 @@
         bindtouchcancel="onGuideDragEnd"
       >
         <cover-image
-          class="pose-guide-image {{guideImageClass}}"
+          wx:if="{{guideMode == 'outline'}}"
+          class="pose-guide-image pose-guide-boost"
+          src="{{currentTemplate.guideImage}}"
+        ></cover-image>
+        <cover-image
+          class="pose-guide-image pose-guide-main {{guideImageClass}}"
           src="{{currentTemplate.guideImage}}"
           binderror="onGuideImageError"
         ></cover-image>
