@@ -1,5 +1,5 @@
 const AD_ENABLED = false
-const MOCK_AD_ENABLED = true
+const MOCK_AD_ENABLED = false
 
 const createAdSlot = (slot) => ({
   ...slot,
