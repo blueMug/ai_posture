@@ -13,7 +13,7 @@ const GUIDE_MAX_OFFSET_X = 120
 const GUIDE_MAX_OFFSET_Y = 160
 const GUIDE_MODE_OUTLINE = 'outline'
 const GUIDE_MODE_PHOTO = 'photo'
-const COUNTDOWN_SECONDS_OPTIONS = [0, 3, 10]
+const COUNTDOWN_SECONDS_OPTIONS = [0, 3, 5, 10]
 
 const hideTemplateGuide = (template) => ({
   ...template,
