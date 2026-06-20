@@ -1,7 +1,5 @@
 const { poseTemplates, poseCategories } = require('../../utils/poses')
 
-const GUIDE_CONFIRM_STORAGE_KEY = 'keepGuideForConfirm'
-
 const normalizeKeyword = (value) => String(value || '').trim().toLowerCase()
 
 const getPoseSearchText = (pose, category) => [
@@ -36,22 +34,7 @@ Page({
     searchKeyword: '',
     poseCategories,
     hasSearchResult: true,
-    failedPoseImages: {},
-    keepGuideForConfirm: false
-  },
-
-  onLoad() {
-    this.loadGuideConfirmSetting()
-  },
-
-  onShow() {
-    this.loadGuideConfirmSetting()
-  },
-
-  loadGuideConfirmSetting() {
-    this.setData({
-      keepGuideForConfirm: Boolean(wx.getStorageSync(GUIDE_CONFIRM_STORAGE_KEY))
-    })
+    failedPoseImages: {}
   },
 
   onSearchInput(event) {
@@ -70,21 +53,6 @@ Page({
       searchKeyword: '',
       poseCategories,
       hasSearchResult: true
-    })
-  },
-
-  openPoseGallery() {
-    wx.navigateTo({
-      url: '/pages/pose-gallery/index'
-    })
-  },
-
-  onGuideConfirmChange(event) {
-    const keepGuideForConfirm = Boolean(event.detail.value)
-
-    wx.setStorageSync(GUIDE_CONFIRM_STORAGE_KEY, keepGuideForConfirm)
-    this.setData({
-      keepGuideForConfirm
     })
   },
 

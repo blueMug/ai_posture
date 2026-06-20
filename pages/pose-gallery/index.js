@@ -6,16 +6,6 @@ Page({
     failedPoseImages: {}
   },
 
-  backToHome() {
-    wx.navigateBack({
-      fail: () => {
-        wx.redirectTo({
-          url: '/pages/home/index'
-        })
-      }
-    })
-  },
-
   openPoseDetail(event) {
     const { poseId } = event.currentTarget.dataset
 

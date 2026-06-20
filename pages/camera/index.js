@@ -18,7 +18,7 @@ const hideTemplateGuide = (template) => ({
 })
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max)
-const isModelPose = (template) => template && template.categoryId === 'model-pairs'
+const isModelPose = (template) => Boolean(template && template.modelImage)
 const canUseModelPhotoGuide = (template) => Boolean(isModelPose(template) && template.modelImage)
 const normalizeGuideMode = (template, guideMode) => (
   guideMode === GUIDE_MODE_PHOTO && canUseModelPhotoGuide(template)
@@ -289,7 +289,7 @@ Page({
       return
     }
 
-    wx.redirectTo({
+    wx.switchTab({
       url: HOME_PAGE_URL
     })
   },

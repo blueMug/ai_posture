@@ -22,7 +22,7 @@ Page({
   backToHome() {
     wx.navigateBack({
       fail: () => {
-        wx.redirectTo({
+        wx.switchTab({
           url: '/pages/home/index'
         })
       }

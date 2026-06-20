@@ -1,6 +1,6 @@
 <view class="page">
   <view class="top-bar">
-    <view class="back-btn" bindtap="backToHome">返回</view>
+    <view class="placeholder"></view>
     <view class="title">姿势速览</view>
     <view class="placeholder"></view>
   </view>

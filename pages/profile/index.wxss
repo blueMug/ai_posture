@@ -1,0 +1,76 @@
+.page {
+  min-height: 100vh;
+  padding: 88rpx 28rpx 160rpx;
+  box-sizing: border-box;
+  background:
+    radial-gradient(circle at 18% 8%, rgba(255, 233, 92, 0.24), transparent 34%),
+    radial-gradient(circle at 86% 18%, rgba(156, 231, 255, 0.18), transparent 36%),
+    linear-gradient(180deg, #171717 0%, #090909 100%);
+}
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 72rpx;
+}
+
+.placeholder {
+  width: 108rpx;
+}
+
+.title {
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: 700;
+}
+
+.hero {
+  padding: 34rpx 4rpx 24rpx;
+}
+
+.hero-title {
+  color: #ffffff;
+  font-size: 52rpx;
+  line-height: 1.15;
+  font-weight: 800;
+}
+
+.hero-desc {
+  margin-top: 16rpx;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 24rpx;
+  line-height: 1.5;
+}
+
+.setting-card {
+  margin-top: 24rpx;
+  padding: 28rpx 24rpx;
+  border-radius: 32rpx;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1rpx solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 22rpx 62rpx rgba(0, 0, 0, 0.24);
+}
+
+.setting-copy {
+  flex: 1;
+  min-width: 0;
+  padding-right: 24rpx;
+}
+
+.setting-title {
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: 800;
+}
+
+.setting-desc {
+  margin-top: 12rpx;
+  color: rgba(255, 255, 255, 0.56);
+  font-size: 24rpx;
+  line-height: 1.45;
+}
