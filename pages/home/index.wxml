@@ -1,4 +1,9 @@
 <view class="page" style="{{pageTopStyle}}">
+  <view class="brand-copy">
+    <view class="brand-name">拍姿势相机</view>
+    <view class="brand-tagline">摆姿势有参考，拍照更出片</view>
+  </view>
+
   <view class="search-card">
     <view class="search-icon">⌕</view>
     <input
