@@ -1,6 +1,14 @@
 const { poseTemplates, poseCategories } = require('../../utils/poses')
 
+const RECOMMEND_LIMIT_PER_CATEGORY = 4
+
 const normalizeKeyword = (value) => String(value || '').trim().toLowerCase()
+const takeRecommendPoses = (categories) => categories
+  .map((category) => ({
+    ...category,
+    poses: category.poses.slice(0, RECOMMEND_LIMIT_PER_CATEGORY)
+  }))
+  .filter((category) => category.poses.length > 0)
 
 const getPoseSearchText = (pose, category) => [
   pose.name,
@@ -18,21 +26,21 @@ const filterPoseCategories = (keyword) => {
   const query = normalizeKeyword(keyword)
 
   if (!query) {
-    return poseCategories
+    return takeRecommendPoses(poseCategories)
   }
 
-  return poseCategories
+  return takeRecommendPoses(poseCategories
     .map((category) => ({
       ...category,
       poses: category.poses.filter((pose) => getPoseSearchText(pose, category).includes(query))
     }))
-    .filter((category) => category.poses.length > 0)
+    .filter((category) => category.poses.length > 0))
 }
 
 Page({
   data: {
     searchKeyword: '',
-    poseCategories,
+    poseCategories: takeRecommendPoses(poseCategories),
     hasSearchResult: true,
     failedPoseImages: {}
   },
@@ -51,7 +59,7 @@ Page({
   clearSearch() {
     this.setData({
       searchKeyword: '',
-      poseCategories,
+      poseCategories: takeRecommendPoses(poseCategories),
       hasSearchResult: true
     })
   },
