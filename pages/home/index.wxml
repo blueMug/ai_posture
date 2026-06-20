@@ -78,7 +78,7 @@
             </view>
           </view>
           <view class="badge">{{pose.badge}}</view>
-          <view wx:if="{{pose.categoryId == 'model-pairs'}}" class="preview-tip">看大图</view>
+          <view wx:if="{{pose.modelImage && pose.detailImage}}" class="preview-tip">看大图</view>
         </view>
 
         <view class="pose-info">

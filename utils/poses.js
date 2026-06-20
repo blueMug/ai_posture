@@ -11,9 +11,24 @@ const poseTemplates = combinePairPoses.map((pose) => ({
 
 const categoryDefinitions = [
   {
-    id: 'model-pairs',
-    name: '真人示例',
-    subtitle: '选择页看真人模特照片，拍摄页使用对应透明轮廓'
+    id: 'portrait-half',
+    name: '半身写真',
+    subtitle: '适合头像、半身照、肩颈线条和温柔情绪照'
+  },
+  {
+    id: 'outfit-standing',
+    name: '全身穿搭',
+    subtitle: '适合显比例、长裙、通勤穿搭和户外全身照'
+  },
+  {
+    id: 'street-dynamic',
+    name: '街拍动态',
+    subtitle: '适合行走抓拍、咖啡街拍和自然松弛感'
+  },
+  {
+    id: 'travel-back',
+    name: '旅行背影',
+    subtitle: '适合景点、山顶、背影和更有表现力的旅行照'
   }
 ]
 

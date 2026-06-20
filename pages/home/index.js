@@ -14,6 +14,8 @@ const getPoseSearchText = (pose, category) => [
   category.subtitle
 ].join(' ').toLowerCase()
 
+const isRealPhotoPose = (pose) => Boolean(pose && pose.modelImage && pose.detailImage)
+
 const filterPoseCategories = (keyword) => {
   const query = normalizeKeyword(keyword)
 
@@ -100,7 +102,7 @@ Page({
       return
     }
 
-    if (!pose || pose.categoryId !== 'model-pairs') {
+    if (!isRealPhotoPose(pose)) {
       this.openCamera(event)
       return
     }
