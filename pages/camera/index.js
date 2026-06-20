@@ -2,6 +2,8 @@ const app = getApp()
 const { poseTemplates, findPoseIndex } = require('../../utils/poses')
 
 const GUIDE_CONFIRM_STORAGE_KEY = 'keepGuideForConfirm'
+const HOME_PAGE_ROUTE = 'pages/home/index'
+const HOME_PAGE_URL = `/${HOME_PAGE_ROUTE}`
 const CAMERA_MIN_ZOOM = 1
 const CAMERA_DEFAULT_MAX_ZOOM = 10
 const GUIDE_MAX_OFFSET_X = 120
@@ -220,12 +222,18 @@ Page({
   },
 
   backToHome() {
-    wx.navigateBack({
-      fail: () => {
-        wx.redirectTo({
-          url: '/pages/home/index'
-        })
-      }
+    const pages = getCurrentPages()
+    const homeIndex = pages.findIndex((page) => page.route === HOME_PAGE_ROUTE)
+
+    if (homeIndex >= 0 && homeIndex < pages.length - 1) {
+      wx.navigateBack({
+        delta: pages.length - 1 - homeIndex
+      })
+      return
+    }
+
+    wx.redirectTo({
+      url: HOME_PAGE_URL
     })
   },
 
