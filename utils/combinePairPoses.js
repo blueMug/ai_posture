@@ -35,7 +35,8 @@ const combinePairIds = [
   'custom34_r01_g01',
   'custom35_r01_g01',
   'custom36_r01_g01',
-  'custom37_r01_g01'
+  'custom37_r01_g01',
+  'custom38_r01_g01'
 ]
 
 const poseMetadataOverrides = {
@@ -384,6 +385,16 @@ const poseMetadataOverrides = {
     badge: '全身',
     guideImage: '/static/pose_pairs/custom37/custom37_r01_g01_contour.png',
     gradient: 'linear-gradient(150deg, #f0f3f8 0%, #2d3038 100%)'
+  },
+  custom38_r01_g01: {
+    categoryId: 'outfit-standing',
+    categoryName: '全身穿搭',
+    name: '锁骨草帽侧站',
+    tip: '推荐全身穿搭、自然站姿、草帽道具照',
+    description: '全身入镜自然松弛站立，身体微微侧向一方，重心落于后脚、前脚轻点地面；一手轻触锁骨附近，另一手垂于身侧持握草帽，适合拍柔美从容的全身站姿照。',
+    badge: '全身',
+    guideImage: '/static/pose_pairs/custom38/custom38_r01_g01_contour.png',
+    gradient: 'linear-gradient(150deg, #efe2c8 0%, #7a6658 100%)'
   }
 }
 
