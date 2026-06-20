@@ -16,10 +16,6 @@
         "type": "folder"
       },
       {
-        "value": "static/pose_pairs",
-        "type": "folder"
-      },
-      {
         "value": ".DS_Store",
         "type": "file"
       },
