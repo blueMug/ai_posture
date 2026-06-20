@@ -1,5 +1,4 @@
 const app = getApp()
-const { cacheImage } = require('../../utils/imageCache')
 const { ensurePrivacyNotice } = require('../../utils/privacy')
 
 const GUIDE_MODE_PHOTO = 'photo'
@@ -64,7 +63,8 @@ const getGuideDisplayRect = ({
   targetWidth,
   targetHeight,
   offsetX = 0,
-  offsetY = 0
+  offsetY = 0,
+  scale = 1
 }) => {
   const photoWidth = Number(photoInfo.width || targetWidth)
   const photoHeight = Number(photoInfo.height || targetHeight)
@@ -78,12 +78,19 @@ const getGuideDisplayRect = ({
   const guideTopInCamera = Number(guideRect.top || targetHeight * 0.17) - cameraTop + offsetY
   const scaleX = photoDisplayRect.width / cameraFillRect.width
   const scaleY = photoDisplayRect.height / cameraFillRect.height
+  const left = photoDisplayRect.x + (guideLeftInCamera - cameraFillRect.x) * scaleX
+  const top = photoDisplayRect.y + (guideTopInCamera - cameraFillRect.y) * scaleY
+  const width = Number(guideRect.width || targetWidth * 0.86) * scaleX
+  const height = Number(guideRect.height || targetHeight * 0.48) * scaleY
+  const guideScale = Number(scale || 1)
+  const scaledWidth = width * guideScale
+  const scaledHeight = height * guideScale
 
   return {
-    left: photoDisplayRect.x + (guideLeftInCamera - cameraFillRect.x) * scaleX,
-    top: photoDisplayRect.y + (guideTopInCamera - cameraFillRect.y) * scaleY,
-    width: Number(guideRect.width || targetWidth * 0.86) * scaleX,
-    height: Number(guideRect.height || targetHeight * 0.48) * scaleY
+    left: left - (scaledWidth - width) / 2,
+    top: top - (scaledHeight - height) / 2,
+    width: scaledWidth,
+    height: scaledHeight
   }
 }
 
@@ -107,14 +114,6 @@ const getImageInfo = (src) => new Promise((resolve, reject) => {
   })
 })
 
-const canvasToTempFilePath = (options, page) => new Promise((resolve, reject) => {
-  wx.canvasToTempFilePath({
-    ...options,
-    success: (res) => resolve(res.tempFilePath),
-    fail: reject
-  }, page)
-})
-
 Page({
   data: {
     photoPath: '',
@@ -125,11 +124,12 @@ Page({
     guidePreviewVisible: true,
     guideOffsetX: 0,
     guideOffsetY: 0,
+    guideScale: 1,
     guideRect: null,
     guideMode: 'outline',
-    shareGenerating: false,
-    shareCanvasWidth: 1,
-    shareCanvasHeight: 1
+    poseId: '',
+    poseName: '',
+    poseShareImage: ''
   },
 
   onLoad() {
@@ -143,6 +143,7 @@ Page({
     }
 
     const previewGuide = app.globalData.previewGuide || {}
+    const previewPose = app.globalData.previewPose || {}
 
     this.setData({
       photoPath,
@@ -153,8 +154,12 @@ Page({
       guidePreviewVisible: true,
       guideOffsetX: Number(previewGuide.offsetX || 0),
       guideOffsetY: Number(previewGuide.offsetY || 0),
+      guideScale: Number(previewGuide.scale || 1),
       guideRect: previewGuide.rect || null,
-      guideMode: previewGuide.guideMode || 'outline'
+      guideMode: previewGuide.guideMode || 'outline',
+      poseId: previewPose.id || '',
+      poseName: previewPose.name || '',
+      poseShareImage: previewPose.thumbnailImage || ''
     })
 
     if (previewGuide.needsConfirm && previewGuide.image) {
@@ -179,6 +184,7 @@ Page({
           targetHeight,
           offsetX: Number(previewGuide.offsetX || 0),
           offsetY: Number(previewGuide.offsetY || 0),
+          scale: Number(previewGuide.scale || 1),
           guideMode: previewGuide.guideMode || 'outline'
         }),
         guideStyleReady: true
@@ -193,6 +199,7 @@ Page({
   retake() {
     app.globalData.photoPath = ''
     app.globalData.previewGuide = null
+    app.globalData.previewPose = null
     wx.navigateBack()
   },
 
@@ -246,118 +253,46 @@ Page({
     })
   },
 
-  async createPhotoWithGuide() {
-    const { photoPath, guideImage, guideOffsetX, guideOffsetY, guideRect, guideMode } = this.data
-
-    if (!photoPath || !guideImage) {
-      throw new Error('missing photo or guide')
-    }
-
-    const systemInfo = wx.getSystemInfoSync()
-    const canvasWidth = Number(systemInfo.windowWidth || 375)
-    const canvasHeight = Number(systemInfo.windowHeight || 667)
-
-    await new Promise((resolve) => {
-      this.setData({
-        shareCanvasWidth: canvasWidth,
-        shareCanvasHeight: canvasHeight
-      }, resolve)
-    })
-
-    const [photoInfo, cachedGuideImage] = await Promise.all([
-      getImageInfo(photoPath),
-      cacheImage(guideImage)
-    ])
-    const photoWidth = Number(photoInfo.width || canvasWidth)
-    const photoHeight = Number(photoInfo.height || canvasHeight)
-    const photoRect = getAspectFitRect(
-      photoWidth,
-      photoHeight,
-      canvasWidth,
-      canvasHeight
-    )
-    const guideDisplayRect = getGuideDisplayRect({
-      guideRect,
-      photoInfo,
-      targetWidth: canvasWidth,
-      targetHeight: canvasHeight,
-      offsetX: guideOffsetX,
-      offsetY: guideOffsetY
-    })
-    const context = wx.createCanvasContext('shareCanvas', this)
-
-    context.setFillStyle('#0d0d0d')
-    context.fillRect(0, 0, canvasWidth, canvasHeight)
-    context.drawImage(photoPath, photoRect.x, photoRect.y, photoRect.width, photoRect.height)
-    context.save()
-    context.setGlobalAlpha(guideMode === GUIDE_MODE_PHOTO ? 0.42 : 0.92)
-    context.drawImage(
-      cachedGuideImage,
-      guideDisplayRect.left,
-      guideDisplayRect.top,
-      guideDisplayRect.width,
-      guideDisplayRect.height
-    )
-    context.restore()
-
-    return new Promise((resolve, reject) => {
-      context.draw(false, async () => {
-        try {
-          const shareImagePath = await canvasToTempFilePath({
-            canvasId: 'shareCanvas',
-            width: canvasWidth,
-            height: canvasHeight,
-            destWidth: canvasWidth * 2,
-            destHeight: canvasHeight * 2,
-            fileType: 'jpg',
-            quality: 0.92
-          }, this)
-          resolve(shareImagePath)
-        } catch (error) {
-          reject(error)
-        }
+  sharePhoto() {
+    if (!this.data.photoPath) {
+      wx.showToast({
+        title: '照片不存在',
+        icon: 'none'
       })
-    })
-  },
-
-  async sharePhotoWithGuide() {
-    if (this.data.shareGenerating) {
       return
     }
 
-    this.setData({
-      shareGenerating: true
-    })
-
-    try {
-      const shareImagePath = await this.createPhotoWithGuide()
-
-      if (typeof wx.showShareImageMenu !== 'function') {
-        wx.showToast({
-          title: '当前微信版本不支持',
-          icon: 'none'
-        })
-        return
-      }
-
-      wx.showShareImageMenu({
-        path: shareImagePath,
-        fail: () => {
-          wx.showToast({
-            title: '分享取消',
-            icon: 'none'
-          })
-        }
-      })
-    } catch (error) {
+    if (typeof wx.showShareImageMenu !== 'function') {
       wx.showToast({
-        title: '生成分享图失败',
+        title: '当前微信版本不支持',
         icon: 'none'
       })
-    } finally {
-      this.setData({
-        shareGenerating: false
-      })
+      return
+    }
+
+    wx.showShareImageMenu({
+      path: this.data.photoPath,
+      fail: () => {
+        wx.showToast({
+          title: '分享取消',
+          icon: 'none'
+        })
+      }
+    })
+  },
+
+  onShareAppMessage() {
+    const poseId = this.data.poseId
+    const poseName = this.data.poseName
+
+    return {
+      title: poseName
+        ? `摆拍助手｜${poseName} 拍照姿势参考`
+        : '摆拍助手｜拍照姿势参考相机，姿势模板照着拍',
+      path: poseId
+        ? `/pages/pose-detail/index?poseId=${poseId}`
+        : '/pages/home/index',
+      imageUrl: this.data.poseShareImage || ''
     }
   }
 })

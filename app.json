@@ -4,6 +4,7 @@
     "pages/pose-gallery/index",
     "pages/profile/index",
     "pages/privacy/index",
+    "pages/feedback/index",
     "pages/pose-detail/index",
     "pages/camera/index",
     "pages/preview/index"
@@ -25,7 +26,7 @@
       },
       {
         "pagePath": "pages/pose-gallery/index",
-        "text": "姿势分类"
+        "text": "拍照场景"
       },
       {
         "pagePath": "pages/profile/index",

@@ -11,7 +11,6 @@
         <view class="section-title">我的收藏</view>
         <view class="section-desc">已收藏 {{favoritePoseCount}} 个姿势，可直接查看或拍照。</view>
       </view>
-      <view class="record-count">匿名记录 {{usageRecordCount}}</view>
     </view>
 
     <view wx:if="{{favoritePoseCount == 0}}" class="empty-state">
@@ -104,6 +103,14 @@
     <view class="setting-copy">
       <view class="setting-title">隐私与权限说明</view>
       <view class="setting-desc">查看相机、保存相册、本地收藏和本地使用记录的用途说明。</view>
+    </view>
+    <view class="setting-arrow">›</view>
+  </view>
+
+  <view class="setting-card feedback-card" bindtap="openFeedback">
+    <view class="setting-copy">
+      <view class="setting-title">意见反馈</view>
+      <view class="setting-desc">复制腾讯问卷链接，填写后内容会同步给创作者。</view>
     </view>
     <view class="setting-arrow">›</view>
   </view>

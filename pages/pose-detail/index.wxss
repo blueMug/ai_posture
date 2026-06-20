@@ -131,10 +131,15 @@
 .favorite-btn,
 .shoot-btn {
   flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   height: 96rpx;
+  padding: 0;
   border-radius: 999rpx;
   font-size: 30rpx;
   font-weight: 800;
+  line-height: 1;
 }
 
 .share-btn {

@@ -86,7 +86,7 @@
       >
         <image
           class="pose-photo"
-          src="{{pose.thumbnailImage || pose.modelImage || pose.detailImage}}"
+          src="{{pose.galleryDisplayImage}}"
           mode="aspectFill"
           data-pose-id="{{pose.id}}"
           binderror="onPoseImageError"
@@ -97,7 +97,12 @@
           data-pose-id="{{pose.id}}"
           catchtap="toggleFavorite"
         >收藏</view>
-        <view wx:if="{{failedPoseImages[pose.id]}}" class="image-error">图片加载失败</view>
+        <view
+          wx:if="{{failedPoseImages[pose.id]}}"
+          class="image-error"
+          data-pose-id="{{pose.id}}"
+          catchtap="retryPoseImage"
+        >图片加载失败，点击重试</view>
         <view class="photo-info">
           <view class="pose-name">{{pose.name}}</view>
           <view

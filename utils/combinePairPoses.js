@@ -104,13 +104,14 @@ const poseMetadataOverrides = {
     gradient: 'linear-gradient(150deg, #f5f3ef 0%, #7f7a73 100%)'
   },
   custom4_r01_g01: {
-    categoryId: 'outfit-standing',
-    categoryName: '全身穿搭',
-    name: '长裙从容侧身',
-    tip: '推荐全身照、长裙户外、优雅站姿',
-    description: '身体以四分之三角度微侧面向镜头，重心落于后脚，前脚自然着地；一手垂放、一手轻搭腰间，适合拍简洁大方的长裙全身照。',
+    categoryId: 'street-dynamic',
+    categoryName: '街拍动态',
+    name: '野餐垫托腮趴姿',
+    tip: '推荐湖岸野餐、趴姿托腮、慵懒少女感照片',
+    description: '趴在湖岸草地的格纹野餐垫上，双肘撑地、双手托腮，双腿在身后屈膝翘起并交叉脚踝；面前摆着书、法棍和葡萄，适合拍慵懒午后的野餐氛围照。',
     badge: '全身',
-    gradient: 'linear-gradient(150deg, #efe7dc 0%, #766b60 100%)'
+    guideImage: '/static/pose_guides/custom4/custom4_r01_g01_contour.png',
+    gradient: 'linear-gradient(150deg, #d8c0df 0%, #6f7d58 100%)'
   },
   custom5_r01_g01: {
     categoryId: 'portrait-half',

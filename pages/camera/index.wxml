@@ -9,36 +9,35 @@
     bindinitdone="onCameraInitDone"
     binderror="onCameraError"
   >
-    <cover-view class="top-bar">
-      <cover-view class="title">姿势引导相机</cover-view>
-    </cover-view>
-
-    <cover-view class="pose-stage">
+    <cover-view class="pose-stage" bindtap="closeSettingsPanel">
       <cover-view class="pose-name">{{currentTemplate.name}}</cover-view>
       <cover-view
         wx:if="{{currentTemplate.guideImage}}"
         class="pose-guide-box"
         style="{{guideBoxStyle}}"
-        bindtouchstart="onGuideDragStart"
+        bindtap="closeSettingsPanel"
+        catchtouchstart="onGuideDragStart"
         catchtouchmove="onGuideDragMove"
-        bindtouchend="onGuideDragEnd"
-        bindtouchcancel="onGuideDragEnd"
+        catchtouchend="onGuideDragEnd"
+        catchtouchcancel="onGuideDragEnd"
       >
-        <cover-image
-          wx:if="{{guideMode == 'outline'}}"
-          class="pose-guide-image pose-guide-shadow"
-          src="{{currentTemplate.guideImage}}"
-        ></cover-image>
-        <cover-image
-          wx:if="{{guideMode == 'outline'}}"
-          class="pose-guide-image pose-guide-boost"
-          src="{{currentTemplate.guideImage}}"
-        ></cover-image>
-        <cover-image
-          class="pose-guide-image pose-guide-main {{guideImageClass}}"
-          src="{{currentTemplate.guideImage}}"
-          binderror="onGuideImageError"
-        ></cover-image>
+        <cover-view class="pose-guide-layer">
+          <cover-image
+            wx:if="{{guideMode == 'outline'}}"
+            class="pose-guide-image pose-guide-shadow"
+            src="{{currentTemplate.guideImage}}"
+          ></cover-image>
+          <cover-image
+            wx:if="{{guideMode == 'outline'}}"
+            class="pose-guide-image pose-guide-boost"
+            src="{{currentTemplate.guideImage}}"
+          ></cover-image>
+          <cover-image
+            class="pose-guide-image pose-guide-main {{guideImageClass}}"
+            src="{{currentTemplate.guideImage}}"
+            binderror="onGuideImageError"
+          ></cover-image>
+        </cover-view>
       </cover-view>
       <cover-view wx:if="{{guideLoadFailed}}" class="guide-error-tip">
         轮廓加载失败，请检查图片域名
@@ -47,13 +46,50 @@
         <cover-view class="countdown-number">{{countdownRemaining}}</cover-view>
       </cover-view>
     </cover-view>
+
+    <cover-view class="camera-settings">
+      <cover-view
+        class="settings-trigger {{settingsPanelOpen ? 'active' : ''}}"
+        catchtap="toggleSettingsPanel"
+      >⚙</cover-view>
+      <cover-view wx:if="{{settingsPanelOpen}}" class="settings-panel">
+        <cover-view class="settings-title">拍摄设置</cover-view>
+        <cover-view class="settings-item">
+          <cover-view class="settings-label">轮廓大小</cover-view>
+          <cover-view class="scale-control">
+            <cover-view class="scale-step-btn" catchtap="decreaseGuideScale">-</cover-view>
+            <cover-view class="scale-percent" catchtap="resetGuideScale">{{guideScaleText}}</cover-view>
+            <cover-view class="scale-step-btn" catchtap="increaseGuideScale">+</cover-view>
+          </cover-view>
+        </cover-view>
+        <cover-view class="settings-actions">
+          <cover-view
+            class="settings-chip {{keepGuideForConfirm ? 'active' : ''}}"
+            catchtap="toggleKeepGuideForConfirm"
+          >拍后带轮廓 {{keepGuideForConfirm ? '开' : '关'}}</cover-view>
+          <cover-view
+            class="settings-chip {{countdownSeconds > 0 ? 'active' : ''}}"
+            catchtap="cycleCountdown"
+          >{{countdownText}}</cover-view>
+        </cover-view>
+      </cover-view>
+    </cover-view>
+
+    <cover-view
+      wx:if="{{guideUsageTipVisible}}"
+      class="guide-usage-tip"
+      catchtap="dismissGuideUsageTip"
+    >
+      <cover-view class="guide-usage-title">姿势可以拖动对齐</cover-view>
+      <cover-view class="guide-usage-desc">双指缩放，或点左上设置调整轮廓大小</cover-view>
+    </cover-view>
   </camera>
   <view wx:else class="privacy-wait">
     <view class="privacy-title">使用相机前需要确认权限说明</view>
     <view class="privacy-desc">我们会先说明相机、相册、本地收藏和使用记录的用途。</view>
   </view>
 
-  <view wx:if="{{privacyAccepted}}" class="bottom-panel safe-area-bottom">
+  <view wx:if="{{privacyAccepted}}" class="bottom-panel safe-area-bottom" bindtap="closeSettingsPanel">
     <view class="shoot-row">
       <view
         class="guide-toggle-btn {{guideVisible ? 'active' : 'muted'}} {{showModelToggle ? 'model-toggle-btn' : ''}}"
@@ -79,7 +115,7 @@
         </view>
         <view class="switch-icon-btn" bindtap="switchCamera">⟳</view>
       </view>
-      <view class="select-pose-btn" bindtap="backToHome">选姿势</view>
+      <view class="select-pose-btn" bindtap="backToPoseGallery">选姿势</view>
     </view>
     <view class="camera-zoom-row">
       <view class="zoom-label">1x</view>
@@ -97,12 +133,6 @@
         bindchange="onCameraZoomChange"
       />
       <view class="zoom-label">{{cameraZoomText}}</view>
-    </view>
-    <view class="countdown-row">
-      <view
-        class="countdown-btn {{countdownSeconds > 0 ? 'active' : ''}}"
-        bindtap="cycleCountdown"
-      >{{countdownText}}</view>
     </view>
   </view>
 </view>

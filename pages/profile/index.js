@@ -6,9 +6,9 @@ const { adSlots } = require('../../utils/adConfig')
 const { poseTemplates } = require('../../utils/poses')
 const { cacheImageFields } = require('../../utils/imageCache')
 const { ensurePrivacyNotice } = require('../../utils/privacy')
+const { isFeedbackFormConfigured } = require('../../utils/feedbackConfig')
 const {
   getFavoritePoses,
-  getPoseUsageRecords,
   togglePoseFavorite
 } = require('../../utils/userData')
 
@@ -22,7 +22,6 @@ Page({
     guideMode: GUIDE_MODE_OUTLINE,
     favoritePoses: [],
     favoritePoseCount: 0,
-    usageRecordCount: 0,
     adSlot: adSlots.profileBanner
   },
 
@@ -50,8 +49,7 @@ Page({
 
     this.setData({
       favoritePoses,
-      favoritePoseCount: favoritePoses.length,
-      usageRecordCount: getPoseUsageRecords().length
+      favoritePoseCount: favoritePoses.length
     })
 
     Promise.all(favoritePoses.map((pose) => cacheImageFields(pose, ['thumbnailImage']))).then((cachedPoses) => {
@@ -116,6 +114,22 @@ Page({
   openPrivacy() {
     wx.navigateTo({
       url: '/pages/privacy/index'
+    })
+  },
+
+  openFeedback() {
+    if (!isFeedbackFormConfigured()) {
+      wx.showModal({
+        title: '反馈表单未配置',
+        content: '请先在 utils/feedbackConfig.js 填入 HTTPS 腾讯问卷链接，再打开意见反馈。',
+        confirmText: '知道了',
+        showCancel: false
+      })
+      return
+    }
+
+    wx.navigateTo({
+      url: '/pages/feedback/index'
     })
   },
 

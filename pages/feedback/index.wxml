@@ -1,0 +1,23 @@
+<view class="page">
+  <view class="top-bar">
+    <view class="back-btn" bindtap="back">返回</view>
+    <view class="title">意见反馈</view>
+    <view class="placeholder"></view>
+  </view>
+
+  <view class="feedback-card">
+    <view class="feedback-title">把问题告诉创作者</view>
+    <view class="feedback-desc">
+      由于当前小程序预览环境不支持直接打开腾讯问卷，请复制反馈链接后，在微信或浏览器中粘贴打开填写。
+    </view>
+
+    <view class="link-box">{{formUrl}}</view>
+
+    <button class="copy-btn" bindtap="copyFeedbackLink">复制反馈链接</button>
+  </view>
+
+  <view class="tip-card">
+    <view class="tip-title">提交后会到哪里？</view>
+    <view class="tip-desc">反馈内容会提交到腾讯问卷后台，创作者可以在那里查看和处理。</view>
+  </view>
+</view>

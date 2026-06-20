@@ -1,7 +1,7 @@
 <view class="page" style="{{pageTopStyle}}">
   <view class="brand-copy">
-    <view class="brand-name">拍姿势相机</view>
-    <view class="brand-tagline">摆姿势有参考，拍照更出片</view>
+    <view class="brand-name">摆拍助手</view>
+    <view class="brand-tagline">拍照姿势参考相机，姿势模板照着拍</view>
   </view>
 
   <view class="search-card">
@@ -9,7 +9,7 @@
     <input
       class="search-input"
       value="{{searchKeyword}}"
-      placeholder="搜索自拍、穿搭、旅行、街拍、背影"
+      placeholder="搜索拍照姿势、姿势相机、自拍、穿搭、旅行"
       placeholder-class="search-placeholder"
       confirm-type="search"
       bindinput="onSearchInput"
@@ -20,6 +20,90 @@
   <view wx:if="{{!hasSearchResult}}" class="empty-state">
     <view class="empty-title">没有匹配姿势</view>
     <view class="empty-desc">试试“半身”“自拍”“全身”“背影”。</view>
+  </view>
+
+  <view wx:if="{{!searchKeyword && dailyRecommend.poses.length}}" class="daily-section">
+    <view class="section-head">
+      <view>
+        <view class="section-kicker">今日推荐</view>
+        <view class="section-title">{{dailyRecommend.title}}</view>
+        <view class="section-subtitle">{{dailyRecommend.subtitle}}</view>
+      </view>
+      <view
+        class="section-link"
+        data-category-id="{{dailyRecommend.categoryId}}"
+        bindtap="openCategory"
+      >看全部</view>
+    </view>
+
+    <scroll-view
+      class="daily-scroll"
+      scroll-x
+      enhanced
+      show-scrollbar="{{false}}"
+    >
+      <view class="daily-list">
+        <view
+          wx:for="{{dailyRecommend.poses}}"
+          wx:key="id"
+          wx:for-item="pose"
+          class="daily-card"
+          data-pose-id="{{pose.id}}"
+          bindtap="openPoseDetail"
+        >
+          <view class="daily-image-wrap" style="background: {{pose.gradient}};">
+            <image
+              class="daily-image"
+              src="{{pose.thumbnailImage || pose.guideImage}}"
+              mode="{{pose.thumbnailMode || 'aspectFit'}}"
+              data-pose-id="{{pose.id}}"
+              binderror="onPoseImageError"
+            ></image>
+            <view wx:if="{{failedPoseImages[pose.id]}}" class="mini-image-error">
+              图片加载失败
+            </view>
+          </view>
+          <view class="daily-name">{{pose.name}}</view>
+          <view
+            class="daily-action"
+            data-pose-id="{{pose.id}}"
+            catchtap="openCamera"
+          >照着拍</view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <view wx:if="{{!searchKeyword && quickScenes.length}}" class="scene-section">
+    <view class="section-head compact">
+      <view>
+        <view class="section-title">马上开拍</view>
+        <view class="section-subtitle">不知道选什么，就从这几个高频场景开始。</view>
+      </view>
+    </view>
+
+    <view class="scene-grid">
+      <view
+        wx:for="{{quickScenes}}"
+        wx:key="categoryId"
+        wx:for-item="scene"
+        class="scene-card"
+        data-category-id="{{scene.categoryId}}"
+        bindtap="openCategory"
+      >
+        <image class="scene-image" src="{{scene.coverImage}}" mode="aspectFit"></image>
+        <view class="scene-mask"></view>
+        <view class="scene-copy">
+          <view class="scene-title">{{scene.title}}</view>
+          <view class="scene-desc">{{scene.desc}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{!searchKeyword && hasSearchResult}}" class="more-head">
+    <view class="section-title">更多拍照灵感</view>
+    <view class="section-subtitle">按场景挑一张，进入相机照着轮廓拍。</view>
   </view>
 
   <view

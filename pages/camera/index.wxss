@@ -7,7 +7,7 @@
 
 .camera {
   width: 100vw;
-  height: calc(100vh - 382rpx);
+  height: calc(100vh - 330rpx);
 }
 
 .camera {
@@ -38,48 +38,173 @@
   line-height: 1.5;
 }
 
-.top-bar {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  z-index: 10;
-  height: 160rpx;
-  padding: 72rpx 32rpx 0;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.68), rgba(0, 0, 0, 0));
-}
-
-.title {
-  font-size: 34rpx;
-  font-weight: 600;
-  color: #ffffff;
-}
-
 .pose-stage {
   position: absolute;
   left: 7vw;
   right: 7vw;
-  top: 13vh;
+  top: 8vh;
   bottom: 4vh;
   z-index: 5;
 }
 
-.pose-name {
+.pose-guide-layer {
   position: absolute;
-  left: 50%;
+  left: 0;
   top: 0;
-  transform: translateX(-50%);
-  padding: 12rpx 28rpx;
+  width: 100%;
+  height: 100%;
+  transform-origin: center center;
+}
+
+.camera-settings {
+  position: absolute;
+  left: 28rpx;
+  top: 88rpx;
+  z-index: 14;
+}
+
+.settings-trigger {
+  width: 72rpx;
+  height: 72rpx;
+  line-height: 72rpx;
   border-radius: 999rpx;
   color: #ffffff;
-  font-size: 26rpx;
+  font-size: 36rpx;
   font-weight: 800;
+  text-align: center;
   background: rgba(0, 0, 0, 0.62);
-  border: 1rpx solid rgba(255, 255, 255, 0.48);
+  border: 2rpx solid rgba(255, 255, 255, 0.58);
+}
+
+.settings-trigger.active {
+  color: #111111;
+  background: #ffe95c;
+  border-color: #ffe95c;
+}
+
+.settings-panel {
+  width: 360rpx;
+  margin-top: 14rpx;
+  padding: 22rpx;
+  border-radius: 28rpx;
+  box-sizing: border-box;
+  background: rgba(0, 0, 0, 0.72);
+  border: 2rpx solid rgba(255, 255, 255, 0.42);
+}
+
+.settings-title {
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 24rpx;
+  font-weight: 900;
+}
+
+.settings-item {
+  margin-top: 18rpx;
+}
+
+.settings-label {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 22rpx;
+  font-weight: 700;
+}
+
+.scale-control {
+  display: flex;
+  align-items: center;
+  margin-top: 12rpx;
+}
+
+.scale-step-btn,
+.scale-percent {
+  height: 58rpx;
+  line-height: 58rpx;
+  border-radius: 999rpx;
+  color: #ffffff;
+  font-size: 28rpx;
+  font-weight: 900;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.14);
+  border: 2rpx solid rgba(255, 255, 255, 0.36);
+}
+
+.scale-step-btn {
+  width: 72rpx;
+}
+
+.scale-percent {
+  width: 124rpx;
+  margin: 0 12rpx;
+  color: #ffe95c;
+  font-size: 24rpx;
+}
+
+.settings-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 18rpx;
+}
+
+.settings-chip {
+  height: 56rpx;
+  line-height: 56rpx;
+  padding: 0 22rpx;
+  margin: 0 12rpx 12rpx 0;
+  border-radius: 999rpx;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 22rpx;
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.12);
+  border: 2rpx solid rgba(255, 255, 255, 0.34);
+}
+
+.settings-chip.active {
+  color: #111111;
+  background: #ffe95c;
+  border-color: #ffe95c;
+}
+
+.guide-usage-tip {
+  position: absolute;
+  left: 50%;
+  top: 190rpx;
+  z-index: 15;
+  transform: translateX(-50%);
+  width: 520rpx;
+  padding: 20rpx 24rpx;
+  border-radius: 28rpx;
+  box-sizing: border-box;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.72);
+  border: 2rpx solid rgba(255, 233, 92, 0.58);
+  box-shadow: 0 18rpx 46rpx rgba(0, 0, 0, 0.34);
+}
+
+.guide-usage-title {
+  color: #ffe95c;
+  font-size: 26rpx;
+  font-weight: 900;
+}
+
+.guide-usage-desc {
+  margin-top: 8rpx;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 22rpx;
+  font-weight: 700;
+}
+
+.pose-name {
+  position: absolute;
+  left: 96rpx;
+  top: 0;
+  max-width: 360rpx;
+  padding: 10rpx 22rpx;
+  border-radius: 999rpx;
+  color: #ffffff;
+  font-size: 24rpx;
+  font-weight: 800;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1rpx solid rgba(255, 255, 255, 0.32);
   text-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.85);
 }
 
@@ -144,8 +269,8 @@
   right: 0;
   bottom: 0;
   z-index: 20;
-  min-height: 382rpx;
-  padding: 28rpx 28rpx 44rpx;
+  min-height: 330rpx;
+  padding: 24rpx 28rpx 38rpx;
   box-sizing: border-box;
   background:
     linear-gradient(0deg, rgba(0, 0, 0, 0.94), rgba(0, 0, 0, 0.82)),
@@ -312,30 +437,6 @@
   justify-content: space-between;
   background: rgba(0, 0, 0, 0.62);
   border: 2rpx solid rgba(255, 255, 255, 0.48);
-}
-
-.countdown-row {
-  display: flex;
-  justify-content: center;
-  margin-top: 18rpx;
-}
-
-.countdown-btn {
-  height: 58rpx;
-  line-height: 58rpx;
-  padding: 0 28rpx;
-  border-radius: 999rpx;
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 24rpx;
-  font-weight: 800;
-  background: rgba(0, 0, 0, 0.62);
-  border: 2rpx solid rgba(255, 255, 255, 0.48);
-}
-
-.countdown-btn.active {
-  color: #111111;
-  background: #ffe95c;
-  border-color: #ffe95c;
 }
 
 .zoom-slider {

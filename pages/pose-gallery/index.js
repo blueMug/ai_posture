@@ -1,5 +1,4 @@
 const { poseCategories } = require('../../utils/poses')
-const { cachePoseCategories } = require('../../utils/imageCache')
 const { adSlots } = require('../../utils/adConfig')
 const { ensurePrivacyNotice } = require('../../utils/privacy')
 const {
@@ -22,6 +21,27 @@ const getPoseSearchText = (pose, category) => [
   category.name,
   category.subtitle
 ].join(' ').toLowerCase()
+
+const getGalleryDisplayImage = (pose, retryToken = '') => {
+  const imageUrl = pose.modelImage || pose.detailImage || pose.thumbnailImage || ''
+
+  if (!retryToken || !/^https?:\/\//.test(imageUrl)) {
+    return imageUrl
+  }
+
+  const separator = imageUrl.includes('?') ? '&' : '?'
+  return `${imageUrl}${separator}_retry=${retryToken}`
+}
+
+const withGalleryDisplayImages = (categories, retryTokens = {}) => (
+  categories.map((category) => ({
+    ...category,
+    poses: category.poses.map((pose) => ({
+      ...pose,
+      galleryDisplayImage: getGalleryDisplayImage(pose, retryTokens[pose.id])
+    }))
+  }))
+)
 
 const filterPoseCategories = (keyword) => {
   const query = normalizeKeyword(keyword)
@@ -62,6 +82,7 @@ Page({
     favoritePoseIds: [],
     hasSearchResult: true,
     failedPoseImages: {},
+    imageRetryTokens: {},
     adSlot: adSlots.poseGalleryFeed
   },
 
@@ -105,7 +126,10 @@ Page({
     const requestId = (this.poseCategoryRequestId || 0) + 1
     this.poseCategoryRequestId = requestId
     const favoritePoseIds = extraData.favoritePoseIds || getFavoritePoseIds()
-    const nextCategoriesWithFavorites = withFavoriteStateCategories(nextCategories, favoritePoseIds)
+    const nextCategoriesWithFavorites = withGalleryDisplayImages(
+      withFavoriteStateCategories(nextCategories, favoritePoseIds),
+      this.data.imageRetryTokens
+    )
 
     if (!nextCategoriesWithFavorites.length) {
       this.setData({
@@ -118,32 +142,27 @@ Page({
       return
     }
 
-    cachePoseCategories(nextCategoriesWithFavorites, ['thumbnailImage']).then((cachedCategories) => {
-      if (this.poseCategoryRequestId !== requestId) {
-        return
+    const cachedCategories = nextCategoriesWithFavorites
+    const activeCategoryId = cachedCategories.some((category) => category.id === targetCategoryId)
+      ? targetCategoryId
+      : cachedCategories[0].id
+
+    this.setData({
+      ...extraData,
+      favoritePoseIds,
+      poseCategories: cachedCategories,
+      categoryNavs: cachedCategories.map((category) => ({
+        id: category.id,
+        name: category.name,
+        count: category.poses.length
+      })),
+      activeCategoryId
+    }, () => {
+      if (targetCategoryId) {
+        wx.nextTick(() => {
+          this.scrollToCategoryId(activeCategoryId)
+        })
       }
-
-      const activeCategoryId = cachedCategories.some((category) => category.id === targetCategoryId)
-        ? targetCategoryId
-        : cachedCategories[0].id
-
-      this.setData({
-        ...extraData,
-        favoritePoseIds,
-        poseCategories: cachedCategories,
-        categoryNavs: cachedCategories.map((category) => ({
-          id: category.id,
-          name: category.name,
-          count: category.poses.length
-        })),
-        activeCategoryId
-      }, () => {
-        if (targetCategoryId) {
-          wx.nextTick(() => {
-            this.scrollToCategoryId(activeCategoryId)
-          })
-        }
-      })
     })
   },
 
@@ -249,6 +268,23 @@ Page({
 
     this.setData({
       [`failedPoseImages.${poseId}`]: true
+    })
+  },
+
+  retryPoseImage(event) {
+    const { poseId } = event.currentTarget.dataset
+
+    if (!poseId) {
+      return
+    }
+
+    const retryToken = Date.now()
+
+    this.setData({
+      [`failedPoseImages.${poseId}`]: false,
+      [`imageRetryTokens.${poseId}`]: retryToken
+    }, () => {
+      this.refreshPoseCategories()
     })
   }
 })

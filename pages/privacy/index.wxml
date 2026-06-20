@@ -6,7 +6,7 @@
   </view>
 
   <view class="hero-card">
-    <view class="hero-title">拍姿势相机如何使用权限</view>
+    <view class="hero-title">摆拍助手如何使用权限</view>
     <view class="hero-desc">
       我们只在你主动使用相关功能时申请相机和相册权限。收藏、使用记录等数据用于改善本机体验，当前仅保存在你的设备本地。
     </view>
@@ -25,5 +25,6 @@
     <view class="section-title">你可以如何管理</view>
     <view class="privacy-item">相机和相册权限可在微信小程序设置中开启或关闭。</view>
     <view class="privacy-item">收藏和使用记录保存在本机，卸载小程序或清理微信缓存后可能被移除。</view>
+    <view class="privacy-item">意见反馈由你自愿填写并提交，提交后的内容可通过腾讯问卷页面或联系创作者处理。</view>
   </view>
 </view>

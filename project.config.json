@@ -1,5 +1,5 @@
 {
-  "description": "AI Posture camera guide mini program",
+  "description": "摆拍助手：拍照姿势参考相机，提供姿势模板、自拍穿搭旅行街拍姿势参考",
   "miniprogramRoot": "./",
   "packOptions": {
     "ignore": [
@@ -21,6 +21,10 @@
       },
       {
         "value": "static/pose_guides",
+        "type": "folder"
+      },
+      {
+        "value": "static/pose_thumbs",
         "type": "folder"
       },
       {
@@ -68,7 +72,7 @@
   "compileType": "miniprogram",
   "libVersion": "3.7.0",
   "appid": "wxa3858e3346b96612",
-  "projectname": "ai_posture",
+  "projectname": "摆拍助手",
   "condition": {},
   "editorSetting": {
     "tabIndent": "insertSpaces",

@@ -6,14 +6,18 @@ const { ensurePrivacyNotice, hasAcceptedPrivacyNotice } = require('../../utils/p
 
 const GUIDE_CONFIRM_STORAGE_KEY = 'keepGuideForConfirm'
 const GUIDE_MODE_STORAGE_KEY = 'cameraGuideMode'
+const CAMERA_GUIDE_TIP_STORAGE_KEY = 'cameraGuideUsageTipSeen'
 const CACHE_TEMPLATE_IMAGE_FIELDS = ['guideImage', 'thumbnailImage', 'modelImage']
-const HOME_PAGE_ROUTE = 'pages/home/index'
-const HOME_PAGE_URL = `/${HOME_PAGE_ROUTE}`
+const POSE_GALLERY_ROUTE = 'pages/pose-gallery/index'
+const POSE_GALLERY_URL = `/${POSE_GALLERY_ROUTE}`
 const CAMERA_MIN_ZOOM = 1
 const CAMERA_DEFAULT_MAX_ZOOM = 10
 const GUIDE_MAX_OFFSET_X = 120
 const GUIDE_MAX_OFFSET_Y = 160
-const BOTTOM_PANEL_RPX = 382
+const GUIDE_MIN_SCALE = 0.35
+const GUIDE_MAX_SCALE = 2.2
+const GUIDE_SCALE_STEP = 0.1
+const BOTTOM_PANEL_RPX = 330
 const STAGE_TOP_VIEWPORT_RATIO = 0.13
 const STAGE_BOTTOM_VIEWPORT_RATIO = 0.04
 const GUIDE_LEFT_RATIO = 0.07
@@ -23,6 +27,19 @@ const GUIDE_HEIGHT_IN_STAGE_RATIO = 0.88
 const GUIDE_MODE_OUTLINE = 'outline'
 const GUIDE_MODE_PHOTO = 'photo'
 const COUNTDOWN_SECONDS_OPTIONS = [0, 3, 5, 10]
+
+const getImageInfo = (src) => new Promise((resolve) => {
+  if (!src) {
+    resolve(null)
+    return
+  }
+
+  wx.getImageInfo({
+    src,
+    success: resolve,
+    fail: () => resolve(null)
+  })
+})
 
 const hideTemplateGuide = (template) => ({
   ...template,
@@ -61,6 +78,16 @@ const getActiveGuideImage = (template, guideMode) => (
     ? template.modelImage
     : template.guideImage
 )
+const getTouchCenter = (touches) => ({
+  x: (touches[0].pageX + touches[1].pageX) / 2,
+  y: (touches[0].pageY + touches[1].pageY) / 2
+})
+const getTouchDistance = (touches) => {
+  const deltaX = touches[0].pageX - touches[1].pageX
+  const deltaY = touches[0].pageY - touches[1].pageY
+
+  return Math.sqrt(deltaX * deltaX + deltaY * deltaY)
+}
 const getGuideModeState = (template, guideMode) => {
   const nextGuideMode = normalizeGuideMode(template, guideMode)
 
@@ -85,10 +112,52 @@ const applyGuideMode = (template, guideVisible, guideMode) => {
     guideImage: getActiveGuideImage(template, nextGuideMode)
   }
 }
-const getGuideBoxStyle = (offsetX, offsetY) => (
-  `transform: translate3d(${offsetX}px, ${offsetY}px, 0);`
+const getAspectFitRect = (sourceWidth, sourceHeight, targetWidth, targetHeight) => {
+  const sourceRatio = sourceWidth / sourceHeight
+  const targetRatio = targetWidth / targetHeight
+
+  if (sourceRatio > targetRatio) {
+    const width = targetWidth
+    const height = width / sourceRatio
+
+    return {
+      x: 0,
+      y: (targetHeight - height) / 2,
+      width,
+      height
+    }
+  }
+
+  const height = targetHeight
+  const width = height * sourceRatio
+
+  return {
+    x: (targetWidth - width) / 2,
+    y: 0,
+    width,
+    height
+  }
+}
+const getGuideBoxStyle = (offsetX, offsetY, scale = 1, guideBoxRect = null) => (
+  [
+    guideBoxRect ? `left: ${guideBoxRect.left}px` : '',
+    guideBoxRect ? `top: ${guideBoxRect.top}px` : '',
+    guideBoxRect ? `width: ${guideBoxRect.width}px` : '',
+    guideBoxRect ? `height: ${guideBoxRect.height}px` : '',
+    'transform-origin: center center',
+    `transform: translate3d(${offsetX}px, ${offsetY}px, 0) scale(${scale})`
+  ].filter(Boolean).join('; ')
 )
-const getCameraGuideRect = () => {
+const getGuideScaleText = (scale) => `${Math.round(scale * 100)}%`
+const getGuideTransformState = (offsetX, offsetY, scale, guideBoxRect = null) => ({
+  guideOffsetX: offsetX,
+  guideOffsetY: offsetY,
+  guideScale: scale,
+  guideScaleText: getGuideScaleText(scale),
+  guideBoxStyle: getGuideBoxStyle(offsetX, offsetY, scale, guideBoxRect),
+  ...(guideBoxRect ? { guideBoxRect } : {})
+})
+const getCameraGuideLayout = (guideImageInfo = null) => {
   const systemInfo = wx.getSystemInfoSync()
   const windowWidth = Number(systemInfo.windowWidth || 375)
   const windowHeight = Number(systemInfo.windowHeight || 667)
@@ -99,11 +168,36 @@ const getCameraGuideRect = () => {
   const stageBottom = windowHeight * STAGE_BOTTOM_VIEWPORT_RATIO
   const stageHeight = Math.max(cameraHeight - stageTop - stageBottom, 1)
 
+  const stageLeft = windowWidth * GUIDE_LEFT_RATIO
+  const stageWidth = windowWidth * GUIDE_WIDTH_RATIO
+  const guideAreaTop = stageHeight * GUIDE_TOP_IN_STAGE_RATIO
+  const guideAreaWidth = stageWidth
+  const guideAreaHeight = stageHeight * GUIDE_HEIGHT_IN_STAGE_RATIO
+  const imageWidth = Number(guideImageInfo && guideImageInfo.width)
+  const imageHeight = Number(guideImageInfo && guideImageInfo.height)
+  const fitRect = imageWidth > 0 && imageHeight > 0
+    ? getAspectFitRect(imageWidth, imageHeight, guideAreaWidth, guideAreaHeight)
+    : {
+        x: 0,
+        y: 0,
+        width: guideAreaWidth,
+        height: guideAreaHeight
+      }
+  const boxRect = {
+    left: fitRect.x,
+    top: guideAreaTop + fitRect.y,
+    width: fitRect.width,
+    height: fitRect.height
+  }
+
   return {
-    left: windowWidth * GUIDE_LEFT_RATIO,
-    top: stageTop + stageHeight * GUIDE_TOP_IN_STAGE_RATIO,
-    width: windowWidth * GUIDE_WIDTH_RATIO,
-    height: stageHeight * GUIDE_HEIGHT_IN_STAGE_RATIO,
+    boxRect,
+    previewRect: {
+      left: stageLeft + boxRect.left,
+      top: stageTop + boxRect.top,
+      width: boxRect.width,
+      height: boxRect.height
+    },
     cameraLeft: 0,
     cameraTop: 0,
     cameraWidth: windowWidth,
@@ -112,16 +206,40 @@ const getCameraGuideRect = () => {
     baseHeight: windowHeight
   }
 }
-const getPreviewGuideStyle = (offsetX, offsetY, guideMode) => {
-  const rect = getCameraGuideRect()
+const getCameraGuideRect = (guideImageInfo = null) => {
+  const { previewRect, ...layout } = getCameraGuideLayout(guideImageInfo)
 
+  return {
+    ...previewRect,
+    ...layout
+  }
+}
+const getGuideLayoutState = (guideImageInfo, offsetX = 0, offsetY = 0, scale = 1) => {
+  const layout = getCameraGuideLayout(guideImageInfo)
+  const guidePreviewRect = {
+    ...layout.previewRect,
+    cameraLeft: layout.cameraLeft,
+    cameraTop: layout.cameraTop,
+    cameraWidth: layout.cameraWidth,
+    cameraHeight: layout.cameraHeight,
+    baseWidth: layout.baseWidth,
+    baseHeight: layout.baseHeight
+  }
+
+  return {
+    guidePreviewRect,
+    ...getGuideTransformState(offsetX, offsetY, scale, layout.boxRect)
+  }
+}
+const getPreviewGuideStyle = (offsetX, offsetY, guideScale, guideMode, rect = getCameraGuideRect()) => {
   return [
     `left: ${rect.left}px`,
     `top: ${rect.top}px`,
     `width: ${rect.width}px`,
     `height: ${rect.height}px`,
     `opacity: ${guideMode === GUIDE_MODE_PHOTO ? 0.42 : 0.92}`,
-    `transform: translate3d(${offsetX}px, ${offsetY}px, 0)`
+    'transform-origin: center center',
+    `transform: translate3d(${offsetX}px, ${offsetY}px, 0) scale(${guideScale})`
   ].join('; ')
 }
 
@@ -137,6 +255,8 @@ Page({
     guideToggleTitle: '显示轮廓',
     guideLoadFailed: false,
     keepGuideForConfirm: false,
+    settingsPanelOpen: false,
+    currentIsSelfie: false,
     guideMode: GUIDE_MODE_OUTLINE,
     guideModeText: '轮廓',
     guideImageClass: 'outline-guide-image',
@@ -144,11 +264,16 @@ Page({
     modelToggleImage: '',
     guideOffsetX: 0,
     guideOffsetY: 0,
-    guideBoxStyle: getGuideBoxStyle(0, 0),
+    guideScale: 1,
+    guideScaleText: getGuideScaleText(1),
+    guideBoxStyle: getGuideBoxStyle(0, 0, 1),
+    guideBoxRect: null,
+    guidePreviewRect: null,
     countdownSeconds: 0,
     countdownText: '倒计时 关',
     countdownActive: false,
     countdownRemaining: 0,
+    guideUsageTipVisible: false,
     privacyAccepted: hasAcceptedPrivacyNotice()
   },
 
@@ -161,7 +286,7 @@ Page({
       const accepted = await ensurePrivacyNotice('打开相机拍照')
 
       if (!accepted) {
-        this.backToHome()
+        this.backToPoseGallery()
         return
       }
 
@@ -172,9 +297,11 @@ Page({
 
     this.cameraContext = wx.createCameraContext()
     this.setData({
-      devicePosition: getDefaultDevicePosition(template)
+      devicePosition: getDefaultDevicePosition(template),
+      currentIsSelfie: isSelfiePose(template)
     })
     this.setTemplate(templateIndex, guideSettings.guideMode)
+    this.showGuideUsageTipOnce()
   },
 
   onShow() {
@@ -190,10 +317,12 @@ Page({
 
   onUnload() {
     this.clearCountdownTimer()
+    this.clearGuideUsageTipTimer()
   },
 
   onHide() {
     this.clearCountdownTimer()
+    this.clearGuideUsageTipTimer()
   },
 
   setTemplate(index, guideMode = this.data.guideMode) {
@@ -202,20 +331,25 @@ Page({
     const requestId = (this.templateRequestId || 0) + 1
     this.templateRequestId = requestId
 
-    cacheImageFields(template, CACHE_TEMPLATE_IMAGE_FIELDS).then((cachedTemplate) => {
+    cacheImageFields(template, CACHE_TEMPLATE_IMAGE_FIELDS).then(async (cachedTemplate) => {
       if (this.templateRequestId !== requestId) {
         return
       }
 
       const guideModeState = getGuideModeState(cachedTemplate, guideMode)
+      const currentTemplate = applyGuideMode(cachedTemplate, this.data.guideVisible, guideModeState.guideMode)
+      const guideImageInfo = await getImageInfo(currentTemplate.guideImage)
+
+      if (this.templateRequestId !== requestId) {
+        return
+      }
 
       this.setData({
         currentIndex: nextIndex,
+        currentIsSelfie: isSelfiePose(cachedTemplate),
         guideLoadFailed: false,
-        currentTemplate: applyGuideMode(cachedTemplate, this.data.guideVisible, guideModeState.guideMode),
-        guideOffsetX: 0,
-        guideOffsetY: 0,
-        guideBoxStyle: getGuideBoxStyle(0, 0),
+        currentTemplate,
+        ...getGuideLayoutState(guideImageInfo, 0, 0, 1),
         ...guideModeState
       }, () => {
         this.hasTemplateLoaded = true
@@ -241,12 +375,20 @@ Page({
       return
     }
 
-    cacheImageFields(currentTemplate, CACHE_TEMPLATE_IMAGE_FIELDS).then((cachedTemplate) => {
+    cacheImageFields(currentTemplate, CACHE_TEMPLATE_IMAGE_FIELDS).then(async (cachedTemplate) => {
       const guideModeState = getGuideModeState(cachedTemplate, nextGuideMode)
+      const nextTemplate = applyGuideMode(cachedTemplate, true, guideModeState.guideMode)
+      const guideImageInfo = await getImageInfo(nextTemplate.guideImage)
 
       this.setData({
         guideVisible: true,
-        currentTemplate: applyGuideMode(cachedTemplate, true, guideModeState.guideMode),
+        currentTemplate: nextTemplate,
+        ...getGuideLayoutState(
+          guideImageInfo,
+          this.data.guideOffsetX,
+          this.data.guideOffsetY,
+          this.data.guideScale
+        ),
         ...guideModeState
       })
     })
@@ -267,12 +409,20 @@ Page({
   refreshCurrentGuide(guideMode = this.data.guideMode) {
     const currentTemplate = poseTemplates[this.data.currentIndex]
 
-    cacheImageFields(currentTemplate, CACHE_TEMPLATE_IMAGE_FIELDS).then((cachedTemplate) => {
+    cacheImageFields(currentTemplate, CACHE_TEMPLATE_IMAGE_FIELDS).then(async (cachedTemplate) => {
       const guideModeState = getGuideModeState(cachedTemplate, guideMode)
+      const nextTemplate = applyGuideMode(cachedTemplate, this.data.guideVisible, guideModeState.guideMode)
+      const guideImageInfo = await getImageInfo(nextTemplate.guideImage)
 
       this.setData({
         guideLoadFailed: false,
-        currentTemplate: applyGuideMode(cachedTemplate, this.data.guideVisible, guideModeState.guideMode),
+        currentTemplate: nextTemplate,
+        ...getGuideLayoutState(
+          guideImageInfo,
+          this.data.guideOffsetX,
+          this.data.guideOffsetY,
+          this.data.guideScale
+        ),
         ...guideModeState
       })
     })
@@ -290,48 +440,192 @@ Page({
   },
 
   onGuideDragStart(event) {
-    const touch = event.touches && event.touches[0]
+    const touches = event.touches || []
 
-    if (!touch || !this.data.currentTemplate.guideImage) {
+    this.dismissGuideUsageTip()
+    this.closeSettingsPanel()
+
+    if (!touches.length || !this.data.currentTemplate.guideImage) {
       this.guideDragState = null
       return
     }
 
+    if (touches.length >= 2) {
+      const center = getTouchCenter(touches)
+
+      this.guideDragState = {
+        type: 'pinch',
+        startDistance: Math.max(getTouchDistance(touches), 1),
+        startCenterX: center.x,
+        startCenterY: center.y,
+        baseScale: this.data.guideScale,
+        baseOffsetX: this.data.guideOffsetX,
+        baseOffsetY: this.data.guideOffsetY
+      }
+      return
+    }
+
     this.guideDragState = {
-      startX: touch.pageX,
-      startY: touch.pageY,
+      type: 'drag',
+      startX: touches[0].pageX,
+      startY: touches[0].pageY,
       baseOffsetX: this.data.guideOffsetX,
       baseOffsetY: this.data.guideOffsetY
     }
   },
 
   onGuideDragMove(event) {
-    const touch = event.touches && event.touches[0]
+    const touches = event.touches || []
 
-    if (!touch || !this.guideDragState) {
+    if (!touches.length || !this.guideDragState) {
       return
     }
 
+    if (touches.length >= 2) {
+      if (this.guideDragState.type !== 'pinch') {
+        const center = getTouchCenter(touches)
+
+        this.guideDragState = {
+          type: 'pinch',
+          startDistance: Math.max(getTouchDistance(touches), 1),
+          startCenterX: center.x,
+          startCenterY: center.y,
+          baseScale: this.data.guideScale,
+          baseOffsetX: this.data.guideOffsetX,
+          baseOffsetY: this.data.guideOffsetY
+        }
+      }
+
+      const center = getTouchCenter(touches)
+      const startDistance = Math.max(this.guideDragState.startDistance || getTouchDistance(touches), 1)
+      const baseScale = this.guideDragState.baseScale || this.data.guideScale
+      const guideScale = clamp(
+        baseScale * getTouchDistance(touches) / startDistance,
+        GUIDE_MIN_SCALE,
+        GUIDE_MAX_SCALE
+      )
+      const guideOffsetX = clamp(
+        this.guideDragState.baseOffsetX + center.x - this.guideDragState.startCenterX,
+        -GUIDE_MAX_OFFSET_X,
+        GUIDE_MAX_OFFSET_X
+      )
+      const guideOffsetY = clamp(
+        this.guideDragState.baseOffsetY + center.y - this.guideDragState.startCenterY,
+        -GUIDE_MAX_OFFSET_Y,
+        GUIDE_MAX_OFFSET_Y
+      )
+
+      this.setData({
+        ...getGuideTransformState(guideOffsetX, guideOffsetY, guideScale, this.data.guideBoxRect)
+      })
+      return
+    }
+
+    if (this.guideDragState.type !== 'drag') {
+      this.guideDragState = {
+        type: 'drag',
+        startX: touches[0].pageX,
+        startY: touches[0].pageY,
+        baseOffsetX: this.data.guideOffsetX,
+        baseOffsetY: this.data.guideOffsetY
+      }
+    }
+
     const guideOffsetX = clamp(
-      this.guideDragState.baseOffsetX + touch.pageX - this.guideDragState.startX,
+      this.guideDragState.baseOffsetX + touches[0].pageX - this.guideDragState.startX,
       -GUIDE_MAX_OFFSET_X,
       GUIDE_MAX_OFFSET_X
     )
     const guideOffsetY = clamp(
-      this.guideDragState.baseOffsetY + touch.pageY - this.guideDragState.startY,
+      this.guideDragState.baseOffsetY + touches[0].pageY - this.guideDragState.startY,
       -GUIDE_MAX_OFFSET_Y,
       GUIDE_MAX_OFFSET_Y
     )
 
     this.setData({
-      guideOffsetX,
-      guideOffsetY,
-      guideBoxStyle: getGuideBoxStyle(guideOffsetX, guideOffsetY)
+      ...getGuideTransformState(guideOffsetX, guideOffsetY, this.data.guideScale, this.data.guideBoxRect)
     })
   },
 
-  onGuideDragEnd() {
+  onGuideDragEnd(event) {
+    const touches = event.touches || []
+
+    if (touches.length >= 2) {
+      this.onGuideDragStart(event)
+      return
+    }
+
+    if (touches.length === 1) {
+      this.guideDragState = {
+        type: 'drag',
+        startX: touches[0].pageX,
+        startY: touches[0].pageY,
+        baseOffsetX: this.data.guideOffsetX,
+        baseOffsetY: this.data.guideOffsetY
+      }
+      return
+    }
+
     this.guideDragState = null
+  },
+
+  setGuideScale(nextScale) {
+    const guideScale = clamp(Number(nextScale || 1), GUIDE_MIN_SCALE, GUIDE_MAX_SCALE)
+
+    this.setData({
+      ...getGuideTransformState(
+        this.data.guideOffsetX,
+        this.data.guideOffsetY,
+        guideScale,
+        this.data.guideBoxRect
+      )
+    })
+  },
+
+  onGuideScaleChanging(event) {
+    this.setGuideScale(event.detail.value)
+  },
+
+  onGuideScaleChange(event) {
+    this.setGuideScale(event.detail.value)
+  },
+
+  toggleSettingsPanel() {
+    this.dismissGuideUsageTip()
+    this.setData({
+      settingsPanelOpen: !this.data.settingsPanelOpen
+    })
+  },
+
+  closeSettingsPanel() {
+    if (!this.data.settingsPanelOpen) {
+      return
+    }
+
+    this.setData({
+      settingsPanelOpen: false
+    })
+  },
+
+  decreaseGuideScale() {
+    this.setGuideScale(this.data.guideScale - GUIDE_SCALE_STEP)
+  },
+
+  increaseGuideScale() {
+    this.setGuideScale(this.data.guideScale + GUIDE_SCALE_STEP)
+  },
+
+  resetGuideScale() {
+    this.setGuideScale(1)
+  },
+
+  toggleKeepGuideForConfirm() {
+    const keepGuideForConfirm = !this.data.keepGuideForConfirm
+
+    wx.setStorageSync(GUIDE_CONFIRM_STORAGE_KEY, keepGuideForConfirm)
+    this.setData({
+      keepGuideForConfirm
+    })
   },
 
   switchCamera() {
@@ -463,19 +757,54 @@ Page({
     return guideSettings
   },
 
-  backToHome() {
-    const pages = getCurrentPages()
-    const homeIndex = pages.findIndex((page) => page.route === HOME_PAGE_ROUTE)
+  showGuideUsageTipOnce() {
+    if (wx.getStorageSync(CAMERA_GUIDE_TIP_STORAGE_KEY)) {
+      return
+    }
 
-    if (homeIndex >= 0 && homeIndex < pages.length - 1) {
+    wx.setStorageSync(CAMERA_GUIDE_TIP_STORAGE_KEY, true)
+    this.setData({
+      guideUsageTipVisible: true
+    })
+
+    this.clearGuideUsageTipTimer()
+    this.guideUsageTipTimer = setTimeout(() => {
+      this.dismissGuideUsageTip()
+    }, 3200)
+  },
+
+  dismissGuideUsageTip() {
+    this.clearGuideUsageTipTimer()
+
+    if (!this.data.guideUsageTipVisible) {
+      return
+    }
+
+    this.setData({
+      guideUsageTipVisible: false
+    })
+  },
+
+  clearGuideUsageTipTimer() {
+    if (this.guideUsageTipTimer) {
+      clearTimeout(this.guideUsageTipTimer)
+      this.guideUsageTipTimer = null
+    }
+  },
+
+  backToPoseGallery() {
+    const pages = getCurrentPages()
+    const galleryIndex = pages.findIndex((page) => page.route === POSE_GALLERY_ROUTE)
+
+    if (galleryIndex >= 0 && galleryIndex < pages.length - 1) {
       wx.navigateBack({
-        delta: pages.length - 1 - homeIndex
+        delta: pages.length - 1 - galleryIndex
       })
       return
     }
 
     wx.switchTab({
-      url: HOME_PAGE_URL
+      url: POSE_GALLERY_URL
     })
   },
 
@@ -504,17 +833,25 @@ Page({
         const poseId = this.data.currentTemplate.id
 
         app.globalData.photoPath = res.tempImagePath
+        app.globalData.previewPose = {
+          id: poseId,
+          name: this.data.currentTemplate.name,
+          thumbnailImage: this.data.currentTemplate.thumbnailImage || this.data.currentTemplate.modelImage || this.data.currentTemplate.guideImage || ''
+        }
         app.globalData.previewGuide = shouldConfirmWithGuide
           ? {
               image: this.data.currentTemplate.guideImage,
               style: getPreviewGuideStyle(
                 this.data.guideOffsetX,
                 this.data.guideOffsetY,
-                this.data.guideMode
+                this.data.guideScale,
+                this.data.guideMode,
+                this.data.guidePreviewRect || getCameraGuideRect()
               ),
               offsetX: this.data.guideOffsetX,
               offsetY: this.data.guideOffsetY,
-              rect: getCameraGuideRect(),
+              scale: this.data.guideScale,
+              rect: this.data.guidePreviewRect || getCameraGuideRect(),
               guideMode: this.data.guideMode,
               needsConfirm: true
             }
