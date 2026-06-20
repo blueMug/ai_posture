@@ -104,6 +104,16 @@
   background: rgba(0, 0, 0, 0.66);
 }
 
+.preload-guide-image {
+  position: fixed;
+  left: -4px;
+  top: -4px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .bottom-panel {
   position: fixed;
   left: 0;

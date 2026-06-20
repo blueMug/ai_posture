@@ -122,6 +122,7 @@ Page({
     guideStyle: '',
     guideStyleReady: false,
     confirmWithGuide: false,
+    guidePreviewVisible: true,
     guideOffsetX: 0,
     guideOffsetY: 0,
     guideRect: null,
@@ -149,6 +150,7 @@ Page({
       guideStyle: previewGuide.style || '',
       guideStyleReady: false,
       confirmWithGuide: Boolean(previewGuide.needsConfirm && previewGuide.image),
+      guidePreviewVisible: true,
       guideOffsetX: Number(previewGuide.offsetX || 0),
       guideOffsetY: Number(previewGuide.offsetY || 0),
       guideRect: previewGuide.rect || null,
@@ -199,7 +201,14 @@ Page({
     this.setData({
       guideImage: '',
       guideStyle: '',
-      confirmWithGuide: false
+      confirmWithGuide: false,
+      guidePreviewVisible: false
+    })
+  },
+
+  toggleGuidePreview() {
+    this.setData({
+      guidePreviewVisible: !this.data.guidePreviewVisible
     })
   },
 

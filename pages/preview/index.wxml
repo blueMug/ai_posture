@@ -1,7 +1,7 @@
 <view class="page">
   <image class="photo" src="{{photoPath}}" mode="aspectFit"></image>
   <image
-    wx:if="{{confirmWithGuide && guideImage && guideStyleReady}}"
+    wx:if="{{confirmWithGuide && guidePreviewVisible && guideImage && guideStyleReady}}"
     class="guide-preview"
     src="{{guideImage}}"
     mode="scaleToFill"
@@ -9,7 +9,12 @@
   ></image>
 
   <view class="top-bar">
-    <view class="back-btn" bindtap="retake">重拍</view>
+    <button
+      wx:if="{{confirmWithGuide}}"
+      class="back-btn guide-visibility-btn {{guidePreviewVisible ? 'active' : ''}}"
+      bindtap="toggleGuidePreview"
+    >{{guidePreviewVisible ? '关轮廓' : '开轮廓'}}</button>
+    <view wx:else class="back-btn" bindtap="retake">重拍</view>
     <view class="title">{{confirmWithGuide ? '确认轮廓' : '照片预览'}}</view>
     <view class="placeholder"></view>
   </view>

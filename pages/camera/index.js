@@ -33,6 +33,19 @@ const hideTemplateGuide = (template) => ({
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max)
 const isModelPose = (template) => Boolean(template && template.modelImage)
 const canUseModelPhotoGuide = (template) => Boolean(isModelPose(template) && template.modelImage)
+const isSelfiePose = (template) => {
+  if (!template) {
+    return false
+  }
+
+  return [
+    template.name,
+    template.tip,
+    template.description,
+    template.categoryName
+  ].some((text) => String(text || '').includes('自拍'))
+}
+const getDefaultDevicePosition = (template) => (isSelfiePose(template) ? 'front' : 'back')
 const getStoredGuideMode = () => (
   wx.getStorageSync(GUIDE_MODE_STORAGE_KEY) === GUIDE_MODE_PHOTO
     ? GUIDE_MODE_PHOTO
@@ -54,6 +67,7 @@ const getGuideModeState = (template, guideMode) => {
   return {
     guideMode: nextGuideMode,
     guideModeText: nextGuideMode === GUIDE_MODE_PHOTO ? '半透明照片' : '轮廓',
+    guideToggleTitle: nextGuideMode === GUIDE_MODE_PHOTO ? '显示半透明照片' : '显示轮廓',
     guideImageClass: nextGuideMode === GUIDE_MODE_PHOTO ? 'photo-guide-image' : 'outline-guide-image',
     showModelToggle: Boolean(isModelPose(template) && template.thumbnailImage),
     modelToggleImage: isModelPose(template) ? template.thumbnailImage : ''
@@ -120,7 +134,7 @@ Page({
     cameraZoom: CAMERA_MIN_ZOOM,
     cameraMaxZoom: CAMERA_DEFAULT_MAX_ZOOM,
     cameraZoomText: '1.0x',
-    guideToggleTitle: '隐藏线条',
+    guideToggleTitle: '显示轮廓',
     guideLoadFailed: false,
     keepGuideForConfirm: false,
     guideMode: GUIDE_MODE_OUTLINE,
@@ -141,6 +155,7 @@ Page({
   async onLoad(options = {}) {
     const guideSettings = this.loadGuideSettings()
     const templateIndex = findPoseIndex(options.poseId)
+    const template = poseTemplates[(templateIndex + poseTemplates.length) % poseTemplates.length]
 
     if (!this.data.privacyAccepted) {
       const accepted = await ensurePrivacyNotice('打开相机拍照')
@@ -156,6 +171,9 @@ Page({
     }
 
     this.cameraContext = wx.createCameraContext()
+    this.setData({
+      devicePosition: getDefaultDevicePosition(template)
+    })
     this.setTemplate(templateIndex, guideSettings.guideMode)
   },
 
@@ -206,37 +224,43 @@ Page({
   },
 
   toggleGuide() {
-    if (this.data.guideVisible) {
-      this.clearGuide()
-    } else {
-      this.showGuide()
-    }
-  },
-
-  showGuide() {
     const currentTemplate = poseTemplates[this.data.currentIndex]
+    const canUsePhoto = canUseModelPhotoGuide(currentTemplate)
+    const nextVisible = !this.data.guideVisible ||
+      (this.data.guideMode === GUIDE_MODE_OUTLINE && canUsePhoto)
+    const nextGuideMode = !this.data.guideVisible
+      ? GUIDE_MODE_OUTLINE
+      : this.data.guideMode === GUIDE_MODE_OUTLINE && canUsePhoto
+        ? GUIDE_MODE_PHOTO
+        : GUIDE_MODE_OUTLINE
+
+    wx.setStorageSync(GUIDE_MODE_STORAGE_KEY, nextGuideMode)
+
+    if (!nextVisible) {
+      this.clearGuide(nextGuideMode)
+      return
+    }
 
     cacheImageFields(currentTemplate, CACHE_TEMPLATE_IMAGE_FIELDS).then((cachedTemplate) => {
-      const guideModeState = getGuideModeState(cachedTemplate, this.data.guideMode)
+      const guideModeState = getGuideModeState(cachedTemplate, nextGuideMode)
 
       this.setData({
         guideVisible: true,
         currentTemplate: applyGuideMode(cachedTemplate, true, guideModeState.guideMode),
-        guideToggleTitle: '隐藏线条',
         ...guideModeState
       })
     })
   },
 
-  clearGuide() {
+  clearGuide(guideMode = this.data.guideMode) {
     const currentTemplate = this.data.currentTemplate
-    const guideModeState = getGuideModeState(currentTemplate, this.data.guideMode)
+    const guideModeState = getGuideModeState(currentTemplate, guideMode)
 
     this.setData({
       guideVisible: false,
       currentTemplate: hideTemplateGuide(currentTemplate),
-      guideToggleTitle: '显示线条',
-      ...guideModeState
+      ...guideModeState,
+      guideToggleTitle: '引导关'
     })
   },
 

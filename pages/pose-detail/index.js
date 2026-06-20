@@ -15,6 +15,7 @@ Page({
     poseId: '',
     pose: null,
     displayImage: '',
+    preloadedGuideImage: '',
     isFavorite: false
   },
 
@@ -28,6 +29,7 @@ Page({
       poseId: pose.id,
       pose: poseWithFavorite,
       displayImage: '',
+      preloadedGuideImage: '',
       isFavorite: poseWithFavorite.isFavorite
     })
 
@@ -64,7 +66,15 @@ Page({
       return
     }
 
-    cacheImage(pose.guideImage)
+    cacheImage(pose.guideImage).then((cachedGuideImage) => {
+      if (this.data.poseId !== pose.id) {
+        return
+      }
+
+      this.setData({
+        preloadedGuideImage: cachedGuideImage
+      })
+    })
   },
 
   backToHome() {

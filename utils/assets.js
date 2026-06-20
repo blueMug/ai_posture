@@ -1,5 +1,5 @@
 const USE_JSDELIVR_ASSETS = true
-const JSDELIVR_ASSET_BASE = 'https://cdn.jsdelivr.net/gh/blueMug/ai_posture@016ac5f'
+const JSDELIVR_ASSET_BASE = 'https://cdn.jsdelivr.net/gh/blueMug/ai_posture@main'
 const LOCAL_PACKED_PREFIXES = ['/static/pose_thumbs/']
 
 const isRemoteUrl = (path) => /^https?:\/\//.test(path)

@@ -26,6 +26,13 @@
 
   </view>
 
+  <image
+    wx:if="{{preloadedGuideImage}}"
+    class="preload-guide-image"
+    src="{{preloadedGuideImage}}"
+    mode="scaleToFill"
+  ></image>
+
   <view class="bottom-panel safe-area-bottom">
     <button class="share-btn" open-type="share">分享</button>
     <button class="favorite-btn {{isFavorite ? 'active' : ''}}" bindtap="toggleFavorite">
