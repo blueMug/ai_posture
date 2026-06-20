@@ -1,4 +1,4 @@
-<view class="page">
+<view class="page" style="{{pageTopStyle}}">
   <view class="top-bar">
     <view class="placeholder"></view>
     <view class="title">姿势分类</view>

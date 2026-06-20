@@ -4,7 +4,7 @@ const { cachePoseCategories } = require('../../utils/imageCache')
 const GALLERY_TARGET_CATEGORY_KEY = 'galleryTargetCategoryId'
 const RECOMMEND_LIMIT_PER_CATEGORY = 4
 const DEFAULT_PAGE_TOP_PX = 110
-const MENU_BUTTON_GAP_PX = 24
+const MENU_BUTTON_GAP_PX = 40
 const RECOMMEND_CATEGORY_CONFIGS = [
   {
     sourceId: 'portrait-half',

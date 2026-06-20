@@ -2,6 +2,8 @@ const { poseCategories } = require('../../utils/poses')
 const { cachePoseCategories } = require('../../utils/imageCache')
 
 const GALLERY_TARGET_CATEGORY_KEY = 'galleryTargetCategoryId'
+const DEFAULT_PAGE_TOP_PX = 90
+const MENU_BUTTON_GAP_PX = 40
 
 const normalizeKeyword = (value) => String(value || '').trim().toLowerCase()
 
@@ -30,8 +32,23 @@ const filterPoseCategories = (keyword) => {
     .filter((category) => category.poses.length > 0)
 }
 
+const getPageTopStyle = () => {
+  if (typeof wx.getMenuButtonBoundingClientRect !== 'function') {
+    return `padding-top: ${DEFAULT_PAGE_TOP_PX}px;`
+  }
+
+  const menuButtonRect = wx.getMenuButtonBoundingClientRect()
+  const menuButtonBottom = Number(menuButtonRect && menuButtonRect.bottom)
+  const pageTop = menuButtonBottom > 0
+    ? menuButtonBottom + MENU_BUTTON_GAP_PX
+    : DEFAULT_PAGE_TOP_PX
+
+  return `padding-top: ${pageTop}px;`
+}
+
 Page({
   data: {
+    pageTopStyle: `padding-top: ${DEFAULT_PAGE_TOP_PX}px;`,
     searchKeyword: '',
     poseCategories: [],
     categoryNavs: [],
@@ -41,6 +58,9 @@ Page({
   },
 
   onLoad() {
+    this.setData({
+      pageTopStyle: getPageTopStyle()
+    })
     this.setPoseCategories(poseCategories, {
       hasSearchResult: true
     })
