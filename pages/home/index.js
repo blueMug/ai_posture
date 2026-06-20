@@ -4,8 +4,7 @@ const { adSlots } = require('../../utils/adConfig')
 
 const GALLERY_TARGET_CATEGORY_KEY = 'galleryTargetCategoryId'
 const RECOMMEND_LIMIT_PER_CATEGORY = 4
-const DEFAULT_PAGE_TOP_PX = 110
-const MENU_BUTTON_GAP_PX = 40
+const DEFAULT_PAGE_TOP_PX = 52
 const RECOMMEND_CATEGORY_CONFIGS = [
   {
     sourceId: 'portrait-half',
@@ -120,9 +119,9 @@ const getPageTopStyle = () => {
   }
 
   const menuButtonRect = wx.getMenuButtonBoundingClientRect()
-  const menuButtonBottom = Number(menuButtonRect && menuButtonRect.bottom)
-  const pageTop = menuButtonBottom > 0
-    ? menuButtonBottom + MENU_BUTTON_GAP_PX
+  const menuButtonTop = Number(menuButtonRect && menuButtonRect.top)
+  const pageTop = menuButtonTop > 0
+    ? menuButtonTop
     : DEFAULT_PAGE_TOP_PX
 
   return `padding-top: ${pageTop}px;`

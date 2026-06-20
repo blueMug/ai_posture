@@ -1,6 +1,6 @@
 .page {
   min-height: 100vh;
-  padding: 220rpx 28rpx 160rpx;
+  padding: 104rpx 28rpx 160rpx;
   box-sizing: border-box;
   background:
     radial-gradient(circle at 18% 8%, rgba(255, 233, 92, 0.28), transparent 34%),
