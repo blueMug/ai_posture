@@ -25,6 +25,11 @@
       >
         <cover-image
           wx:if="{{guideMode == 'outline'}}"
+          class="pose-guide-image pose-guide-shadow"
+          src="{{currentTemplate.guideImage}}"
+        ></cover-image>
+        <cover-image
+          wx:if="{{guideMode == 'outline'}}"
           class="pose-guide-image pose-guide-boost"
           src="{{currentTemplate.guideImage}}"
         ></cover-image>
