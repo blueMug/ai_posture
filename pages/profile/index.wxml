@@ -5,6 +5,70 @@
     <view class="placeholder"></view>
   </view>
 
+  <view class="favorite-section">
+    <view class="section-head">
+      <view>
+        <view class="section-title">我的收藏</view>
+        <view class="section-desc">已收藏 {{favoritePoseCount}} 个姿势，可直接查看或拍照。</view>
+      </view>
+      <view class="record-count">匿名记录 {{usageRecordCount}}</view>
+    </view>
+
+    <view wx:if="{{favoritePoseCount == 0}}" class="empty-state">
+      <view class="empty-title">还没有收藏姿势</view>
+      <view class="empty-desc">在首页、分类或详情页点击收藏后，会出现在这里。</view>
+    </view>
+
+    <view wx:else class="favorite-list">
+      <view
+        wx:for="{{favoritePoses}}"
+        wx:key="id"
+        wx:for-item="pose"
+        class="favorite-card"
+        data-pose-id="{{pose.id}}"
+        bindtap="openPoseDetail"
+      >
+        <image
+          class="favorite-image"
+          src="{{pose.thumbnailImage || pose.modelImage || pose.detailImage}}"
+          mode="aspectFill"
+        ></image>
+        <view class="favorite-copy">
+          <view class="favorite-name">{{pose.name}}</view>
+          <view class="favorite-tip">{{pose.tip}}</view>
+          <view class="favorite-actions">
+            <view
+              class="favorite-action ghost"
+              data-pose-id="{{pose.id}}"
+              catchtap="removeFavorite"
+            >取消</view>
+            <view
+              class="favorite-action"
+              data-pose-id="{{pose.id}}"
+              catchtap="openCamera"
+            >拍照</view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{adSlot.visible}}" class="ad-card">
+    <view wx:if="{{adSlot.isMock}}" class="mock-ad">
+      <view class="mock-ad-label">广告</view>
+      <view class="mock-ad-copy">
+        <view class="mock-ad-title">{{adSlot.mockTitle}}</view>
+        <view class="mock-ad-desc">{{adSlot.mockDesc}}</view>
+      </view>
+      <view class="mock-ad-action">{{adSlot.mockAction}}</view>
+    </view>
+    <ad
+      wx:else
+      unit-id="{{adSlot.unitId}}"
+      ad-type="{{adSlot.adType}}"
+    ></ad>
+  </view>
+
   <view class="setting-card">
     <view class="setting-copy">
       <view class="setting-title">相机引导样式</view>
@@ -36,19 +100,11 @@
     />
   </view>
 
-  <view wx:if="{{adSlot.visible}}" class="ad-card">
-    <view wx:if="{{adSlot.isMock}}" class="mock-ad">
-      <view class="mock-ad-label">广告</view>
-      <view class="mock-ad-copy">
-        <view class="mock-ad-title">{{adSlot.mockTitle}}</view>
-        <view class="mock-ad-desc">{{adSlot.mockDesc}}</view>
-      </view>
-      <view class="mock-ad-action">{{adSlot.mockAction}}</view>
+  <view class="setting-card privacy-card" bindtap="openPrivacy">
+    <view class="setting-copy">
+      <view class="setting-title">隐私与权限说明</view>
+      <view class="setting-desc">查看相机、保存相册、本地收藏和本地使用记录的用途说明。</view>
     </view>
-    <ad
-      wx:else
-      unit-id="{{adSlot.unitId}}"
-      ad-type="{{adSlot.adType}}"
-    ></ad>
+    <view class="setting-arrow">›</view>
   </view>
 </view>

@@ -1,5 +1,6 @@
 <view class="page">
   <camera
+    wx:if="{{privacyAccepted}}"
     class="camera"
     device-position="{{devicePosition}}"
     flash="off"
@@ -47,8 +48,12 @@
       </cover-view>
     </cover-view>
   </camera>
+  <view wx:else class="privacy-wait">
+    <view class="privacy-title">使用相机前需要确认权限说明</view>
+    <view class="privacy-desc">我们会先说明相机、相册、本地收藏和使用记录的用途。</view>
+  </view>
 
-  <view class="bottom-panel safe-area-bottom">
+  <view wx:if="{{privacyAccepted}}" class="bottom-panel safe-area-bottom">
     <view class="shoot-row">
       <view
         class="guide-toggle-btn {{guideVisible ? 'active' : 'muted'}} {{showModelToggle ? 'model-toggle-btn' : ''}}"

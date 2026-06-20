@@ -113,5 +113,75 @@
     "id": "custom23_r01_g01",
     "demo": "pose_pairs/custom23/custom23_r01_g01_demo.png",
     "contour": "pose_pairs/custom23/custom23_r01_g01_contour_hd.png"
+  },
+  {
+    "id": "custom24_r01_g01",
+    "demo": "pose_pairs/custom24/custom24_r01_g01_demo.png",
+    "contour": "pose_pairs/custom24/custom24_r01_g01_contour_hd.png"
+  },
+  {
+    "id": "custom25_r01_g01",
+    "demo": "pose_pairs/custom25/custom25_r01_g01_demo.png",
+    "contour": "pose_pairs/custom25/custom25_r01_g01_contour_hd.png"
+  },
+  {
+    "id": "custom26_r01_g01",
+    "demo": "pose_pairs/custom26/custom26_r01_g01_demo.png",
+    "contour": "pose_pairs/custom26/custom26_r01_g01_contour_hd.png"
+  },
+  {
+    "id": "custom27_r01_g01",
+    "demo": "pose_pairs/custom27/custom27_r01_g01_demo.png",
+    "contour": "pose_pairs/custom27/custom27_r01_g01_contour_hd.png"
+  },
+  {
+    "id": "custom28_r01_g01",
+    "demo": "pose_pairs/custom28/custom28_r01_g01_demo.png",
+    "contour": "pose_pairs/custom28/custom28_r01_g01_contour_hd.png"
+  },
+  {
+    "id": "custom29_r01_g01",
+    "demo": "pose_pairs/custom29/custom29_r01_g01_demo.png",
+    "contour": "pose_pairs/custom29/custom29_r01_g01_contour_hd.png"
+  },
+  {
+    "id": "custom30_r01_g01",
+    "demo": "pose_pairs/custom30/custom30_r01_g01_demo.png",
+    "contour": "pose_pairs/custom30/custom30_r01_g01_contour_hd.png"
+  },
+  {
+    "id": "custom31_r01_g01",
+    "demo": "pose_pairs/custom31/custom31_r01_g01_demo.png",
+    "contour": "pose_pairs/custom31/custom31_r01_g01_contour_hd.png"
+  },
+  {
+    "id": "custom32_r01_g01",
+    "demo": "pose_pairs/custom32/custom32_r01_g01_demo.png",
+    "contour": "pose_pairs/custom32/custom32_r01_g01_contour_hd.png"
+  },
+  {
+    "id": "custom33_r01_g01",
+    "demo": "pose_pairs/custom33/custom33_r01_g01_demo.png",
+    "contour": "pose_pairs/custom33/custom33_r01_g01_contour_hd.png"
+  },
+  {
+    "id": "custom34_r01_g01",
+    "demo": "pose_pairs/custom34/custom34_r01_g01_demo.png",
+    "contour": "pose_pairs/custom34/custom34_r01_g01_contour_hd.png"
+  },
+  {
+    "id": "custom35_r01_g01",
+    "demo": "pose_pairs/custom35/custom35_r01_g01_demo.png",
+    "contour": "pose_pairs/custom35/custom35_r01_g01_contour_hd.png"
+  },
+  {
+    "id": "custom36_r01_g01",
+    "demo": "pose_pairs/custom36/custom36_r01_g01_demo.png",
+    "contour": "pose_pairs/custom36/custom36_r01_g01_contour_hd.png"
+  },
+  {
+    "id": "custom37_r01_g01",
+    "demo": "pose_pairs/custom37/custom37_r01_g01_demo.png",
+    "contour": "pose_pairs/custom37/custom37_r01_g01_contour_hd.png"
   }
 ]

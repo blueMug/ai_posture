@@ -1,11 +1,8 @@
 const app = getApp()
 const { cacheImage } = require('../../utils/imageCache')
+const { ensurePrivacyNotice } = require('../../utils/privacy')
 
 const GUIDE_MODE_PHOTO = 'photo'
-const SHARE_GUIDE_LEFT_RATIO = 0.07
-const SHARE_GUIDE_TOP_RATIO = 0.13
-const SHARE_GUIDE_WIDTH_RATIO = 0.86
-const SHARE_GUIDE_HEIGHT_RATIO = 0.58
 
 const getAspectFitRect = (sourceWidth, sourceHeight, targetWidth, targetHeight) => {
   const sourceRatio = sourceWidth / sourceHeight
@@ -34,6 +31,74 @@ const getAspectFitRect = (sourceWidth, sourceHeight, targetWidth, targetHeight) 
   }
 }
 
+const getAspectFillRect = (sourceWidth, sourceHeight, targetWidth, targetHeight) => {
+  const sourceRatio = sourceWidth / sourceHeight
+  const targetRatio = targetWidth / targetHeight
+
+  if (sourceRatio > targetRatio) {
+    const height = targetHeight
+    const width = height * sourceRatio
+
+    return {
+      x: (targetWidth - width) / 2,
+      y: 0,
+      width,
+      height
+    }
+  }
+
+  const width = targetWidth
+  const height = width / sourceRatio
+
+  return {
+    x: 0,
+    y: (targetHeight - height) / 2,
+    width,
+    height
+  }
+}
+
+const getGuideDisplayRect = ({
+  guideRect = {},
+  photoInfo = {},
+  targetWidth,
+  targetHeight,
+  offsetX = 0,
+  offsetY = 0
+}) => {
+  const photoWidth = Number(photoInfo.width || targetWidth)
+  const photoHeight = Number(photoInfo.height || targetHeight)
+  const photoDisplayRect = getAspectFitRect(photoWidth, photoHeight, targetWidth, targetHeight)
+  const cameraWidth = Number(guideRect.cameraWidth || guideRect.baseWidth || targetWidth)
+  const cameraHeight = Number(guideRect.cameraHeight || guideRect.baseHeight || targetHeight)
+  const cameraLeft = Number(guideRect.cameraLeft || 0)
+  const cameraTop = Number(guideRect.cameraTop || 0)
+  const cameraFillRect = getAspectFillRect(photoWidth, photoHeight, cameraWidth, cameraHeight)
+  const guideLeftInCamera = Number(guideRect.left || targetWidth * 0.07) - cameraLeft + offsetX
+  const guideTopInCamera = Number(guideRect.top || targetHeight * 0.17) - cameraTop + offsetY
+  const scaleX = photoDisplayRect.width / cameraFillRect.width
+  const scaleY = photoDisplayRect.height / cameraFillRect.height
+
+  return {
+    left: photoDisplayRect.x + (guideLeftInCamera - cameraFillRect.x) * scaleX,
+    top: photoDisplayRect.y + (guideTopInCamera - cameraFillRect.y) * scaleY,
+    width: Number(guideRect.width || targetWidth * 0.86) * scaleX,
+    height: Number(guideRect.height || targetHeight * 0.48) * scaleY
+  }
+}
+
+const getGuideDisplayStyle = ({ guideMode, ...options }) => {
+  const rect = getGuideDisplayRect(options)
+
+  return [
+    `left: ${rect.left}px`,
+    `top: ${rect.top}px`,
+    `width: ${rect.width}px`,
+    `height: ${rect.height}px`,
+    `opacity: ${guideMode === GUIDE_MODE_PHOTO ? 0.42 : 0.92}`
+  ].join('; ')
+}
+
 const getImageInfo = (src) => new Promise((resolve, reject) => {
   wx.getImageInfo({
     src,
@@ -55,9 +120,11 @@ Page({
     photoPath: '',
     guideImage: '',
     guideStyle: '',
+    guideStyleReady: false,
     confirmWithGuide: false,
     guideOffsetX: 0,
     guideOffsetY: 0,
+    guideRect: null,
     guideMode: 'outline',
     shareGenerating: false,
     shareCanvasWidth: 1,
@@ -80,11 +147,45 @@ Page({
       photoPath,
       guideImage: previewGuide.image || '',
       guideStyle: previewGuide.style || '',
+      guideStyleReady: false,
       confirmWithGuide: Boolean(previewGuide.needsConfirm && previewGuide.image),
       guideOffsetX: Number(previewGuide.offsetX || 0),
       guideOffsetY: Number(previewGuide.offsetY || 0),
+      guideRect: previewGuide.rect || null,
       guideMode: previewGuide.guideMode || 'outline'
     })
+
+    if (previewGuide.needsConfirm && previewGuide.image) {
+      this.updateGuidePreviewStyle(photoPath, previewGuide)
+    }
+  },
+
+  async updateGuidePreviewStyle(photoPath, previewGuide) {
+    try {
+      const [systemInfo, photoInfo] = [
+        wx.getSystemInfoSync(),
+        await getImageInfo(photoPath)
+      ]
+      const targetWidth = Number(systemInfo.windowWidth || 375)
+      const targetHeight = Number(systemInfo.windowHeight || 667)
+
+      this.setData({
+        guideStyle: getGuideDisplayStyle({
+          guideRect: previewGuide.rect,
+          photoInfo,
+          targetWidth,
+          targetHeight,
+          offsetX: Number(previewGuide.offsetX || 0),
+          offsetY: Number(previewGuide.offsetY || 0),
+          guideMode: previewGuide.guideMode || 'outline'
+        }),
+        guideStyleReady: true
+      })
+    } catch (error) {
+      this.setData({
+        guideStyleReady: true
+      })
+    }
   },
 
   retake() {
@@ -102,7 +203,13 @@ Page({
     })
   },
 
-  savePhoto() {
+  async savePhoto() {
+    const accepted = await ensurePrivacyNotice('保存照片到相册')
+
+    if (!accepted) {
+      return
+    }
+
     wx.saveImageToPhotosAlbum({
       filePath: this.data.photoPath,
       success: () => {
@@ -131,7 +238,7 @@ Page({
   },
 
   async createPhotoWithGuide() {
-    const { photoPath, guideImage, guideOffsetX, guideOffsetY, guideMode } = this.data
+    const { photoPath, guideImage, guideOffsetX, guideOffsetY, guideRect, guideMode } = this.data
 
     if (!photoPath || !guideImage) {
       throw new Error('missing photo or guide')
@@ -152,16 +259,22 @@ Page({
       getImageInfo(photoPath),
       cacheImage(guideImage)
     ])
+    const photoWidth = Number(photoInfo.width || canvasWidth)
+    const photoHeight = Number(photoInfo.height || canvasHeight)
     const photoRect = getAspectFitRect(
-      Number(photoInfo.width || canvasWidth),
-      Number(photoInfo.height || canvasHeight),
+      photoWidth,
+      photoHeight,
       canvasWidth,
       canvasHeight
     )
-    const guideLeft = canvasWidth * SHARE_GUIDE_LEFT_RATIO + guideOffsetX
-    const guideTop = canvasHeight * SHARE_GUIDE_TOP_RATIO + guideOffsetY
-    const guideWidth = canvasWidth * SHARE_GUIDE_WIDTH_RATIO
-    const guideHeight = canvasHeight * SHARE_GUIDE_HEIGHT_RATIO
+    const guideDisplayRect = getGuideDisplayRect({
+      guideRect,
+      photoInfo,
+      targetWidth: canvasWidth,
+      targetHeight: canvasHeight,
+      offsetX: guideOffsetX,
+      offsetY: guideOffsetY
+    })
     const context = wx.createCanvasContext('shareCanvas', this)
 
     context.setFillStyle('#0d0d0d')
@@ -169,7 +282,13 @@ Page({
     context.drawImage(photoPath, photoRect.x, photoRect.y, photoRect.width, photoRect.height)
     context.save()
     context.setGlobalAlpha(guideMode === GUIDE_MODE_PHOTO ? 0.42 : 0.92)
-    context.drawImage(cachedGuideImage, guideLeft, guideTop, guideWidth, guideHeight)
+    context.drawImage(
+      cachedGuideImage,
+      guideDisplayRect.left,
+      guideDisplayRect.top,
+      guideDisplayRect.width,
+      guideDisplayRect.height
+    )
     context.restore()
 
     return new Promise((resolve, reject) => {

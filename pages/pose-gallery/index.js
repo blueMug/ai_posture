@@ -1,6 +1,12 @@
 const { poseCategories } = require('../../utils/poses')
 const { cachePoseCategories } = require('../../utils/imageCache')
 const { adSlots } = require('../../utils/adConfig')
+const { ensurePrivacyNotice } = require('../../utils/privacy')
+const {
+  getFavoritePoseIds,
+  togglePoseFavorite,
+  withFavoriteStateCategories
+} = require('../../utils/userData')
 
 const GALLERY_TARGET_CATEGORY_KEY = 'galleryTargetCategoryId'
 const DEFAULT_PAGE_TOP_PX = 52
@@ -53,6 +59,7 @@ Page({
     poseCategories: [],
     categoryNavs: [],
     activeCategoryId: '',
+    favoritePoseIds: [],
     hasSearchResult: true,
     failedPoseImages: {},
     adSlot: adSlots.poseGalleryFeed
@@ -60,7 +67,8 @@ Page({
 
   onLoad() {
     this.setData({
-      pageTopStyle: getPageTopStyle()
+      pageTopStyle: getPageTopStyle(),
+      favoritePoseIds: getFavoritePoseIds()
     })
     this.setPoseCategories(poseCategories, {
       hasSearchResult: true
@@ -71,31 +79,46 @@ Page({
     const targetCategoryId = wx.getStorageSync(GALLERY_TARGET_CATEGORY_KEY)
 
     if (!targetCategoryId) {
+      this.refreshPoseCategories()
       return
     }
 
     wx.removeStorageSync(GALLERY_TARGET_CATEGORY_KEY)
     this.setPoseCategories(poseCategories, {
       searchKeyword: '',
+      favoritePoseIds: getFavoritePoseIds(),
       hasSearchResult: true
     }, targetCategoryId)
+  },
+
+  refreshPoseCategories(extraData = {}) {
+    const nextCategories = filterPoseCategories(this.data.searchKeyword)
+
+    this.setPoseCategories(nextCategories, {
+      favoritePoseIds: getFavoritePoseIds(),
+      hasSearchResult: nextCategories.length > 0,
+      ...extraData
+    })
   },
 
   setPoseCategories(nextCategories, extraData = {}, targetCategoryId = '') {
     const requestId = (this.poseCategoryRequestId || 0) + 1
     this.poseCategoryRequestId = requestId
+    const favoritePoseIds = extraData.favoritePoseIds || getFavoritePoseIds()
+    const nextCategoriesWithFavorites = withFavoriteStateCategories(nextCategories, favoritePoseIds)
 
-    if (!nextCategories.length) {
+    if (!nextCategoriesWithFavorites.length) {
       this.setData({
         ...extraData,
-        poseCategories: nextCategories,
+        favoritePoseIds,
+        poseCategories: nextCategoriesWithFavorites,
         categoryNavs: [],
         activeCategoryId: ''
       })
       return
     }
 
-    cachePoseCategories(nextCategories, ['thumbnailImage']).then((cachedCategories) => {
+    cachePoseCategories(nextCategoriesWithFavorites, ['thumbnailImage']).then((cachedCategories) => {
       if (this.poseCategoryRequestId !== requestId) {
         return
       }
@@ -106,6 +129,7 @@ Page({
 
       this.setData({
         ...extraData,
+        favoritePoseIds,
         poseCategories: cachedCategories,
         categoryNavs: cachedCategories.map((category) => ({
           id: category.id,
@@ -162,7 +186,27 @@ Page({
   clearSearch() {
     this.setPoseCategories(poseCategories, {
       searchKeyword: '',
+      favoritePoseIds: getFavoritePoseIds(),
       hasSearchResult: true
+    })
+  },
+
+  toggleFavorite(event) {
+    const { poseId } = event.currentTarget.dataset
+
+    if (!poseId) {
+      return
+    }
+
+    const result = togglePoseFavorite(poseId)
+
+    wx.showToast({
+      title: result.isFavorite ? '已收藏' : '已取消收藏',
+      icon: 'none'
+    })
+
+    this.refreshPoseCategories({
+      favoritePoseIds: result.favoritePoseIds
     })
   },
 
@@ -178,10 +222,16 @@ Page({
     })
   },
 
-  openCamera(event) {
+  async openCamera(event) {
     const { poseId } = event.currentTarget.dataset
 
     if (!poseId) {
+      return
+    }
+
+    const accepted = await ensurePrivacyNotice('打开相机拍照')
+
+    if (!accepted) {
       return
     }
 

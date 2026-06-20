@@ -1,7 +1,7 @@
 <view class="page">
   <image class="photo" src="{{photoPath}}" mode="aspectFit"></image>
   <image
-    wx:if="{{confirmWithGuide && guideImage}}"
+    wx:if="{{confirmWithGuide && guideImage && guideStyleReady}}"
     class="guide-preview"
     src="{{guideImage}}"
     mode="scaleToFill"

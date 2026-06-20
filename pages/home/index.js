@@ -1,6 +1,12 @@
 const { poseTemplates, poseCategories } = require('../../utils/poses')
 const { cachePoseCategories } = require('../../utils/imageCache')
 const { adSlots } = require('../../utils/adConfig')
+const { ensurePrivacyNotice } = require('../../utils/privacy')
+const {
+  getFavoritePoseIds,
+  togglePoseFavorite,
+  withFavoriteStateCategories
+} = require('../../utils/userData')
 
 const GALLERY_TARGET_CATEGORY_KEY = 'galleryTargetCategoryId'
 const RECOMMEND_LIMIT_PER_CATEGORY = 4
@@ -23,9 +29,9 @@ const RECOMMEND_CATEGORY_CONFIGS = [
     subtitle: '手机自拍、窗边自然光、咖啡馆自拍和半身参考',
     poseIds: [
       'pair-custom18-r01-g01',
-      'pair-custom20-r01-g01',
-      'pair-custom21-r01-g01',
-      'pair-custom2-r01-g01'
+      'pair-custom23-r01-g01',
+      'pair-custom24-r01-g01',
+      'pair-custom28-r01-g01'
     ]
   },
   {
@@ -33,10 +39,10 @@ const RECOMMEND_CATEGORY_CONFIGS = [
     name: '全身照/穿搭',
     subtitle: '全身照、穿搭展示、显比例和户外站姿参考',
     poseIds: [
-      'pair-custom4-r01-g01',
-      'pair-custom6-r01-g01',
-      'pair-custom8-r01-g01',
-      'pair-custom9-r01-g01'
+      'pair-custom25-r01-g01',
+      'pair-custom27-r01-g01',
+      'pair-custom30-r01-g01',
+      'pair-custom36-r01-g01'
     ]
   },
   {
@@ -44,10 +50,10 @@ const RECOMMEND_CATEGORY_CONFIGS = [
     name: '旅行/背影',
     subtitle: '旅行拍照、景点打卡、山海湖畔和回眸背影',
     poseIds: [
-      'pair-custom10-r01-g01',
-      'pair-custom13-r01-g01',
-      'pair-custom14-r01-g01',
-      'pair-custom17-r01-g01'
+      'pair-custom26-r01-g01',
+      'pair-custom29-r01-g01',
+      'pair-custom31-r01-g01',
+      'pair-custom33-r01-g01'
     ]
   }
 ]
@@ -132,6 +138,7 @@ Page({
     pageTopStyle: `padding-top: ${DEFAULT_PAGE_TOP_PX}px;`,
     searchKeyword: '',
     poseCategories: [],
+    favoritePoseIds: [],
     hasSearchResult: true,
     failedPoseImages: {},
     adSlot: adSlots.homeRecommendBottom
@@ -139,32 +146,51 @@ Page({
 
   onLoad() {
     this.setData({
-      pageTopStyle: getPageTopStyle()
+      pageTopStyle: getPageTopStyle(),
+      favoritePoseIds: getFavoritePoseIds()
     })
     this.setPoseCategories(buildRecommendCategories(), {
       hasSearchResult: true
     })
   },
 
+  onShow() {
+    this.refreshPoseCategories()
+  },
+
+  refreshPoseCategories(extraData = {}) {
+    const nextCategories = filterPoseCategories(this.data.searchKeyword)
+
+    this.setPoseCategories(nextCategories, {
+      favoritePoseIds: getFavoritePoseIds(),
+      hasSearchResult: nextCategories.length > 0,
+      ...extraData
+    })
+  },
+
   setPoseCategories(nextCategories, extraData = {}) {
     const requestId = (this.poseCategoryRequestId || 0) + 1
     this.poseCategoryRequestId = requestId
+    const favoritePoseIds = extraData.favoritePoseIds || getFavoritePoseIds()
+    const nextCategoriesWithFavorites = withFavoriteStateCategories(nextCategories, favoritePoseIds)
 
-    if (!nextCategories.length) {
+    if (!nextCategoriesWithFavorites.length) {
       this.setData({
         ...extraData,
-        poseCategories: nextCategories
+        favoritePoseIds,
+        poseCategories: nextCategoriesWithFavorites
       })
       return
     }
 
-    cachePoseCategories(nextCategories, ['thumbnailImage']).then((cachedCategories) => {
+    cachePoseCategories(nextCategoriesWithFavorites, ['thumbnailImage']).then((cachedCategories) => {
       if (this.poseCategoryRequestId !== requestId) {
         return
       }
 
       this.setData({
         ...extraData,
+        favoritePoseIds,
         poseCategories: cachedCategories
       })
     })
@@ -183,7 +209,27 @@ Page({
   clearSearch() {
     this.setPoseCategories(buildRecommendCategories(), {
       searchKeyword: '',
+      favoritePoseIds: getFavoritePoseIds(),
       hasSearchResult: true
+    })
+  },
+
+  toggleFavorite(event) {
+    const { poseId } = event.currentTarget.dataset
+
+    if (!poseId) {
+      return
+    }
+
+    const result = togglePoseFavorite(poseId)
+
+    wx.showToast({
+      title: result.isFavorite ? '已收藏' : '已取消收藏',
+      icon: 'none'
+    })
+
+    this.refreshPoseCategories({
+      favoritePoseIds: result.favoritePoseIds
     })
   },
 
@@ -217,10 +263,16 @@ Page({
     })
   },
 
-  openCamera(event) {
+  async openCamera(event) {
     const { poseId } = event.currentTarget.dataset
 
     if (!poseId) {
+      return
+    }
+
+    const accepted = await ensurePrivacyNotice('打开相机拍照')
+
+    if (!accepted) {
       return
     }
 

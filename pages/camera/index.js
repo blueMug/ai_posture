@@ -1,6 +1,8 @@
 const app = getApp()
 const { poseTemplates, findPoseIndex } = require('../../utils/poses')
 const { cacheImageFields } = require('../../utils/imageCache')
+const { recordPoseUsage } = require('../../utils/userData')
+const { ensurePrivacyNotice, hasAcceptedPrivacyNotice } = require('../../utils/privacy')
 
 const GUIDE_CONFIRM_STORAGE_KEY = 'keepGuideForConfirm'
 const GUIDE_MODE_STORAGE_KEY = 'cameraGuideMode'
@@ -11,6 +13,13 @@ const CAMERA_MIN_ZOOM = 1
 const CAMERA_DEFAULT_MAX_ZOOM = 10
 const GUIDE_MAX_OFFSET_X = 120
 const GUIDE_MAX_OFFSET_Y = 160
+const BOTTOM_PANEL_RPX = 382
+const STAGE_TOP_VIEWPORT_RATIO = 0.13
+const STAGE_BOTTOM_VIEWPORT_RATIO = 0.04
+const GUIDE_LEFT_RATIO = 0.07
+const GUIDE_WIDTH_RATIO = 0.86
+const GUIDE_TOP_IN_STAGE_RATIO = 0.08
+const GUIDE_HEIGHT_IN_STAGE_RATIO = 0.88
 const GUIDE_MODE_OUTLINE = 'outline'
 const GUIDE_MODE_PHOTO = 'photo'
 const COUNTDOWN_SECONDS_OPTIONS = [0, 3, 5, 10]
@@ -65,9 +74,42 @@ const applyGuideMode = (template, guideVisible, guideMode) => {
 const getGuideBoxStyle = (offsetX, offsetY) => (
   `transform: translate3d(${offsetX}px, ${offsetY}px, 0);`
 )
-const getPreviewGuideStyle = (offsetX, offsetY, guideMode) => (
-  `left: 7vw; top: 13vh; width: 86vw; height: 58vh; opacity: ${guideMode === GUIDE_MODE_PHOTO ? 0.42 : 0.92}; transform: translate3d(${offsetX}px, ${offsetY}px, 0);`
-)
+const getCameraGuideRect = () => {
+  const systemInfo = wx.getSystemInfoSync()
+  const windowWidth = Number(systemInfo.windowWidth || 375)
+  const windowHeight = Number(systemInfo.windowHeight || 667)
+  const rpxToPx = windowWidth / 750
+  const bottomPanelHeight = BOTTOM_PANEL_RPX * rpxToPx
+  const cameraHeight = Math.max(windowHeight - bottomPanelHeight, 1)
+  const stageTop = windowHeight * STAGE_TOP_VIEWPORT_RATIO
+  const stageBottom = windowHeight * STAGE_BOTTOM_VIEWPORT_RATIO
+  const stageHeight = Math.max(cameraHeight - stageTop - stageBottom, 1)
+
+  return {
+    left: windowWidth * GUIDE_LEFT_RATIO,
+    top: stageTop + stageHeight * GUIDE_TOP_IN_STAGE_RATIO,
+    width: windowWidth * GUIDE_WIDTH_RATIO,
+    height: stageHeight * GUIDE_HEIGHT_IN_STAGE_RATIO,
+    cameraLeft: 0,
+    cameraTop: 0,
+    cameraWidth: windowWidth,
+    cameraHeight,
+    baseWidth: windowWidth,
+    baseHeight: windowHeight
+  }
+}
+const getPreviewGuideStyle = (offsetX, offsetY, guideMode) => {
+  const rect = getCameraGuideRect()
+
+  return [
+    `left: ${rect.left}px`,
+    `top: ${rect.top}px`,
+    `width: ${rect.width}px`,
+    `height: ${rect.height}px`,
+    `opacity: ${guideMode === GUIDE_MODE_PHOTO ? 0.42 : 0.92}`,
+    `transform: translate3d(${offsetX}px, ${offsetY}px, 0)`
+  ].join('; ')
+}
 
 Page({
   data: {
@@ -92,14 +134,29 @@ Page({
     countdownSeconds: 0,
     countdownText: '倒计时 关',
     countdownActive: false,
-    countdownRemaining: 0
+    countdownRemaining: 0,
+    privacyAccepted: hasAcceptedPrivacyNotice()
   },
 
-  onLoad(options = {}) {
-    this.cameraContext = wx.createCameraContext()
+  async onLoad(options = {}) {
     const guideSettings = this.loadGuideSettings()
+    const templateIndex = findPoseIndex(options.poseId)
 
-    this.setTemplate(findPoseIndex(options.poseId), guideSettings.guideMode)
+    if (!this.data.privacyAccepted) {
+      const accepted = await ensurePrivacyNotice('打开相机拍照')
+
+      if (!accepted) {
+        this.backToHome()
+        return
+      }
+
+      this.setData({
+        privacyAccepted: true
+      })
+    }
+
+    this.cameraContext = wx.createCameraContext()
+    this.setTemplate(templateIndex, guideSettings.guideMode)
   },
 
   onShow() {
@@ -420,6 +477,7 @@ Page({
           this.data.guideVisible &&
           this.data.currentTemplate.guideImage
         )
+        const poseId = this.data.currentTemplate.id
 
         app.globalData.photoPath = res.tempImagePath
         app.globalData.previewGuide = shouldConfirmWithGuide
@@ -432,10 +490,16 @@ Page({
               ),
               offsetX: this.data.guideOffsetX,
               offsetY: this.data.guideOffsetY,
+              rect: getCameraGuideRect(),
               guideMode: this.data.guideMode,
               needsConfirm: true
             }
           : null
+
+        recordPoseUsage('shoot_pose', poseId, {
+          source: 'camera',
+          guideMode: this.data.guideMode
+        })
 
         wx.navigateTo({
           url: '/pages/preview/index'

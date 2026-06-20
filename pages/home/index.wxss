@@ -189,32 +189,6 @@
   background: rgba(0, 0, 0, 0.38);
 }
 
-.badge {
-  position: absolute;
-  right: 14rpx;
-  bottom: 14rpx;
-  z-index: 3;
-  padding: 8rpx 14rpx;
-  border-radius: 999rpx;
-  color: #111111;
-  font-size: 21rpx;
-  font-weight: 700;
-  background: rgba(255, 255, 255, 0.9);
-}
-
-.preview-tip {
-  position: absolute;
-  left: 14rpx;
-  bottom: 14rpx;
-  z-index: 3;
-  padding: 8rpx 14rpx;
-  border-radius: 999rpx;
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 21rpx;
-  font-weight: 700;
-  background: rgba(0, 0, 0, 0.62);
-}
-
 .pose-info {
   flex: 1;
   min-width: 0;

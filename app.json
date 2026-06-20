@@ -3,6 +3,7 @@
     "pages/home/index",
     "pages/pose-gallery/index",
     "pages/profile/index",
+    "pages/privacy/index",
     "pages/pose-detail/index",
     "pages/camera/index",
     "pages/preview/index"
@@ -34,10 +35,10 @@
   },
   "permission": {
     "scope.camera": {
-      "desc": "用于拍摄带姿势引导的照片"
+      "desc": "用于调用相机拍摄带姿势参考的照片"
     },
     "scope.writePhotosAlbum": {
-      "desc": "用于将拍摄照片保存到相册"
+      "desc": "仅在你点击保存时，用于将拍摄照片保存到手机相册"
     }
   },
   "sitemapLocation": "sitemap.json"

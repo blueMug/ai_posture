@@ -20,6 +20,10 @@
         "type": "folder"
       },
       {
+        "value": "static/pose_guides",
+        "type": "folder"
+      },
+      {
         "value": ".DS_Store",
         "type": "file"
       },

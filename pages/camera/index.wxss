@@ -14,6 +14,30 @@
   display: block;
 }
 
+.privacy-wait {
+  width: 100vw;
+  height: 100vh;
+  padding: 220rpx 48rpx 0;
+  box-sizing: border-box;
+  text-align: center;
+  background:
+    radial-gradient(circle at 18% 8%, rgba(255, 233, 92, 0.24), transparent 34%),
+    linear-gradient(180deg, #171717 0%, #090909 100%);
+}
+
+.privacy-title {
+  color: #ffffff;
+  font-size: 34rpx;
+  font-weight: 900;
+}
+
+.privacy-desc {
+  margin-top: 20rpx;
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 25rpx;
+  line-height: 1.5;
+}
+
 .top-bar {
   position: absolute;
   left: 0;
@@ -130,29 +154,30 @@
 
 .countdown-mask {
   position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
+  right: 28rpx;
+  top: 178rpx;
   z-index: 12;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.18);
+  padding: 12rpx 22rpx;
+  border-radius: 999rpx;
+  background: rgba(0, 0, 0, 0.42);
+  border: 1rpx solid rgba(255, 255, 255, 0.42);
+  box-shadow: 0 12rpx 34rpx rgba(0, 0, 0, 0.32);
 }
 
 .countdown-number {
-  width: 180rpx;
-  height: 180rpx;
-  line-height: 180rpx;
+  min-width: 66rpx;
+  height: 66rpx;
+  line-height: 66rpx;
   border-radius: 999rpx;
-  color: #111111;
-  font-size: 92rpx;
+  color: #ffe95c;
+  font-size: 48rpx;
   font-weight: 900;
   text-align: center;
-  background: #ffe95c;
-  border: 8rpx solid rgba(255, 255, 255, 0.92);
-  box-shadow: 0 18rpx 60rpx rgba(0, 0, 0, 0.42);
+  background: rgba(255, 233, 92, 0.16);
+  text-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.55);
 }
 
 .shoot-row {

@@ -28,6 +28,9 @@
 
   <view class="bottom-panel safe-area-bottom">
     <button class="share-btn" open-type="share">分享</button>
+    <button class="favorite-btn {{isFavorite ? 'active' : ''}}" bindtap="toggleFavorite">
+      {{isFavorite ? '已收藏' : '收藏'}}
+    </button>
     <button class="shoot-btn" bindtap="openCamera">拍照</button>
   </view>
 </view>
