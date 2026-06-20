@@ -132,6 +132,52 @@
   border: 1rpx solid rgba(255, 255, 255, 0.16);
 }
 
+.mock-ad {
+  min-height: 132rpx;
+  padding: 22rpx;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, rgba(255, 233, 92, 0.18), rgba(156, 231, 255, 0.12));
+}
+
+.mock-ad-label {
+  flex: 0 0 auto;
+  padding: 6rpx 10rpx;
+  border-radius: 8rpx;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 20rpx;
+  background: rgba(0, 0, 0, 0.36);
+}
+
+.mock-ad-copy {
+  flex: 1;
+  min-width: 0;
+  margin: 0 18rpx;
+}
+
+.mock-ad-title {
+  color: #ffffff;
+  font-size: 28rpx;
+  font-weight: 800;
+}
+
+.mock-ad-desc {
+  margin-top: 8rpx;
+  color: rgba(255, 255, 255, 0.74);
+  font-size: 22rpx;
+}
+
+.mock-ad-action {
+  flex: 0 0 auto;
+  padding: 10rpx 16rpx;
+  border-radius: 999rpx;
+  color: #111111;
+  font-size: 22rpx;
+  font-weight: 800;
+  background: #ffe95c;
+}
+
 .category {
   margin-top: 34rpx;
 }

@@ -46,7 +46,16 @@
   </scroll-view>
 
   <view wx:if="{{adSlot.visible}}" class="ad-card">
+    <view wx:if="{{adSlot.isMock}}" class="mock-ad">
+      <view class="mock-ad-label">广告</view>
+      <view class="mock-ad-copy">
+        <view class="mock-ad-title">{{adSlot.mockTitle}}</view>
+        <view class="mock-ad-desc">{{adSlot.mockDesc}}</view>
+      </view>
+      <view class="mock-ad-action">{{adSlot.mockAction}}</view>
+    </view>
     <ad
+      wx:else
       unit-id="{{adSlot.unitId}}"
       ad-type="{{adSlot.adType}}"
     ></ad>
