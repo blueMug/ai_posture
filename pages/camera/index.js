@@ -430,6 +430,9 @@ Page({
                 this.data.guideOffsetY,
                 this.data.guideMode
               ),
+              offsetX: this.data.guideOffsetX,
+              offsetY: this.data.guideOffsetY,
+              guideMode: this.data.guideMode,
               needsConfirm: true
             }
           : null

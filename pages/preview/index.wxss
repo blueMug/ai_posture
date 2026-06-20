@@ -73,7 +73,8 @@
   text-align: center;
 }
 
-.save-btn {
+.save-btn,
+.share-guide-btn {
   height: 92rpx;
   line-height: 92rpx;
   border-radius: 46rpx;
@@ -81,6 +82,10 @@
   font-size: 30rpx;
   font-weight: 600;
   background: #ffe95c;
+}
+
+.share-guide-btn {
+  margin-bottom: 20rpx;
 }
 
 .confirm-actions {
@@ -111,7 +116,15 @@
 }
 
 .save-btn::after,
+.share-guide-btn::after,
 .discard-btn::after,
 .accept-btn::after {
   border: 0;
+}
+
+.share-canvas {
+  position: absolute;
+  left: -9999px;
+  top: -9999px;
+  z-index: -1;
 }

@@ -15,7 +15,12 @@
   </view>
 
   <view wx:if="{{confirmWithGuide}}" class="bottom-panel safe-area-bottom">
-    <view class="hint">确认轮廓对齐后保存原照片。</view>
+    <view class="hint">确认轮廓对齐后保存原照片，也可以分享带轮廓版本。</view>
+    <button
+      class="share-guide-btn"
+      loading="{{shareGenerating}}"
+      bindtap="sharePhotoWithGuide"
+    >{{shareGenerating ? '生成中' : '分享带轮廓'}}</button>
     <view class="confirm-actions">
       <button class="discard-btn" bindtap="retake">放弃</button>
       <button class="accept-btn" bindtap="acceptPhoto">接受</button>
@@ -26,4 +31,10 @@
     <view class="hint">轮廓不会出现在照片里。</view>
     <button class="save-btn" bindtap="savePhoto">保存到相册</button>
   </view>
+
+  <canvas
+    class="share-canvas"
+    canvas-id="shareCanvas"
+    style="width: {{shareCanvasWidth}}px; height: {{shareCanvasHeight}}px;"
+  ></canvas>
 </view>
