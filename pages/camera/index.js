@@ -13,6 +13,7 @@ const GUIDE_MAX_OFFSET_X = 120
 const GUIDE_MAX_OFFSET_Y = 160
 const GUIDE_MODE_OUTLINE = 'outline'
 const GUIDE_MODE_PHOTO = 'photo'
+const COUNTDOWN_SECONDS_OPTIONS = [0, 3, 10]
 
 const hideTemplateGuide = (template) => ({
   ...template,
@@ -87,7 +88,11 @@ Page({
     modelToggleImage: '',
     guideOffsetX: 0,
     guideOffsetY: 0,
-    guideBoxStyle: getGuideBoxStyle(0, 0)
+    guideBoxStyle: getGuideBoxStyle(0, 0),
+    countdownSeconds: 0,
+    countdownText: '倒计时 关',
+    countdownActive: false,
+    countdownRemaining: 0
   },
 
   onLoad(options = {}) {
@@ -106,6 +111,14 @@ Page({
     if (guideModeChanged && this.hasTemplateLoaded) {
       this.refreshCurrentGuide(nextGuideMode)
     }
+  },
+
+  onUnload() {
+    this.clearCountdownTimer()
+  },
+
+  onHide() {
+    this.clearCountdownTimer()
   },
 
   setTemplate(index, guideMode = this.data.guideMode) {
@@ -300,6 +313,63 @@ Page({
     this.setCameraZoom(Number(event.detail.value))
   },
 
+  cycleCountdown() {
+    if (this.data.countdownActive) {
+      return
+    }
+
+    const currentIndex = COUNTDOWN_SECONDS_OPTIONS.indexOf(this.data.countdownSeconds)
+    const nextIndex = (currentIndex + 1) % COUNTDOWN_SECONDS_OPTIONS.length
+    const countdownSeconds = COUNTDOWN_SECONDS_OPTIONS[nextIndex]
+
+    this.setData({
+      countdownSeconds,
+      countdownText: countdownSeconds > 0 ? `倒计时 ${countdownSeconds}s` : '倒计时 关'
+    })
+  },
+
+  clearCountdownTimer() {
+    if (this.countdownTimer) {
+      clearTimeout(this.countdownTimer)
+      this.countdownTimer = null
+    }
+
+    if (this.data.countdownActive) {
+      this.setData({
+        countdownActive: false,
+        countdownRemaining: 0
+      })
+    }
+  },
+
+  startCountdownTakePhoto() {
+    if (this.data.countdownActive) {
+      return
+    }
+
+    this.setData({
+      countdownActive: true,
+      countdownRemaining: this.data.countdownSeconds
+    })
+
+    const tick = () => {
+      const nextRemaining = this.data.countdownRemaining - 1
+
+      if (nextRemaining <= 0) {
+        this.clearCountdownTimer()
+        this.capturePhoto()
+        return
+      }
+
+      this.setData({
+        countdownRemaining: nextRemaining
+      })
+      this.countdownTimer = setTimeout(tick, 1000)
+    }
+
+    this.countdownTimer = setTimeout(tick, 1000)
+  },
+
   loadGuideSettings() {
     const keepGuideForConfirm = Boolean(wx.getStorageSync(GUIDE_CONFIRM_STORAGE_KEY))
     const guideMode = getStoredGuideMode()
@@ -329,6 +399,15 @@ Page({
   },
 
   takePhoto() {
+    if (this.data.countdownSeconds > 0) {
+      this.startCountdownTakePhoto()
+      return
+    }
+
+    this.capturePhoto()
+  },
+
+  capturePhoto() {
     if (!this.cameraContext) {
       this.cameraContext = wx.createCameraContext()
     }

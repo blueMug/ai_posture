@@ -27,6 +27,11 @@ Page({
     })
 
     this.prefetchGuideImage(pose)
+
+    wx.showShareMenu({
+      withShareTicket: true,
+      menus: ['shareAppMessage']
+    })
   },
 
   prefetchGuideImage(pose) {
@@ -58,5 +63,16 @@ Page({
       title: '大图加载失败',
       icon: 'none'
     })
+  },
+
+  onShareAppMessage() {
+    const pose = this.data.pose || {}
+    const poseId = this.data.poseId
+
+    return {
+      title: pose.name ? `试试这个拍照姿势：${pose.name}` : '试试这个拍照姿势',
+      path: `/pages/pose-detail/index?poseId=${poseId}`,
+      imageUrl: pose.thumbnailImage || pose.detailImage || pose.guideImage || ''
+    }
   }
 })

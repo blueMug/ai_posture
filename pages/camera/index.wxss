@@ -7,7 +7,7 @@
 
 .camera {
   width: 100vw;
-  height: calc(100vh - 306rpx);
+  height: calc(100vh - 382rpx);
 }
 
 .camera {
@@ -120,12 +120,39 @@
   right: 0;
   bottom: 0;
   z-index: 20;
-  min-height: 306rpx;
+  min-height: 382rpx;
   padding: 28rpx 28rpx 44rpx;
   box-sizing: border-box;
   background:
     linear-gradient(0deg, rgba(0, 0, 0, 0.94), rgba(0, 0, 0, 0.82)),
     #000000;
+}
+
+.countdown-mask {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 12;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.countdown-number {
+  width: 180rpx;
+  height: 180rpx;
+  line-height: 180rpx;
+  border-radius: 999rpx;
+  color: #111111;
+  font-size: 92rpx;
+  font-weight: 900;
+  text-align: center;
+  background: #ffe95c;
+  border: 8rpx solid rgba(255, 255, 255, 0.92);
+  box-shadow: 0 18rpx 60rpx rgba(0, 0, 0, 0.42);
 }
 
 .shoot-row {
@@ -260,6 +287,30 @@
   justify-content: space-between;
   background: rgba(0, 0, 0, 0.62);
   border: 2rpx solid rgba(255, 255, 255, 0.48);
+}
+
+.countdown-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 18rpx;
+}
+
+.countdown-btn {
+  height: 58rpx;
+  line-height: 58rpx;
+  padding: 0 28rpx;
+  border-radius: 999rpx;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 24rpx;
+  font-weight: 800;
+  background: rgba(0, 0, 0, 0.62);
+  border: 2rpx solid rgba(255, 255, 255, 0.48);
+}
+
+.countdown-btn.active {
+  color: #111111;
+  background: #ffe95c;
+  border-color: #ffe95c;
 }
 
 .zoom-slider {

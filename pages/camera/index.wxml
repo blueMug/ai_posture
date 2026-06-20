@@ -42,6 +42,9 @@
       <cover-view wx:if="{{guideLoadFailed}}" class="guide-error-tip">
         轮廓加载失败，请检查图片域名
       </cover-view>
+      <cover-view wx:if="{{countdownActive}}" class="countdown-mask">
+        <cover-view class="countdown-number">{{countdownRemaining}}</cover-view>
+      </cover-view>
     </cover-view>
   </camera>
 
@@ -89,6 +92,12 @@
         bindchange="onCameraZoomChange"
       />
       <view class="zoom-label">{{cameraZoomText}}</view>
+    </view>
+    <view class="countdown-row">
+      <view
+        class="countdown-btn {{countdownSeconds > 0 ? 'active' : ''}}"
+        bindtap="cycleCountdown"
+      >{{countdownText}}</view>
     </view>
   </view>
 </view>
