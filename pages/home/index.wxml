@@ -17,92 +17,31 @@
     <view wx:if="{{searchKeyword}}" class="search-clear" bindtap="clearSearch">清除</view>
   </view>
 
-  <view wx:if="{{!searchKeyword && sceneAdvisor.plans.length}}" class="advisor-section">
-    <view class="advisor-hero">
-      <view class="advisor-kicker">场景拍照导演</view>
-      <view class="advisor-title">先选你在哪，再决定怎么拍</view>
+  <view wx:if="{{!searchKeyword && sceneTopics.length}}" class="topic-section">
+    <view class="topic-hero-card">
+      <view class="topic-kicker">场景出片专题</view>
+      <view class="topic-title">到了现场，不知道怎么拍？</view>
+      <view class="topic-subtitle">先选具体场景，再照着 3 个拍法拍。</view>
     </view>
 
-    <scroll-view
-      class="scene-tab-scroll"
-      scroll-x
-      enhanced
-      show-scrollbar="{{false}}"
-    >
-      <view class="scene-tab-list">
-        <view
-          wx:for="{{sceneTabs}}"
-          wx:key="id"
-          wx:for-item="scene"
-          class="scene-tab {{scene.active ? 'active' : ''}}"
-          data-scene-id="{{scene.id}}"
-          bindtap="selectScene"
-        >
-          <image
-            wx:if="{{!retryingPoseImages[scene.id]}}"
-            class="scene-tab-image"
-            src="{{scene.coverImage}}"
-            mode="aspectFit"
-            data-pose-id="{{scene.id}}"
-            bindload="onPoseImageLoad"
-            binderror="onPoseImageError"
-          ></image>
-          <view class="scene-tab-copy">
-            <view class="scene-tab-title">{{scene.title}}</view>
-          </view>
-        </view>
-      </view>
-    </scroll-view>
-
-    <view class="advisor-head">
-      <view>
-        <view class="section-title">{{sceneAdvisor.title}}怎么拍</view>
-        <view class="section-subtitle">{{sceneAdvisor.desc}}</view>
-      </view>
+    <view class="topic-grid">
       <view
-        class="section-link"
-        data-category-id="{{sceneAdvisor.categoryId}}"
-        bindtap="openCategory"
-      >更多</view>
-    </view>
-
-    <view class="advisor-plan-list">
-      <view
-        wx:for="{{sceneAdvisor.plans}}"
-        wx:key="poseId"
-        wx:for-item="plan"
-        wx:for-index="planIndex"
-        class="advisor-plan"
-        data-pose-id="{{plan.poseId}}"
-        data-plan-index="{{planIndex}}"
-        bindtap="openAdvisorPlanDetail"
+        wx:for="{{sceneTopics}}"
+        wx:key="id"
+        wx:for-item="topic"
+        class="topic-card"
+        data-topic-id="{{topic.id}}"
+        bindtap="openSceneTopic"
       >
-        <view class="advisor-plan-preview" style="background: {{plan.gradient}};">
-          <image
-            wx:if="{{!retryingPoseImages[plan.poseId]}}"
-            class="advisor-plan-image"
-            src="{{plan.thumbnailImage}}"
-            mode="aspectFit"
-            data-pose-id="{{plan.poseId}}"
-            bindload="onPoseImageLoad"
-            binderror="onPoseImageError"
-          ></image>
-          <view wx:if="{{failedPoseImages[plan.poseId]}}" class="mini-image-error">
-            图片加载失败
-          </view>
-        </view>
-        <view class="advisor-plan-body">
-          <view class="advisor-plan-top">
-            <view class="advisor-plan-badge">{{plan.badge}}</view>
-            <view
-              class="advisor-plan-action"
-              data-pose-id="{{plan.poseId}}"
-              data-home-local="1"
-              catchtap="openCamera"
-            >照着拍</view>
-          </view>
-          <view class="advisor-plan-title">{{plan.title}}</view>
-          <view class="advisor-plan-reason">{{plan.reason}}</view>
+        <image
+          class="topic-image"
+          src="{{topic.coverImage}}"
+          mode="aspectFit"
+        ></image>
+        <view class="topic-mask"></view>
+        <view class="topic-copy">
+          <view class="topic-card-title">{{topic.title}}</view>
+          <view class="topic-card-desc">{{topic.promise}}</view>
         </view>
       </view>
     </view>
@@ -166,41 +105,6 @@
         </view>
       </view>
     </scroll-view>
-  </view>
-
-  <view wx:if="{{!searchKeyword && quickScenes.length}}" class="scene-section">
-    <view class="section-head compact">
-      <view>
-        <view class="section-title">马上开拍</view>
-        <view class="section-subtitle">不知道选什么，就从这几个高频场景开始。</view>
-      </view>
-    </view>
-
-    <view class="scene-grid">
-      <view
-        wx:for="{{quickScenes}}"
-        wx:key="categoryId"
-        wx:for-item="scene"
-        class="scene-card"
-        data-category-id="{{scene.categoryId}}"
-        bindtap="openCategory"
-      >
-        <image
-          wx:if="{{!retryingPoseImages[scene.categoryId]}}"
-          class="scene-image"
-          src="{{scene.coverImage}}"
-          mode="aspectFit"
-          data-pose-id="{{scene.categoryId}}"
-          bindload="onPoseImageLoad"
-          binderror="onPoseImageError"
-        ></image>
-        <view class="scene-mask"></view>
-        <view class="scene-copy">
-          <view class="scene-title">{{scene.title}}</view>
-          <view class="scene-desc">{{scene.desc}}</view>
-        </view>
-      </view>
-    </view>
   </view>
 
   <view wx:if="{{!searchKeyword && hasSearchResult}}" class="more-head">

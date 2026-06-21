@@ -20,9 +20,9 @@ const {
   isPoseMatchedSearch,
   normalizeSearchText
 } = require('../../utils/poseSearch')
+const { sceneTopics } = require('../../utils/sceneTopics')
 
 const GALLERY_TARGET_CATEGORY_KEY = 'galleryTargetCategoryId'
-const SCENE_PLAN_DETAIL_KEY = 'sceneAdvisorPlanDetail'
 const RECOMMEND_LIMIT_PER_CATEGORY = 4
 const SCENE_ADVISOR_PLAN_LIMIT = 3
 const DEFAULT_PAGE_TOP_PX = 52
@@ -62,32 +62,6 @@ const DAILY_RECOMMEND_CONFIGS = [
     title: '今天坐着也好拍',
     subtitle: '坐姿、蹲姿、野餐和松弛生活照都适合。',
     categoryId: 'sitting-life'
-  }
-]
-const QUICK_SCENE_CONFIGS = [
-  {
-    categoryId: 'outfit-standing',
-    coverPoseId: 'pair-custom25-r01-g01',
-    title: '拍穿搭',
-    desc: '显高显比例'
-  },
-  {
-    categoryId: 'travel-back',
-    coverPoseId: 'pair-custom26-r01-g01',
-    title: '旅行打卡',
-    desc: '景点直接照着站'
-  },
-  {
-    categoryId: 'back-view',
-    coverPoseId: 'pair-custom29-r01-g01',
-    title: '不露脸',
-    desc: '背影回眸不尴尬'
-  },
-  {
-    categoryId: 'selfie',
-    coverPoseId: 'pair-custom18-r01-g01',
-    title: '自拍',
-    desc: '近景表情更自然'
   }
 ]
 const SCENE_ADVISOR_CONFIGS = [
@@ -405,6 +379,22 @@ const getHomeDisplayImage = (pose) => {
 
   return cdnAssetUrl(pose.detailImage || pose.modelImage || pose.thumbnailImage || pose.guideImage)
 }
+const buildSceneTopicCards = () => (
+  sceneTopics
+    .map((topic) => {
+      const coverPose = poseTemplateMap.get(topic.coverPoseId)
+
+      return {
+        id: topic.id,
+        title: topic.shortTitle || topic.title,
+        fullTitle: topic.title,
+        painPoint: topic.painPoint,
+        promise: topic.promise,
+        coverImage: getHomeDisplayImage(coverPose)
+      }
+    })
+    .filter((topic) => topic.coverImage)
+)
 const compactText = (text = '') => String(text || '').replace(/\s+/g, ' ').trim()
 const splitTextParts = (text = '') => compactText(text)
   .split(/[。.!！?？；;]/)
@@ -582,20 +572,6 @@ const buildDailyRecommend = () => {
   }
 }
 
-const buildQuickScenes = () => (
-  QUICK_SCENE_CONFIGS
-    .map((scene) => {
-      const category = poseCategoryMap.get(scene.categoryId)
-      const coverPose = poseTemplateMap.get(scene.coverPoseId) || (category && category.poses && category.poses[0])
-
-      return {
-        ...scene,
-        coverImage: cdnAssetUrl(coverPose && (coverPose.detailImage || coverPose.modelImage || coverPose.thumbnailImage || coverPose.guideImage))
-      }
-    })
-    .filter((scene) => scene.coverImage)
-)
-
 const buildSceneTabs = (selectedSceneId = SCENE_ADVISOR_CONFIGS[0].id) => (
   SCENE_ADVISOR_CONFIGS
     .map((scene) => {
@@ -709,10 +685,7 @@ Page({
     dailyRecommend: {
       poses: []
     },
-    sceneTabs: [],
-    selectedSceneId: SCENE_ADVISOR_CONFIGS[0].id,
-    sceneAdvisor: buildSceneAdvisor(SCENE_ADVISOR_CONFIGS[0].id),
-    quickScenes: [],
+    sceneTopics: [],
     poseCategories: [],
     favoritePoseIds: [],
     hasSearchResult: true,
@@ -725,10 +698,8 @@ Page({
     this.setData({
       pageTopStyle: getPageTopStyle(),
       favoritePoseIds: getFavoritePoseIds(),
-      sceneTabs: buildSceneTabs(),
-      quickScenes: buildQuickScenes()
+      sceneTopics: buildSceneTopicCards()
     })
-    this.refreshSceneAdvisor()
     this.refreshDailyRecommend()
     this.setPoseCategories(buildRecommendCategories(), {
       hasSearchResult: true
@@ -765,27 +736,6 @@ Page({
         dailyRecommend: {
           ...dailyRecommend,
           poses: cachedPoses
-        }
-      }, () => this.queueHomeImagePreload())
-    })
-  },
-
-  refreshSceneAdvisor(sceneId = this.data.selectedSceneId) {
-    const requestId = (this.sceneAdvisorRequestId || 0) + 1
-    this.sceneAdvisorRequestId = requestId
-    const sceneAdvisor = buildSceneAdvisor(sceneId)
-
-    Promise.all(sceneAdvisor.plans.map((plan) => cacheImageFields(plan, ['thumbnailImage']))).then((cachedPlans) => {
-      if (this.sceneAdvisorRequestId !== requestId) {
-        return
-      }
-
-      this.setData({
-        selectedSceneId: sceneAdvisor.id,
-        sceneTabs: buildSceneTabs(sceneAdvisor.id),
-        sceneAdvisor: {
-          ...sceneAdvisor,
-          plans: cachedPlans
         }
       }, () => this.queueHomeImagePreload())
     })
@@ -856,9 +806,6 @@ Page({
     }
 
     ;(this.data.dailyRecommend.poses || []).forEach(appendPose)
-    ;((this.data.sceneAdvisor && this.data.sceneAdvisor.plans) || []).forEach((plan) => {
-      appendPose(poseTemplateMap.get(plan.poseId))
-    })
     ;(this.data.poseCategories || []).forEach((category) => {
       ;(category.poses || []).forEach(appendPose)
     })
@@ -914,14 +861,16 @@ Page({
     })
   },
 
-  selectScene(event) {
-    const { sceneId } = event.currentTarget.dataset
+  openSceneTopic(event) {
+    const { topicId } = event.currentTarget.dataset
 
-    if (!sceneId || sceneId === this.data.selectedSceneId) {
+    if (!topicId) {
       return
     }
 
-    this.refreshSceneAdvisor(sceneId)
+    wx.navigateTo({
+      url: `/pages/scene-topic/index?topicId=${topicId}`
+    })
   },
 
   toggleFavorite(event) {
@@ -1022,38 +971,6 @@ Page({
     if (!poseId) {
       return
     }
-
-    if (!isRealPhotoPose(pose)) {
-      this.openCamera(event)
-      return
-    }
-
-    wx.navigateTo({
-      url: `/pages/pose-detail/index?poseId=${poseId}`
-    })
-  },
-
-  openAdvisorPlanDetail(event) {
-    const { poseId, planIndex } = event.currentTarget.dataset
-    const plan = this.data.sceneAdvisor.plans[Number(planIndex)]
-    const pose = poseTemplates.find((item) => item.id === poseId)
-
-    if (!poseId || !plan) {
-      return
-    }
-
-    wx.setStorageSync(SCENE_PLAN_DETAIL_KEY, {
-      poseId,
-      sceneTitle: this.data.sceneAdvisor.title,
-      title: plan.title,
-      badge: plan.badge,
-      reason: plan.reason,
-      composition: plan.composition,
-      camera: plan.camera,
-      poseDescription: pose ? pose.description : '',
-      poseCue: plan.poseCue,
-      avoid: plan.avoid
-    })
 
     if (!isRealPhotoPose(pose)) {
       this.openCamera(event)

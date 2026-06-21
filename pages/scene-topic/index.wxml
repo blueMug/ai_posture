@@ -1,0 +1,77 @@
+<view class="page" style="{{pageTopStyle}}">
+  <view class="top-bar">
+    <view class="back-btn" bindtap="backToHome">返回</view>
+    <view class="title">场景专题</view>
+    <view class="placeholder"></view>
+  </view>
+
+  <view wx:if="{{topic}}" class="topic-hero">
+    <view class="topic-copy">
+      <view class="topic-kicker">场景出片专题</view>
+      <view class="topic-title">{{topic.title}}</view>
+      <view class="topic-pain">{{topic.painPoint}}</view>
+      <view class="topic-promise">{{topic.promise}}</view>
+    </view>
+    <image
+      wx:if="{{topic.coverImage}}"
+      class="topic-cover"
+      src="{{topic.coverImage}}"
+      mode="aspectFit"
+    ></image>
+  </view>
+
+  <view wx:if="{{topic && topic.plans.length}}" class="plan-section">
+    <view class="section-head">
+      <view>
+        <view class="section-title">先照着这 3 个拍法</view>
+        <view class="section-subtitle">每张卡片都能进详情，也可以直接打开相机照着拍。</view>
+      </view>
+    </view>
+
+    <view class="plan-list">
+      <view
+        wx:for="{{topic.plans}}"
+        wx:key="poseId"
+        wx:for-item="plan"
+        wx:for-index="planIndex"
+        class="plan-card"
+        data-pose-id="{{plan.poseId}}"
+        data-plan-index="{{planIndex}}"
+        bindtap="openPoseDetail"
+      >
+        <view class="plan-preview" style="background: {{plan.gradient}};">
+          <image
+            class="plan-image"
+            src="{{plan.thumbnailImage}}"
+            mode="aspectFit"
+            data-pose-id="{{plan.poseId}}"
+            binderror="onPoseImageError"
+          ></image>
+          <view wx:if="{{failedPoseImages[plan.poseId]}}" class="image-error">
+            图片加载失败
+          </view>
+        </view>
+        <view class="plan-body">
+          <view class="plan-top">
+            <view class="plan-badge">{{plan.badge}}</view>
+            <view
+              class="shoot-action"
+              data-pose-id="{{plan.poseId}}"
+              data-plan-index="{{planIndex}}"
+              catchtap="openCamera"
+            >照着拍</view>
+          </view>
+          <view class="plan-title">{{plan.title}}</view>
+          <view class="plan-reason">{{plan.reason}}</view>
+          <view class="plan-more">查看动作要点</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{topic}}" class="share-card">
+    <view class="share-title">适合发给一起拍照的人</view>
+    <view class="share-desc">{{topic.shareTitle}}</view>
+    <button class="share-btn" open-type="share">分享这个场景</button>
+  </view>
+</view>

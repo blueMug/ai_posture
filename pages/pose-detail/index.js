@@ -3,6 +3,7 @@ const { cacheImage } = require('../../utils/imageCache')
 const { cdnAssetUrl } = require('../../utils/assets')
 const { ensurePrivacyNotice } = require('../../utils/privacy')
 const { getShootingGuide } = require('../../utils/shootingGuide')
+const { getSceneTopic } = require('../../utils/sceneTopics')
 const {
   getFavoritePoseIds,
   recordPoseUsage,
@@ -101,6 +102,7 @@ Page({
     shootingGuide: null,
     detailGuide: null,
     detailExpanded: false,
+    sourceTopic: null,
     isFavorite: false
   },
 
@@ -111,6 +113,7 @@ Page({
     const poseWithFavorite = withFavoriteState(pose, favoritePoseIds)
     const shootingGuide = getShootingGuide(pose)
     const detailGuide = buildDetailGuide(pose, shootingGuide)
+    const sourceTopic = options.topicId ? getSceneTopic(options.topicId) : null
 
     this.setData({
       poseId: pose.id,
@@ -122,6 +125,7 @@ Page({
       shootingGuide,
       detailGuide,
       detailExpanded: false,
+      sourceTopic,
       isFavorite: poseWithFavorite.isFavorite
     })
 
@@ -264,6 +268,15 @@ Page({
   onShareAppMessage() {
     const pose = this.data.pose || {}
     const poseId = this.data.poseId
+    const sourceTopic = this.data.sourceTopic
+
+    if (sourceTopic && sourceTopic.id) {
+      return {
+        title: sourceTopic.shareTitle || `${sourceTopic.title}，照着姿势拍`,
+        path: `/pages/scene-topic/index?topicId=${sourceTopic.id}`,
+        imageUrl: pose.thumbnailImage || pose.detailImage || pose.guideImage || ''
+      }
+    }
 
     return {
       title: pose.name
