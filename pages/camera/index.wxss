@@ -7,7 +7,8 @@
 
 .camera {
   width: 100vw;
-  height: calc(100vh - 330rpx);
+  height: 133.333vw;
+  max-height: calc(100vh - 330rpx);
 }
 
 .camera {
@@ -42,8 +43,8 @@
   position: absolute;
   left: 7vw;
   right: 7vw;
-  top: 8vh;
-  bottom: 4vh;
+  top: 8%;
+  bottom: 4%;
   z-index: 5;
 }
 

@@ -21,8 +21,9 @@ const GUIDE_MIN_SCALE = 0.35
 const GUIDE_MAX_SCALE = 2.2
 const GUIDE_SCALE_STEP = 0.1
 const BOTTOM_PANEL_RPX = 330
-const STAGE_TOP_VIEWPORT_RATIO = 0.13
-const STAGE_BOTTOM_VIEWPORT_RATIO = 0.04
+const CAMERA_PREVIEW_HEIGHT_RATIO = 4 / 3
+const STAGE_TOP_CAMERA_RATIO = 0.08
+const STAGE_BOTTOM_CAMERA_RATIO = 0.04
 const GUIDE_LEFT_RATIO = 0.07
 const GUIDE_WIDTH_RATIO = 0.86
 const GUIDE_TOP_IN_STAGE_RATIO = 0.08
@@ -156,6 +157,14 @@ const getGuideBoxStyle = (offsetX, offsetY, scale = 1, guideBoxRect = null) => (
   ].filter(Boolean).join('; ')
 )
 const getGuideScaleText = (scale) => `${Math.round(scale * 100)}%`
+const getCameraPreviewHeight = (windowWidth, windowHeight) => {
+  const rpxToPx = windowWidth / 750
+  const bottomPanelHeight = BOTTOM_PANEL_RPX * rpxToPx
+  const availableHeight = Math.max(windowHeight - bottomPanelHeight, 1)
+  const nativePhotoHeight = windowWidth * CAMERA_PREVIEW_HEIGHT_RATIO
+
+  return Math.min(availableHeight, nativePhotoHeight)
+}
 const getGuideTransformState = (offsetX, offsetY, scale, guideBoxRect = null) => ({
   guideOffsetX: offsetX,
   guideOffsetY: offsetY,
@@ -168,11 +177,9 @@ const getCameraGuideLayout = (guideImageInfo = null) => {
   const systemInfo = wx.getSystemInfoSync()
   const windowWidth = Number(systemInfo.windowWidth || 375)
   const windowHeight = Number(systemInfo.windowHeight || 667)
-  const rpxToPx = windowWidth / 750
-  const bottomPanelHeight = BOTTOM_PANEL_RPX * rpxToPx
-  const cameraHeight = Math.max(windowHeight - bottomPanelHeight, 1)
-  const stageTop = windowHeight * STAGE_TOP_VIEWPORT_RATIO
-  const stageBottom = windowHeight * STAGE_BOTTOM_VIEWPORT_RATIO
+  const cameraHeight = getCameraPreviewHeight(windowWidth, windowHeight)
+  const stageTop = cameraHeight * STAGE_TOP_CAMERA_RATIO
+  const stageBottom = cameraHeight * STAGE_BOTTOM_CAMERA_RATIO
   const stageHeight = Math.max(cameraHeight - stageTop - stageBottom, 1)
 
   const stageLeft = windowWidth * GUIDE_LEFT_RATIO
