@@ -1,12 +1,15 @@
 const USE_JSDELIVR_ASSETS = true
 const JSDELIVR_ASSET_BASE = 'https://cdn.jsdelivr.net/gh/blueMug/ai_posture@main'
-const LOCAL_PACKED_PREFIXES = ['/static/recommend_thumbs/']
-const REMOTE_ONLY_FOLDERS = new Set([
-  'custom74'
+const LOCAL_PACKED_PREFIXES = ['/static/recommend_thumbs/', '/static/home_guides/']
+const REMOTE_ONLY_ASSET_PATHS = new Set([
+  '/static/pose_pairs/custom74/custom74_r01_g01_demo.jpg',
+  '/static/pose_thumbs/custom74/custom74_r01_g01_thumb.jpg'
 ])
 const HOME_LOCAL_ASSET_FOLDERS = new Set([
   'custom1',
   'custom3',
+  'custom7',
+  'custom9',
   'custom18',
   'custom19',
   'custom22',
@@ -19,8 +22,14 @@ const HOME_LOCAL_ASSET_FOLDERS = new Set([
   'custom29',
   'custom30',
   'custom31',
+  'custom32',
   'custom33',
   'custom36',
+  'custom46',
+  'custom49',
+  'custom50',
+  'custom60',
+  'custom64',
   'custom75',
   'custom76',
   'custom77',
@@ -53,6 +62,15 @@ const HOME_LOCAL_ASSET_FOLDERS = new Set([
   'custom104',
   'custom105'
 ])
+const HOME_LOCAL_GUIDE_FOLDERS = new Set([
+  'custom76',
+  'custom78',
+  'custom80',
+  'custom84',
+  'custom88',
+  'custom103',
+  'custom105'
+])
 
 const isRemoteUrl = (path) => /^https?:\/\//.test(path)
 const isPackedLocalAsset = (path) => LOCAL_PACKED_PREFIXES.some((prefix) => path.startsWith(prefix))
@@ -60,7 +78,8 @@ const isPoseContour = (path) => (
   (
     path.startsWith('/static/pose_pairs/') ||
     path.startsWith('/static/pose_guides/') ||
-    path.startsWith('/static/recommend_guides/')
+    path.startsWith('/static/recommend_guides/') ||
+    path.startsWith('/static/home_guides/')
   ) &&
   /_contour\.png$/.test(path)
 )
@@ -70,7 +89,7 @@ const isPoseThumb = (path) => (
   (path.startsWith('/static/pose_pairs/') && /_demo\.jpg$/.test(path))
 )
 const getPoseFolder = (path) => {
-  const match = path.match(/^\/static\/(?:pose_(?:pairs|guides|thumbs)|recommend_(?:guides|thumbs))\/([^/]+)\//)
+  const match = path.match(/^\/static\/(?:pose_(?:pairs|guides|thumbs)|recommend_(?:guides|thumbs)|home_guides)\/([^/]+)\//)
   return match ? match[1] : ''
 }
 const normalizeAssetPath = (path) => {
@@ -91,28 +110,31 @@ const cdnAssetUrl = (path) => {
   const remotePath = path
     .replace('/static/recommend_thumbs/', '/static/pose_thumbs/')
     .replace('/static/recommend_guides/', '/static/pose_guides/')
+    .replace('/static/home_guides/', '/static/pose_guides/')
 
   return `${JSDELIVR_ASSET_BASE}/${remotePath.replace(/^\/+/, '')}`
 }
 
 const assetUrl = (path) => {
-  if (!path || isRemoteUrl(path)) {
+  const localPath = normalizeAssetPath(path)
+
+  if (!localPath || isRemoteUrl(localPath)) {
     return path
   }
 
-  if (REMOTE_ONLY_FOLDERS.has(getPoseFolder(path))) {
-    return `${JSDELIVR_ASSET_BASE}/${path.replace(/^\/+/, '')}`
+  if (REMOTE_ONLY_ASSET_PATHS.has(localPath)) {
+    return cdnAssetUrl(localPath)
   }
 
-  if (isPackedLocalAsset(path)) {
-    return path
+  if (isPackedLocalAsset(localPath)) {
+    return localPath
   }
 
   if (!USE_JSDELIVR_ASSETS) {
-    return path
+    return localPath
   }
 
-  return `${JSDELIVR_ASSET_BASE}/${path.replace(/^\/+/, '')}`
+  return isPackedLocalAsset(localPath) ? localPath : cdnAssetUrl(localPath)
 }
 
 const homeLocalAssetUrl = (path) => {
@@ -125,11 +147,18 @@ const homeLocalAssetUrl = (path) => {
   const folder = getPoseFolder(localPath)
 
   if (!HOME_LOCAL_ASSET_FOLDERS.has(folder)) {
-    return cdnAssetUrl(localPath)
+    return assetUrl(localPath)
   }
 
   if (isPoseContour(localPath)) {
-    return cdnAssetUrl(localPath)
+    if (!HOME_LOCAL_GUIDE_FOLDERS.has(folder)) {
+      return cdnAssetUrl(localPath)
+    }
+
+    return localPath
+      .replace('/static/pose_pairs/', '/static/home_guides/')
+      .replace('/static/pose_guides/', '/static/home_guides/')
+      .replace('/static/recommend_guides/', '/static/home_guides/')
   }
 
   if (isPoseThumb(localPath)) {
@@ -139,7 +168,7 @@ const homeLocalAssetUrl = (path) => {
       .replace(/_demo\.jpg$/, '_thumb.jpg')
   }
 
-  return cdnAssetUrl(localPath)
+  return assetUrl(localPath)
 }
 
 module.exports = {

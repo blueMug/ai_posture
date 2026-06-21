@@ -91,7 +91,7 @@
         <cover-view class="camera-guide-text">{{shootingGuide.actionText}}</cover-view>
       </cover-view>
       <cover-view wx:if="{{shootingGuide.compositionText}}" class="camera-guide-item">
-        <cover-view class="camera-guide-label">构图</cover-view>
+        <cover-view class="camera-guide-label">画面</cover-view>
         <cover-view class="camera-guide-text">{{shootingGuide.compositionText}}</cover-view>
       </cover-view>
     </cover-view>

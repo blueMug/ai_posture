@@ -38,7 +38,15 @@
           data-scene-id="{{scene.id}}"
           bindtap="selectScene"
         >
-          <image class="scene-tab-image" src="{{scene.coverImage}}" mode="aspectFit"></image>
+          <image
+            wx:if="{{!retryingPoseImages[scene.id]}}"
+            class="scene-tab-image"
+            src="{{scene.coverImage}}"
+            mode="aspectFit"
+            data-pose-id="{{scene.id}}"
+            bindload="onPoseImageLoad"
+            binderror="onPoseImageError"
+          ></image>
           <view class="scene-tab-copy">
             <view class="scene-tab-title">{{scene.title}}</view>
           </view>
@@ -71,6 +79,7 @@
       >
         <view class="advisor-plan-preview" style="background: {{plan.gradient}};">
           <image
+            wx:if="{{!retryingPoseImages[plan.poseId]}}"
             class="advisor-plan-image"
             src="{{plan.thumbnailImage}}"
             mode="aspectFit"
@@ -135,6 +144,7 @@
         >
           <view class="daily-image-wrap" style="background: {{pose.gradient}};">
             <image
+              wx:if="{{!retryingPoseImages[pose.id]}}"
               class="daily-image"
               src="{{pose.thumbnailImage || pose.guideImage}}"
               mode="{{pose.thumbnailMode || 'aspectFit'}}"
@@ -175,7 +185,15 @@
         data-category-id="{{scene.categoryId}}"
         bindtap="openCategory"
       >
-        <image class="scene-image" src="{{scene.coverImage}}" mode="aspectFit"></image>
+        <image
+          wx:if="{{!retryingPoseImages[scene.categoryId]}}"
+          class="scene-image"
+          src="{{scene.coverImage}}"
+          mode="aspectFit"
+          data-pose-id="{{scene.categoryId}}"
+          bindload="onPoseImageLoad"
+          binderror="onPoseImageError"
+        ></image>
         <view class="scene-mask"></view>
         <view class="scene-copy">
           <view class="scene-title">{{scene.title}}</view>
@@ -230,6 +248,7 @@
           <view class="preview-shine"></view>
           <view class="mini-stage">
             <image
+              wx:if="{{!retryingPoseImages[pose.id]}}"
               class="mini-guide-image"
               src="{{pose.thumbnailImage || pose.guideImage}}"
               mode="{{pose.thumbnailMode || 'aspectFit'}}"

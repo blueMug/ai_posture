@@ -13,12 +13,18 @@
     <view class="photo-card" style="background: {{pose.gradient}};">
       <view class="photo-glow"></view>
       <image
+        wx:if="{{displayImage}}"
         class="pose-photo"
         src="{{displayImage}}"
         mode="aspectFit"
         bindtap="openCamera"
+        bindload="onImageLoad"
         binderror="onImageError"
       ></image>
+      <view wx:if="{{imageLoading}}" class="image-loading">
+        <view class="loading-spinner"></view>
+        <view class="loading-text">图片加载中</view>
+      </view>
       <view class="tap-tip">点图拍照</view>
     </view>
 

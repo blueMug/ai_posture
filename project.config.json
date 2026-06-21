@@ -12,6 +12,10 @@
         "type": "folder"
       },
       {
+        "value": "docs",
+        "type": "folder"
+      },
+      {
         "value": "assets",
         "type": "folder"
       },

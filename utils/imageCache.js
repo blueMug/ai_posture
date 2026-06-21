@@ -3,6 +3,7 @@ const PINNED_CACHE_URLS_KEY = 'pinnedImageCacheUrlsV1'
 const MAX_CACHE_BYTES = 8 * 1024 * 1024
 
 const pendingTasks = {}
+let preloadQueue = Promise.resolve()
 
 const isRemoteUrl = (url) => /^https?:\/\//.test(url || '')
 
@@ -200,10 +201,29 @@ const cachePoseCategories = async (categories, fields) => Promise.all(categories
   poses: await Promise.all(category.poses.map((pose) => cacheImageFields(pose, fields)))
 })))
 
+const queueImagePreload = (urls = []) => {
+  const remoteUrls = Array.from(new Set(urls.filter(isRemoteUrl)))
+
+  if (!remoteUrls.length) {
+    return preloadQueue
+  }
+
+  preloadQueue = preloadQueue
+    .then(async () => {
+      for (const url of remoteUrls) {
+        await cacheImage(url)
+      }
+    })
+    .catch(() => {})
+
+  return preloadQueue
+}
+
 module.exports = {
   cacheImage,
   cacheImageFields,
   cachePoseCategories,
+  queueImagePreload,
   pinCachedImages,
   unpinCachedImages
 }

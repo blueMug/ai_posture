@@ -1,5 +1,6 @@
 const { poseTemplates, findPoseIndex } = require('../../utils/poses')
 const { cacheImage } = require('../../utils/imageCache')
+const { cdnAssetUrl } = require('../../utils/assets')
 const { ensurePrivacyNotice } = require('../../utils/privacy')
 const { getShootingGuide } = require('../../utils/shootingGuide')
 const {
@@ -94,6 +95,8 @@ Page({
     poseId: '',
     pose: null,
     displayImage: '',
+    imageLoading: false,
+    displayImageFallbackTried: false,
     preloadedGuideImage: '',
     shootingGuide: null,
     detailGuide: null,
@@ -113,6 +116,8 @@ Page({
       poseId: pose.id,
       pose: poseWithFavorite,
       displayImage: '',
+      imageLoading: true,
+      displayImageFallbackTried: false,
       preloadedGuideImage: '',
       shootingGuide,
       detailGuide,
@@ -126,7 +131,16 @@ Page({
 
     cacheImage(displayImage).then((cachedImage) => {
       this.setData({
-        displayImage: cachedImage
+        displayImage: cachedImage,
+        imageLoading: true
+      })
+    }).catch(() => {
+      this.setData({
+        imageLoading: false
+      })
+      wx.showToast({
+        title: '大图加载失败',
+        icon: 'none'
       })
     })
 
@@ -215,9 +229,35 @@ Page({
   },
 
   onImageError() {
+    const displayImage = this.data.displayImage
+
+    if (!displayImage) {
+      return
+    }
+
+    const fallbackImage = cdnAssetUrl(displayImage)
+
+    if (!this.data.displayImageFallbackTried && fallbackImage && fallbackImage !== displayImage) {
+      this.setData({
+        displayImage: fallbackImage,
+        displayImageFallbackTried: true,
+        imageLoading: true
+      })
+      return
+    }
+
+    this.setData({
+      imageLoading: false
+    })
     wx.showToast({
       title: '大图加载失败',
       icon: 'none'
+    })
+  },
+
+  onImageLoad() {
+    this.setData({
+      imageLoading: false
     })
   },
 

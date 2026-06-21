@@ -77,6 +77,46 @@
   height: calc(100% - 112rpx);
 }
 
+.image-loading {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.loading-spinner {
+  width: 58rpx;
+  height: 58rpx;
+  border-radius: 999rpx;
+  border: 6rpx solid rgba(255, 255, 255, 0.22);
+  border-top-color: #ffe95c;
+  animation: image-loading-spin 0.8s linear infinite;
+}
+
+.loading-text {
+  margin-top: 18rpx;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+@keyframes image-loading-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .tap-tip {
   position: absolute;
   left: 50%;

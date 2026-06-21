@@ -1,5 +1,5 @@
 const { poseTemplates, poseCategories } = require('../../utils/poses')
-const { cacheImageFields, cachePoseCategories } = require('../../utils/imageCache')
+const { cacheImageFields, cachePoseCategories, queueImagePreload } = require('../../utils/imageCache')
 const {
   cdnAssetUrl,
   homeLocalAssetUrl,
@@ -201,16 +201,14 @@ const SCENE_ADVISOR_CONFIGS = [
     keywords: ['街边', '街头', '街拍', '路口', '城市', '通勤', '公园'],
     candidatePoseIds: [
       'pair-custom91-r01-g01',
-      'pair-custom92-r01-g01',
-      'pair-custom97-r01-g01',
-      'pair-custom104-r01-g01',
-      'pair-custom101-r01-g01',
-      'pair-custom87-r01-g01',
       'pair-custom49-r01-g01',
       'pair-custom46-r01-g01',
       'pair-custom7-r01-g01',
       'pair-custom9-r01-g01',
-      'pair-custom32-r01-g01'
+      'pair-custom32-r01-g01',
+      'pair-custom50-r01-g01',
+      'pair-custom60-r01-g01',
+      'pair-custom64-r01-g01'
     ],
     plans: [
       {
@@ -348,6 +346,17 @@ const SCENE_ADVISOR_CONFIGS = [
 const SCENE_ADVISOR_COVER_POSE_IDS = new Set(
   SCENE_ADVISOR_CONFIGS.map((scene) => scene.coverPoseId).filter(Boolean)
 )
+const SCENE_ADVISOR_POSE_OWNER_MAP = SCENE_ADVISOR_CONFIGS.reduce((map, scene) => {
+  const candidatePoseIds = scene.candidatePoseIds || []
+
+  candidatePoseIds.forEach((poseId) => {
+    if (!map.has(poseId)) {
+      map.set(poseId, scene.id)
+    }
+  })
+
+  return map
+}, new Map())
 const RECOMMEND_CATEGORY_CONFIGS = [
   {
     sourceId: 'outfit-standing'
@@ -615,6 +624,11 @@ const buildSceneAdvisor = (sceneId) => {
       .filter(Boolean)
     : poseTemplates.filter((pose) => isSceneMatchedPose(scene, pose))
   const matchedPoses = sourcePoses
+    .filter((pose) => {
+      const ownerSceneId = SCENE_ADVISOR_POSE_OWNER_MAP.get(pose.id)
+
+      return !ownerSceneId || ownerSceneId === scene.id
+    })
     .filter(isHomeLocalPose)
     .filter(isRealPhotoPose)
     .sort((left, right) => getPoseRichnessScore(right) - getPoseRichnessScore(left))
@@ -672,6 +686,22 @@ const getPageTopStyle = () => {
   return `padding-top: ${pageTop}px;`
 }
 
+const getDetailPreloadUrl = (pose) => {
+  if (!pose) {
+    return ''
+  }
+
+  return cdnAssetUrl(pose.detailImage || pose.modelImage || pose.thumbnailImage || pose.guideImage)
+}
+
+const getGuidePreloadUrl = (pose) => {
+  if (!pose) {
+    return ''
+  }
+
+  return homeLocalAssetUrl(pose.guideImage || pose.modelImage || pose.thumbnailImage)
+}
+
 Page({
   data: {
     pageTopStyle: `padding-top: ${DEFAULT_PAGE_TOP_PX}px;`,
@@ -687,6 +717,7 @@ Page({
     favoritePoseIds: [],
     hasSearchResult: true,
     failedPoseImages: {},
+    retryingPoseImages: {},
     adSlot: adSlots.homeRecommendBottom
   },
 
@@ -709,6 +740,17 @@ Page({
     this.refreshPoseCategories()
   },
 
+  onUnload() {
+    if (this.failedImageRetryTimer) {
+      clearTimeout(this.failedImageRetryTimer)
+      this.failedImageRetryTimer = null
+    }
+  },
+
+  onPullDownRefresh() {
+    this.retryFailedPoseImages()
+  },
+
   refreshDailyRecommend() {
     const requestId = (this.dailyRecommendRequestId || 0) + 1
     this.dailyRecommendRequestId = requestId
@@ -724,7 +766,7 @@ Page({
           ...dailyRecommend,
           poses: cachedPoses
         }
-      })
+      }, () => this.queueHomeImagePreload())
     })
   },
 
@@ -745,7 +787,7 @@ Page({
           ...sceneAdvisor,
           plans: cachedPlans
         }
-      })
+      }, () => this.queueHomeImagePreload())
     })
   },
 
@@ -783,8 +825,75 @@ Page({
         ...extraData,
         favoritePoseIds,
         poseCategories: cachedCategories
-      })
+      }, () => this.queueHomeImagePreload())
     })
+  },
+
+  queueHomeImagePreload() {
+    if (this.homeGuidePreloadTimer) {
+      clearTimeout(this.homeGuidePreloadTimer)
+    }
+
+    if (this.homeDetailPreloadTimer) {
+      clearTimeout(this.homeDetailPreloadTimer)
+    }
+
+    this.homeGuidePreloadTimer = setTimeout(() => {
+      this.preloadHomeImages('guide')
+    }, 200)
+
+    this.homeDetailPreloadTimer = setTimeout(() => {
+      this.preloadHomeImages('detail')
+    }, 1800)
+  },
+
+  getHomeVisiblePoses() {
+    const poses = []
+    const appendPose = (pose) => {
+      if (pose && pose.id) {
+        poses.push(pose)
+      }
+    }
+
+    ;(this.data.dailyRecommend.poses || []).forEach(appendPose)
+    ;((this.data.sceneAdvisor && this.data.sceneAdvisor.plans) || []).forEach((plan) => {
+      appendPose(poseTemplateMap.get(plan.poseId))
+    })
+    ;(this.data.poseCategories || []).forEach((category) => {
+      ;(category.poses || []).forEach(appendPose)
+    })
+
+    return poses
+  },
+
+  preloadHomeImages(type = 'detail') {
+    const seenKey = type === 'guide' ? 'homeGuidePreloadSeen' : 'homeDetailPreloadSeen'
+    const chainKey = type === 'guide' ? 'homeGuidePreloadChain' : 'homeDetailPreloadChain'
+    const getUrl = type === 'guide' ? getGuidePreloadUrl : getDetailPreloadUrl
+    const seen = this[seenKey] || new Set()
+    this[seenKey] = seen
+    const urls = []
+    const queued = new Set()
+
+    this.getHomeVisiblePoses().forEach((pose) => {
+      const url = getUrl(pose)
+
+      if (!url || !/^https?:\/\//.test(url) || seen.has(url) || queued.has(url)) {
+        return
+      }
+
+      queued.add(url)
+      urls.push(url)
+    })
+
+    if (!urls.length) {
+      return
+    }
+
+    urls.forEach((url) => {
+      seen.add(url)
+    })
+    this[chainKey] = queueImagePreload(urls)
   },
 
   onSearchInput(event) {
@@ -862,6 +971,47 @@ Page({
 
     this.setData({
       [`failedPoseImages.${poseId}`]: false
+    })
+  },
+
+  retryFailedPoseImages() {
+    const failedPoseImages = this.data.failedPoseImages || {}
+    const failedPoseIds = Object.keys(failedPoseImages).filter((poseId) => failedPoseImages[poseId])
+
+    if (!failedPoseIds.length) {
+      if (typeof wx.stopPullDownRefresh === 'function') {
+        wx.stopPullDownRefresh()
+      }
+      return
+    }
+
+    if (this.failedImageRetryTimer) {
+      clearTimeout(this.failedImageRetryTimer)
+    }
+
+    const retryingPoseImages = failedPoseIds.reduce((map, poseId) => {
+      map[poseId] = true
+      return map
+    }, {})
+    const resetFailedImages = failedPoseIds.reduce((map, poseId) => {
+      map[`failedPoseImages.${poseId}`] = false
+      return map
+    }, {})
+
+    this.setData({
+      retryingPoseImages,
+      ...resetFailedImages
+    }, () => {
+      this.failedImageRetryTimer = setTimeout(() => {
+        this.failedImageRetryTimer = null
+        this.setData({
+          retryingPoseImages: {}
+        })
+
+        if (typeof wx.stopPullDownRefresh === 'function') {
+          wx.stopPullDownRefresh()
+        }
+      }, 80)
     })
   },
 

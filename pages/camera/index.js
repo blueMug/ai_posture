@@ -1,16 +1,16 @@
 const app = getApp()
 const { poseTemplates, findPoseIndex } = require('../../utils/poses')
 const { cacheImageFields } = require('../../utils/imageCache')
-const { homeLocalAssetUrl } = require('../../utils/assets')
+const { cdnAssetUrl, homeLocalAssetUrl } = require('../../utils/assets')
 const { recordPoseUsage } = require('../../utils/userData')
 const { ensurePrivacyNotice, hasAcceptedPrivacyNotice } = require('../../utils/privacy')
-const { getShootingGuide } = require('../../utils/shootingGuide')
+const { getSimpleShootingGuide } = require('../../utils/shootingGuide')
 
 const GUIDE_CONFIRM_STORAGE_KEY = 'keepGuideForConfirm'
 const GUIDE_MODE_STORAGE_KEY = 'cameraGuideMode'
 const SHOOTING_TIPS_DEFAULT_STORAGE_KEY = 'cameraShootingTipsDefaultEnabled'
 const GALLERY_TARGET_CATEGORY_KEY = 'galleryTargetCategoryId'
-const CACHE_TEMPLATE_IMAGE_FIELDS = ['guideImage', 'thumbnailImage', 'modelImage']
+const CACHE_TEMPLATE_SUPPORT_IMAGE_FIELDS = ['thumbnailImage', 'modelImage']
 const POSE_GALLERY_ROUTE = 'pages/pose-gallery/index'
 const POSE_GALLERY_URL = `/${POSE_GALLERY_ROUTE}`
 const CAMERA_MIN_ZOOM = 1
@@ -261,6 +261,30 @@ const withHomeLocalTemplateAssets = (template) => ({
   modelImage: template.modelImage,
   detailImage: template.detailImage
 })
+const cacheTemplatePrimaryGuide = (template, guideMode) => (
+  Promise.resolve({
+    ...template,
+    guideImage: getActiveGuideImage(template, guideMode)
+  })
+)
+const cacheTemplateSupportImages = (template) => {
+  cacheImageFields(template, CACHE_TEMPLATE_SUPPORT_IMAGE_FIELDS).catch(() => {})
+}
+const getGuideFallbackImage = (guideImage) => {
+  if (!guideImage) {
+    return ''
+  }
+
+  if (guideImage.startsWith('/static/')) {
+    return cdnAssetUrl(guideImage)
+  }
+
+  if (guideImage.includes('/static/pose_guides/')) {
+    return guideImage.replace('/static/pose_guides/', '/static/pose_pairs/')
+  }
+
+  return ''
+}
 
 Page({
   data: {
@@ -362,7 +386,7 @@ Page({
     const requestId = (this.templateRequestId || 0) + 1
     this.templateRequestId = requestId
 
-    cacheImageFields(template, CACHE_TEMPLATE_IMAGE_FIELDS).then(async (cachedTemplate) => {
+    cacheTemplatePrimaryGuide(template, guideMode).then(async (cachedTemplate) => {
       if (this.templateRequestId !== requestId) {
         return
       }
@@ -380,11 +404,12 @@ Page({
         currentIsSelfie: isSelfiePose(cachedTemplate),
         guideLoadFailed: false,
         currentTemplate,
-        shootingGuide: getShootingGuide(cachedTemplate),
+        shootingGuide: getSimpleShootingGuide(cachedTemplate),
         ...getGuideLayoutState(guideImageInfo, 0, 0, 1),
         ...guideModeState
       }, () => {
         this.hasTemplateLoaded = true
+        cacheTemplateSupportImages(template)
       })
     })
   },
@@ -409,7 +434,7 @@ Page({
       return
     }
 
-    cacheImageFields(currentTemplate, CACHE_TEMPLATE_IMAGE_FIELDS).then(async (cachedTemplate) => {
+    cacheTemplatePrimaryGuide(currentTemplate, nextGuideMode).then(async (cachedTemplate) => {
       const guideModeState = getGuideModeState(cachedTemplate, nextGuideMode)
       const nextTemplate = applyGuideMode(cachedTemplate, true, guideModeState.guideMode)
       const guideImageInfo = await getImageInfo(nextTemplate.guideImage)
@@ -424,6 +449,8 @@ Page({
           this.data.guideScale
         ),
         ...guideModeState
+      }, () => {
+        cacheTemplateSupportImages(currentTemplate)
       })
     })
   },
@@ -445,7 +472,7 @@ Page({
       ? withHomeLocalTemplateAssets(poseTemplates[this.data.currentIndex])
       : poseTemplates[this.data.currentIndex]
 
-    cacheImageFields(currentTemplate, CACHE_TEMPLATE_IMAGE_FIELDS).then(async (cachedTemplate) => {
+    cacheTemplatePrimaryGuide(currentTemplate, guideMode).then(async (cachedTemplate) => {
       const guideModeState = getGuideModeState(cachedTemplate, guideMode)
       const nextTemplate = applyGuideMode(cachedTemplate, this.data.guideVisible, guideModeState.guideMode)
       const guideImageInfo = await getImageInfo(nextTemplate.guideImage)
@@ -460,11 +487,28 @@ Page({
           this.data.guideScale
         ),
         ...guideModeState
+      }, () => {
+        cacheTemplateSupportImages(currentTemplate)
       })
     })
   },
 
   onGuideImageError() {
+    const currentTemplate = this.data.currentTemplate || {}
+    const currentGuideImage = currentTemplate.guideImage || ''
+    const fallbackGuideImage = getGuideFallbackImage(currentGuideImage)
+
+    if (fallbackGuideImage && fallbackGuideImage !== currentGuideImage) {
+      this.setData({
+        guideLoadFailed: false,
+        currentTemplate: {
+          ...currentTemplate,
+          guideImage: fallbackGuideImage
+        }
+      })
+      return
+    }
+
     this.setData({
       guideLoadFailed: true
     })
@@ -1084,9 +1128,11 @@ Page({
       return
     }
 
+    const urls = this.data.sessionPhotoPaths
+
     wx.previewImage({
-      current: this.data.sessionPhotoPaths[0],
-      urls: this.data.sessionPhotoPaths,
+      current: urls[0],
+      urls,
       fail: () => {
         wx.showToast({
           title: '预览失败',
