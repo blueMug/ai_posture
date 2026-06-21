@@ -34,10 +34,23 @@
         bindtap="openSceneTopic"
       >
         <image
+          wx:if="{{!retryingPoseImages[topic.id]}}"
           class="topic-image"
           src="{{topic.coverImage}}"
           mode="aspectFit"
+          data-pose-id="{{topic.id}}"
+          bindload="onPoseImageLoad"
+          binderror="onPoseImageError"
         ></image>
+        <view
+          wx:if="{{!loadedPoseImages[topic.id] && !failedPoseImages[topic.id] && !retryingPoseImages[topic.id]}}"
+          class="home-image-loading compact topic-loading"
+        >
+          <view class="home-loading-spinner"></view>
+        </view>
+        <view wx:if="{{failedPoseImages[topic.id]}}" class="mini-image-error">
+          图片加载失败
+        </view>
         <view class="topic-mask"></view>
         <view class="topic-copy">
           <view class="topic-card-title">{{topic.title}}</view>
@@ -91,6 +104,13 @@
               bindload="onPoseImageLoad"
               binderror="onPoseImageError"
             ></image>
+            <view
+              wx:if="{{!loadedPoseImages[pose.id] && !failedPoseImages[pose.id] && !retryingPoseImages[pose.id]}}"
+              class="home-image-loading"
+            >
+              <view class="home-loading-spinner"></view>
+              <view class="home-loading-text">图片加载中</view>
+            </view>
             <view wx:if="{{failedPoseImages[pose.id]}}" class="mini-image-error">
               图片加载失败
             </view>
@@ -160,6 +180,13 @@
               bindload="onPoseImageLoad"
               binderror="onPoseImageError"
             ></image>
+            <view
+              wx:if="{{!loadedPoseImages[pose.id] && !failedPoseImages[pose.id] && !retryingPoseImages[pose.id]}}"
+              class="home-image-loading"
+            >
+              <view class="home-loading-spinner"></view>
+              <view class="home-loading-text">图片加载中</view>
+            </view>
             <view wx:if="{{failedPoseImages[pose.id]}}" class="mini-image-error">
               图片加载失败
             </view>

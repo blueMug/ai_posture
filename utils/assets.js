@@ -1,6 +1,6 @@
 const USE_JSDELIVR_ASSETS = true
 const JSDELIVR_ASSET_BASE = 'https://cdn.jsdelivr.net/gh/blueMug/ai_posture@main'
-const LOCAL_PACKED_PREFIXES = ['/static/recommend_thumbs/', '/static/home_guides/']
+const LOCAL_PACKED_PREFIXES = ['/static/recommend_thumbs/']
 const REMOTE_ONLY_ASSET_PATHS = new Set([
   '/static/pose_pairs/custom74/custom74_r01_g01_demo.jpg',
   '/static/pose_thumbs/custom74/custom74_r01_g01_thumb.jpg'
@@ -62,16 +62,6 @@ const HOME_LOCAL_ASSET_FOLDERS = new Set([
   'custom104',
   'custom105'
 ])
-const HOME_LOCAL_GUIDE_FOLDERS = new Set([
-  'custom76',
-  'custom78',
-  'custom80',
-  'custom84',
-  'custom88',
-  'custom103',
-  'custom105'
-])
-
 const isRemoteUrl = (path) => /^https?:\/\//.test(path)
 const isPackedLocalAsset = (path) => LOCAL_PACKED_PREFIXES.some((prefix) => path.startsWith(prefix))
 const isPoseContour = (path) => (
@@ -151,14 +141,7 @@ const homeLocalAssetUrl = (path) => {
   }
 
   if (isPoseContour(localPath)) {
-    if (!HOME_LOCAL_GUIDE_FOLDERS.has(folder)) {
-      return cdnAssetUrl(localPath)
-    }
-
-    return localPath
-      .replace('/static/pose_pairs/', '/static/home_guides/')
-      .replace('/static/pose_guides/', '/static/home_guides/')
-      .replace('/static/recommend_guides/', '/static/home_guides/')
+    return cdnAssetUrl(localPath)
   }
 
   if (isPoseThumb(localPath)) {

@@ -690,6 +690,7 @@ Page({
     favoritePoseIds: [],
     hasSearchResult: true,
     failedPoseImages: {},
+    loadedPoseImages: {},
     retryingPoseImages: {},
     adSlot: adSlots.homeRecommendBottom
   },
@@ -907,19 +908,21 @@ Page({
     }
 
     this.setData({
-      [`failedPoseImages.${poseId}`]: true
+      [`failedPoseImages.${poseId}`]: true,
+      [`loadedPoseImages.${poseId}`]: false
     })
   },
 
   onPoseImageLoad(event) {
     const { poseId } = event.currentTarget.dataset
 
-    if (!poseId || !this.data.failedPoseImages[poseId]) {
+    if (!poseId) {
       return
     }
 
     this.setData({
-      [`failedPoseImages.${poseId}`]: false
+      [`failedPoseImages.${poseId}`]: false,
+      [`loadedPoseImages.${poseId}`]: true
     })
   },
 
@@ -944,6 +947,7 @@ Page({
     }, {})
     const resetFailedImages = failedPoseIds.reduce((map, poseId) => {
       map[`failedPoseImages.${poseId}`] = false
+      map[`loadedPoseImages.${poseId}`] = false
       return map
     }, {})
 

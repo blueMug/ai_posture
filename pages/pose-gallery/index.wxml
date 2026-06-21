@@ -89,8 +89,16 @@
           src="{{pose.galleryDisplayImage}}"
           mode="aspectFill"
           data-pose-id="{{pose.id}}"
+          bindload="onPoseImageLoad"
           binderror="onPoseImageError"
         ></image>
+        <view
+          wx:if="{{loadingPoseImages[pose.id] && !failedPoseImages[pose.id]}}"
+          class="image-loading"
+        >
+          <view class="loading-spinner"></view>
+          <view class="loading-text">图片加载中</view>
+        </view>
         <view
           wx:if="{{pose.isFavorite}}"
           class="favorite-chip active"

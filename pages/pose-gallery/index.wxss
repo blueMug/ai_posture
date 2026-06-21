@@ -226,6 +226,47 @@
   display: block;
 }
 
+.image-loading {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.24);
+  pointer-events: none;
+}
+
+.loading-spinner {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 999rpx;
+  border: 5rpx solid rgba(255, 255, 255, 0.22);
+  border-top-color: #ffe95c;
+  animation: image-loading-spin 0.8s linear infinite;
+}
+
+.loading-text {
+  margin-top: 14rpx;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 22rpx;
+  font-weight: 800;
+}
+
+@keyframes image-loading-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .image-error {
   position: absolute;
   left: 18rpx;

@@ -13,6 +13,7 @@ const {
 } = require('../../utils/userData')
 const {
   cacheFavoritePoseAssets,
+  getCachedFavoritePoseAssets,
   unpinFavoritePoseAssets
 } = require('../../utils/favoriteAssetCache')
 
@@ -53,8 +54,18 @@ Page({
     const requestId = (this.favoritePoseRequestId || 0) + 1
     this.favoritePoseRequestId = requestId
 
+    Promise.all(favoritePoses.map((pose) => getCachedFavoritePoseAssets(pose))).then((localPoses) => {
+      if (this.favoritePoseRequestId !== requestId) {
+        return
+      }
+
+      this.setData({
+        favoritePoses: localPoses,
+        favoritePoseCount: favoritePoses.length
+      })
+    })
+
     this.setData({
-      favoritePoses,
       favoritePoseCount: favoritePoses.length
     })
 
