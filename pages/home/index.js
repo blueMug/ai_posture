@@ -1,6 +1,10 @@
 const { poseTemplates, poseCategories } = require('../../utils/poses')
 const { cacheImageFields, cachePoseCategories } = require('../../utils/imageCache')
-const { cdnAssetUrl } = require('../../utils/assets')
+const {
+  cdnAssetUrl,
+  homeLocalAssetUrl,
+  HOME_LOCAL_ASSET_FOLDERS
+} = require('../../utils/assets')
 const { adSlots } = require('../../utils/adConfig')
 const { ensurePrivacyNotice } = require('../../utils/privacy')
 const {
@@ -9,6 +13,10 @@ const {
   withFavoriteStateCategories
 } = require('../../utils/userData')
 const {
+  cacheFavoritePoseAssets,
+  unpinFavoritePoseAssets
+} = require('../../utils/favoriteAssetCache')
+const {
   isPoseMatchedSearch,
   normalizeSearchText
 } = require('../../utils/poseSearch')
@@ -16,50 +24,44 @@ const {
 const GALLERY_TARGET_CATEGORY_KEY = 'galleryTargetCategoryId'
 const SCENE_PLAN_DETAIL_KEY = 'sceneAdvisorPlanDetail'
 const RECOMMEND_LIMIT_PER_CATEGORY = 4
+const SCENE_ADVISOR_PLAN_LIMIT = 3
 const DEFAULT_PAGE_TOP_PX = 52
 const DAY_MS = 24 * 60 * 60 * 1000
 const DAILY_RECOMMEND_CONFIGS = [
   {
     title: '今天拍穿搭',
     subtitle: '想拍全身照，先从这 4 个显比例姿势开始。',
-    categoryId: 'outfit-standing',
-    poseIds: ['pair-custom25-r01-g01', 'pair-custom27-r01-g01', 'pair-custom30-r01-g01', 'pair-custom36-r01-g01']
+    categoryId: 'outfit-standing'
   },
   {
     title: '今天试试不露脸',
     subtitle: '不用看镜头，背影和回眸也能很出片。',
-    categoryId: 'back-view',
-    poseIds: ['pair-custom26-r01-g01', 'pair-custom29-r01-g01', 'pair-custom31-r01-g01', 'pair-custom33-r01-g01']
+    categoryId: 'back-view'
   },
   {
     title: '今天拍咖啡馆',
     subtitle: '手不知道放哪，就用杯子、相机和书本互动。',
-    categoryId: 'props-action',
-    poseIds: ['pair-custom19-r01-g01', 'pair-custom22-r01-g01', 'pair-custom27-r01-g01', 'pair-custom30-r01-g01']
+    categoryId: 'props-action'
   },
   {
     title: '今天自拍不尴尬',
     subtitle: '近景自拍、表情管理和酷一点的姿势都在这里。',
-    categoryId: 'selfie',
-    poseIds: ['pair-custom18-r01-g01', 'pair-custom21-r01-g01', 'pair-custom23-r01-g01', 'pair-custom28-r01-g01']
+    categoryId: 'selfie'
   },
   {
     title: '今天出门街拍',
     subtitle: '通勤路上、街角、机车和运动风都能照着拍。',
-    categoryId: 'street-commute',
-    poseIds: ['pair-custom25-r01-g01', 'pair-custom27-r01-g01', 'pair-custom30-r01-g01', 'pair-custom36-r01-g01']
+    categoryId: 'street-commute'
   },
   {
     title: '今天旅行打卡',
     subtitle: '到景点不用临场想姿势，选一个直接拍。',
-    categoryId: 'travel-back',
-    poseIds: ['pair-custom26-r01-g01', 'pair-custom29-r01-g01', 'pair-custom31-r01-g01', 'pair-custom33-r01-g01']
+    categoryId: 'travel-back'
   },
   {
     title: '今天坐着也好拍',
     subtitle: '坐姿、蹲姿、野餐和松弛生活照都适合。',
-    categoryId: 'sitting-life',
-    poseIds: ['pair-custom1-r01-g01', 'pair-custom3-r01-g01', 'pair-custom19-r01-g01', 'pair-custom22-r01-g01']
+    categoryId: 'sitting-life'
   }
 ]
 const QUICK_SCENE_CONFIGS = [
@@ -94,7 +96,19 @@ const SCENE_ADVISOR_CONFIGS = [
     title: '咖啡店',
     desc: '手不知道放哪，就让杯子、窗户和桌面帮你完成动作。',
     categoryId: 'props-action',
-    coverPoseId: 'pair-custom22-r01-g01',
+    coverPoseId: 'pair-custom84-r01-g01',
+    keywords: ['咖啡馆', '咖啡厅', '咖啡店', '窗边', '书店'],
+    candidatePoseIds: [
+      'pair-custom84-r01-g01',
+      'pair-custom76-r01-g01',
+      'pair-custom78-r01-g01',
+      'pair-custom88-r01-g01',
+      'pair-custom75-r01-g01',
+      'pair-custom22-r01-g01',
+      'pair-custom51-r01-g01',
+      'pair-custom40-r01-g01',
+      'pair-custom7-r01-g01'
+    ],
     plans: [
       {
         poseId: 'pair-custom22-r01-g01',
@@ -133,7 +147,18 @@ const SCENE_ADVISOR_CONFIGS = [
     title: '旅行景点',
     desc: '先决定人和景的关系，再选背影、回眸或远景动作。',
     categoryId: 'travel-back',
-    coverPoseId: 'pair-custom26-r01-g01',
+    coverPoseId: 'pair-custom97-r01-g01',
+    keywords: ['旅行', '景点', '古镇', '海边', '山顶', '湖边', '花田'],
+    candidatePoseIds: [
+      'pair-custom105-r01-g01',
+      'pair-custom104-r01-g01',
+      'pair-custom97-r01-g01',
+      'pair-custom99-r01-g01',
+      'pair-custom100-r01-g01',
+      'pair-custom26-r01-g01',
+      'pair-custom31-r01-g01',
+      'pair-custom33-r01-g01'
+    ],
     plans: [
       {
         poseId: 'pair-custom26-r01-g01',
@@ -172,7 +197,21 @@ const SCENE_ADVISOR_CONFIGS = [
     title: '街边路口',
     desc: '把马路、墙面、店招当背景，先做出行走感。',
     categoryId: 'street-commute',
-    coverPoseId: 'pair-custom7-r01-g01',
+    coverPoseId: 'pair-custom91-r01-g01',
+    keywords: ['街边', '街头', '街拍', '路口', '城市', '通勤', '公园'],
+    candidatePoseIds: [
+      'pair-custom91-r01-g01',
+      'pair-custom92-r01-g01',
+      'pair-custom97-r01-g01',
+      'pair-custom104-r01-g01',
+      'pair-custom101-r01-g01',
+      'pair-custom87-r01-g01',
+      'pair-custom49-r01-g01',
+      'pair-custom46-r01-g01',
+      'pair-custom7-r01-g01',
+      'pair-custom9-r01-g01',
+      'pair-custom32-r01-g01'
+    ],
     plans: [
       {
         poseId: 'pair-custom46-r01-g01',
@@ -211,7 +250,17 @@ const SCENE_ADVISOR_CONFIGS = [
     title: '穿搭全身',
     desc: '重点不是姿势多，而是把比例、衣服轮廓和背景拍清楚。',
     categoryId: 'outfit-standing',
-    coverPoseId: 'pair-custom30-r01-g01',
+    coverPoseId: 'pair-custom92-r01-g01',
+    keywords: ['全身照', '穿搭', 'ootd', '显比例', '站姿', '楼梯', '天台'],
+    candidatePoseIds: [
+      'pair-custom92-r01-g01',
+      'pair-custom101-r01-g01',
+      'pair-custom94-r01-g01',
+      'pair-custom91-r01-g01',
+      'pair-custom30-r01-g01',
+      'pair-custom36-r01-g01',
+      'pair-custom25-r01-g01'
+    ],
     plans: [
       {
         poseId: 'pair-custom30-r01-g01',
@@ -250,7 +299,18 @@ const SCENE_ADVISOR_CONFIGS = [
     title: '自拍近景',
     desc: '近景先处理脸、手和视线，别急着套全身姿势。',
     categoryId: 'selfie',
-    coverPoseId: 'pair-custom18-r01-g01',
+    coverPoseId: 'pair-custom75-r01-g01',
+    keywords: ['自拍', '前置自拍', '半身自拍', '近景', '朋友圈'],
+    candidatePoseIds: [
+      'pair-custom75-r01-g01',
+      'pair-custom77-r01-g01',
+      'pair-custom82-r01-g01',
+      'pair-custom86-r01-g01',
+      'pair-custom87-r01-g01',
+      'pair-custom18-r01-g01',
+      'pair-custom23-r01-g01',
+      'pair-custom28-r01-g01'
+    ],
     plans: [
       {
         poseId: 'pair-custom18-r01-g01',
@@ -285,49 +345,41 @@ const SCENE_ADVISOR_CONFIGS = [
     ]
   }
 ]
+const SCENE_ADVISOR_COVER_POSE_IDS = new Set(
+  SCENE_ADVISOR_CONFIGS.map((scene) => scene.coverPoseId).filter(Boolean)
+)
 const RECOMMEND_CATEGORY_CONFIGS = [
   {
-    sourceId: 'outfit-standing',
-    poseIds: [
-      'pair-custom25-r01-g01',
-      'pair-custom27-r01-g01',
-      'pair-custom30-r01-g01',
-      'pair-custom36-r01-g01'
-    ]
+    sourceId: 'outfit-standing'
   },
   {
-    sourceId: 'portrait-half',
-    poseIds: [
-      'pair-custom1-r01-g01',
-      'pair-custom3-r01-g01',
-      'pair-custom19-r01-g01',
-      'pair-custom22-r01-g01'
-    ]
+    sourceId: 'portrait-half'
   },
   {
-    sourceId: 'travel-back',
-    poseIds: [
-      'pair-custom26-r01-g01',
-      'pair-custom29-r01-g01',
-      'pair-custom31-r01-g01',
-      'pair-custom33-r01-g01'
-    ]
+    sourceId: 'back-view'
   },
   {
-    sourceId: 'selfie',
-    poseIds: [
-      'pair-custom18-r01-g01',
-      'pair-custom23-r01-g01',
-      'pair-custom24-r01-g01',
-      'pair-custom28-r01-g01'
-    ]
+    sourceId: 'selfie'
   }
 ]
 
 const withCdnCardAssets = (pose) => ({
   ...pose,
-  thumbnailImage: getHomeDisplayImage(pose),
+  thumbnailImage: cdnAssetUrl(pose.detailImage || pose.modelImage || pose.thumbnailImage || pose.guideImage),
   guideImage: cdnAssetUrl(pose.guideImage)
+})
+const getPoseFolderFromId = (poseId = '') => {
+  const match = String(poseId).match(/custom(\d+)/)
+
+  return match ? `custom${match[1]}` : ''
+}
+const isHomeLocalPose = (pose = {}) => HOME_LOCAL_ASSET_FOLDERS.has(getPoseFolderFromId(pose.id))
+const withHomeLocalAssets = (pose) => ({
+  ...pose,
+  guideImage: homeLocalAssetUrl(pose.guideImage),
+  thumbnailImage: homeLocalAssetUrl(pose.thumbnailImage),
+  modelImage: cdnAssetUrl(pose.modelImage),
+  detailImage: cdnAssetUrl(pose.detailImage)
 })
 
 const getHomeDisplayImage = (pose) => {
@@ -336,13 +388,76 @@ const getHomeDisplayImage = (pose) => {
   }
 
   const thumbnailImage = pose.thumbnailImage || ''
+  const localThumbnailImage = homeLocalAssetUrl(thumbnailImage)
 
-  if (thumbnailImage.startsWith('/static/recommend_thumbs/')) {
-    return thumbnailImage
+  if (localThumbnailImage && localThumbnailImage.startsWith('/static/recommend_thumbs/')) {
+    return localThumbnailImage
   }
 
   return cdnAssetUrl(pose.detailImage || pose.modelImage || pose.thumbnailImage || pose.guideImage)
 }
+const compactText = (text = '') => String(text || '').replace(/\s+/g, ' ').trim()
+const splitTextParts = (text = '') => compactText(text)
+  .split(/[。.!！?？；;]/)
+  .map((item) => compactText(item))
+  .filter(Boolean)
+const truncateText = (text = '', maxLength = 36) => {
+  const value = compactText(text)
+
+  if (value.length <= maxLength) {
+    return value
+  }
+
+  return `${value.slice(0, maxLength)}...`
+}
+const getPoseRichnessScore = (pose = {}) => {
+  const description = compactText(pose.description)
+  const richSectionScore = [
+    '适合场景',
+    '拍照指导',
+    '关键动作',
+    '角度要点',
+    '注意事项',
+    '核心口诀'
+  ].reduce((score, keyword) => (
+    description.includes(keyword) ? score + 80 : score
+  ), 0)
+
+  return description.length + richSectionScore + (pose.searchKeywords || []).length * 4
+}
+const getSceneKeywords = (scene = {}) => [
+  scene.title,
+  scene.desc,
+  ...(scene.keywords || [])
+].filter(Boolean)
+const isSceneMatchedPose = (scene, pose) => {
+  const category = poseCategoryMap.get(pose.categoryId) || {}
+
+  return getSceneKeywords(scene).some((keyword) => isPoseMatchedSearch(pose, category, keyword))
+}
+const getScenePlanReason = (pose = {}, fallback = '') => {
+  const tip = compactText(pose.tip).replace(/^推荐/, '')
+  const firstDescription = splitTextParts(pose.description)[0]
+
+  return truncateText(tip || firstDescription || fallback, 38)
+}
+const getScenePlanCue = (pose = {}, fallback = '') => {
+  const cue = splitTextParts(pose.description)
+    .find((part) => /一手|双手|身体|背对|侧身|正对|眼神|头部|脚|腿/.test(part))
+
+  return truncateText(cue || fallback || compactText(pose.description), 42)
+}
+const getAutoScenePlan = (scene, pose, manualPlan = {}) => ({
+  ...manualPlan,
+  poseId: pose.id,
+  title: manualPlan.title || pose.name,
+  badge: manualPlan.badge || pose.badge || pose.categoryName || scene.title,
+  reason: manualPlan.reason || getScenePlanReason(pose, scene.desc),
+  composition: manualPlan.composition || getScenePlanReason(pose, scene.desc),
+  camera: manualPlan.camera || '优先竖拍，人物和关键动作都保留完整。',
+  poseCue: manualPlan.poseCue || getScenePlanCue(pose),
+  avoid: manualPlan.avoid || '不要把手部动作和脚部姿态裁掉。'
+})
 
 const poseTemplateMap = poseTemplates.reduce((map, pose) => {
   map.set(pose.id, pose)
@@ -353,6 +468,23 @@ const poseCategoryMap = poseCategories.reduce((map, category) => {
   map.set(category.id, category)
   return map
 }, new Map())
+
+const getRichCategoryPoses = (categoryId, {
+  query = '',
+  usedPoseIds = new Set(),
+  limit = RECOMMEND_LIMIT_PER_CATEGORY
+} = {}) => {
+  const category = poseCategoryMap.get(categoryId)
+
+  if (!category || !category.poses) {
+    return []
+  }
+
+  return category.poses
+    .filter((pose) => !usedPoseIds.has(pose.id))
+    .filter((pose) => isPoseMatchedSearch(pose, category, query))
+    .slice(0, limit)
+}
 
 const buildRecommendCategories = (keyword = '') => {
   const query = normalizeSearchText(keyword)
@@ -368,12 +500,10 @@ const buildRecommendCategories = (keyword = '') => {
         subtitle: sourceCategory.subtitle || '',
         totalPoseCount: sourceCategory.poses ? sourceCategory.poses.length : 0
       }
-      const poses = config.poseIds
-        .map((poseId) => poseTemplateMap.get(poseId))
-        .filter(Boolean)
-        .filter((pose) => !usedPoseIds.has(pose.id))
-        .filter((pose) => isPoseMatchedSearch(pose, category, query))
-        .slice(0, RECOMMEND_LIMIT_PER_CATEGORY)
+      const poses = getRichCategoryPoses(config.sourceId, {
+        query,
+        usedPoseIds
+      })
         .map(withCdnCardAssets)
 
       poses.forEach((pose) => {
@@ -430,9 +560,12 @@ const getDailyRecommendConfig = () => {
 
 const buildDailyRecommend = () => {
   const config = getDailyRecommendConfig()
-  const poses = config.poseIds
-    .map((poseId) => poseTemplateMap.get(poseId))
-    .filter(Boolean)
+  const poses = getRichCategoryPoses(config.categoryId, {
+    limit: Number.MAX_SAFE_INTEGER
+  })
+    .filter(isHomeLocalPose)
+    .slice(0, RECOMMEND_LIMIT_PER_CATEGORY)
+    .map(withHomeLocalAssets)
 
   return {
     ...config,
@@ -448,7 +581,7 @@ const buildQuickScenes = () => (
 
       return {
         ...scene,
-        coverImage: getHomeDisplayImage(coverPose)
+        coverImage: cdnAssetUrl(coverPose && (coverPose.detailImage || coverPose.modelImage || coverPose.thumbnailImage || coverPose.guideImage))
       }
     })
     .filter((scene) => scene.coverImage)
@@ -471,15 +604,47 @@ const buildSceneTabs = (selectedSceneId = SCENE_ADVISOR_CONFIGS[0].id) => (
 
 const buildSceneAdvisor = (sceneId) => {
   const scene = SCENE_ADVISOR_CONFIGS.find((item) => item.id === sceneId) || SCENE_ADVISOR_CONFIGS[0]
-  const plans = scene.plans
-    .slice(0, 3)
+  const manualPlanMap = (scene.plans || []).reduce((map, plan) => {
+    map.set(plan.poseId, plan)
+    return map
+  }, new Map())
+  const matchedPoseIds = new Set()
+  const sourcePoses = scene.candidatePoseIds
+    ? scene.candidatePoseIds
+      .map((poseId) => poseTemplateMap.get(poseId))
+      .filter(Boolean)
+    : poseTemplates.filter((pose) => isSceneMatchedPose(scene, pose))
+  const matchedPoses = sourcePoses
+    .filter(isHomeLocalPose)
+    .filter(isRealPhotoPose)
+    .sort((left, right) => getPoseRichnessScore(right) - getPoseRichnessScore(left))
+
+  const plans = [
+    ...matchedPoses,
+    ...(scene.plans || [])
+      .map((plan) => poseTemplateMap.get(plan.poseId))
+      .filter(Boolean)
+  ]
+    .filter((pose) => !SCENE_ADVISOR_COVER_POSE_IDS.has(pose.id))
+    .filter((pose) => {
+      if (matchedPoseIds.has(pose.id)) {
+        return false
+      }
+
+      matchedPoseIds.add(pose.id)
+      return true
+    })
+    .slice(0, SCENE_ADVISOR_PLAN_LIMIT)
     .map((plan) => {
-      const pose = poseTemplateMap.get(plan.poseId)
+      const pose = poseTemplateMap.get(plan.id)
+      const scenePlan = getAutoScenePlan(scene, plan, manualPlanMap.get(plan.id))
+      const localPose = withHomeLocalAssets(pose)
 
       return {
-        ...plan,
+        ...scenePlan,
         poseName: pose ? pose.name : '',
-        thumbnailImage: getHomeDisplayImage(pose),
+        guideImage: localPose.guideImage,
+        thumbnailImage: getHomeDisplayImage(localPose),
         gradient: pose ? pose.gradient : 'linear-gradient(135deg, #353535, #151515)'
       }
     })
@@ -658,11 +823,18 @@ Page({
     }
 
     const result = togglePoseFavorite(poseId)
+    const pose = poseTemplates.find((item) => item.id === poseId)
 
     wx.showToast({
-      title: result.isFavorite ? '已收藏' : '已取消收藏',
+      title: result.isFavorite ? '已收藏，缓存中' : '已取消收藏',
       icon: 'none'
     })
+
+    if (result.isFavorite) {
+      cacheFavoritePoseAssets(pose).catch(() => {})
+    } else {
+      unpinFavoritePoseAssets(pose)
+    }
 
     this.refreshPoseCategories({
       favoritePoseIds: result.favoritePoseIds
@@ -678,6 +850,18 @@ Page({
 
     this.setData({
       [`failedPoseImages.${poseId}`]: true
+    })
+  },
+
+  onPoseImageLoad(event) {
+    const { poseId } = event.currentTarget.dataset
+
+    if (!poseId || !this.data.failedPoseImages[poseId]) {
+      return
+    }
+
+    this.setData({
+      [`failedPoseImages.${poseId}`]: false
     })
   },
 
@@ -732,7 +916,7 @@ Page({
   },
 
   async openCamera(event) {
-    const { poseId } = event.currentTarget.dataset
+    const { poseId, homeLocal } = event.currentTarget.dataset
 
     if (!poseId) {
       return
@@ -744,8 +928,10 @@ Page({
       return
     }
 
+    const shouldUseHomeLocalAssets = homeLocal === '1' && isHomeLocalPose({ id: poseId })
+
     wx.navigateTo({
-      url: `/pages/camera/index?poseId=${poseId}`
+      url: `/pages/camera/index?poseId=${poseId}${shouldUseHomeLocalAssets ? '&homeLocal=1' : ''}`
     })
   },
 

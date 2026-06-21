@@ -63,6 +63,10 @@
         </cover-view>
         <cover-view class="settings-actions">
           <cover-view
+            class="settings-chip {{guideVisible ? 'active' : ''}}"
+            catchtap="toggleGuide"
+          >引导 {{guideVisible ? guideModeText : '关'}}</cover-view>
+          <cover-view
             class="settings-chip {{keepGuideForConfirm ? 'active' : ''}}"
             catchtap="toggleKeepGuideForConfirm"
           >拍后带轮廓 {{keepGuideForConfirm ? '开' : '关'}}</cover-view>
@@ -108,22 +112,15 @@
 
   <view wx:if="{{privacyAccepted}}" class="bottom-panel safe-area-bottom" bindtap="closeSettingsPanel">
     <view class="shoot-row">
-      <view
-        class="guide-toggle-btn {{guideVisible ? 'active' : 'muted'}} {{showModelToggle ? 'model-toggle-btn' : ''}}"
-        bindtap="toggleGuide"
-        aria-label="{{guideToggleTitle}}"
-      >
-        <block wx:if="{{showModelToggle}}">
-          <image
-            class="model-toggle-image"
-            src="{{modelToggleImage}}"
-            mode="aspectFill"
-          ></image>
-          <view class="model-toggle-mask">{{guideVisible ? guideModeText : '引导关'}}</view>
-        </block>
-        <view wx:else class="eye-icon">
-          <view class="eye-dot"></view>
-          <view wx:if="{{!guideVisible}}" class="eye-slash"></view>
+      <view class="left-actions">
+        <view
+          wx:if="{{latestPhotoPath}}"
+          class="recent-photo-btn"
+          bindtap="previewSessionPhotos"
+          aria-label="查看本次拍摄照片"
+        >
+          <image class="recent-photo-image" src="{{latestPhotoPath}}" mode="aspectFill"></image>
+          <view wx:if="{{sessionPhotoCount > 1}}" class="recent-photo-count">{{sessionPhotoCount}}</view>
         </view>
       </view>
       <view class="shutter-group">
@@ -138,7 +135,9 @@
           ></image>
         </view>
       </view>
-      <view class="select-pose-btn" bindtap="backToPoseGallery">选姿势</view>
+      <view class="right-actions">
+        <view class="select-pose-btn" bindtap="backToPoseGallery">选姿势</view>
+      </view>
     </view>
     <view class="camera-zoom-row">
       <view class="zoom-label">1x</view>

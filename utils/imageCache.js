@@ -1,4 +1,5 @@
 const CACHE_STORAGE_KEY = 'imageFileCacheV1'
+const PINNED_CACHE_URLS_KEY = 'pinnedImageCacheUrlsV1'
 const MAX_CACHE_BYTES = 8 * 1024 * 1024
 
 const pendingTasks = {}
@@ -19,6 +20,27 @@ const writeCache = (cache) => {
   } catch (error) {
     // Cache writes are best effort; image loading should still continue.
   }
+}
+
+const getPinnedCacheUrls = () => {
+  try {
+    const urls = wx.getStorageSync(PINNED_CACHE_URLS_KEY)
+    return Array.isArray(urls) ? Array.from(new Set(urls.filter(Boolean))) : []
+  } catch (error) {
+    return []
+  }
+}
+
+const setPinnedCacheUrls = (urls) => {
+  const nextUrls = Array.from(new Set((urls || []).filter(Boolean)))
+
+  try {
+    wx.setStorageSync(PINNED_CACHE_URLS_KEY, nextUrls)
+  } catch (error) {
+    // Pin writes are best effort; cached files can still be re-downloaded.
+  }
+
+  return nextUrls
 }
 
 const getSavedFileInfo = (filePath) => new Promise((resolve) => {
@@ -47,13 +69,14 @@ const removeSavedFile = (filePath) => {
 const pruneCache = (cache, keepUrl) => {
   const entries = Object.entries(cache)
   let totalBytes = entries.reduce((sum, [, entry]) => sum + Number(entry.size || 0), 0)
+  const pinnedUrls = new Set(getPinnedCacheUrls())
 
   if (totalBytes <= MAX_CACHE_BYTES) {
     return cache
   }
 
   entries
-    .filter(([url]) => url !== keepUrl)
+    .filter(([url]) => url !== keepUrl && !pinnedUrls.has(url))
     .sort(([, a], [, b]) => Number(a.lastAccessAt || 0) - Number(b.lastAccessAt || 0))
     .some(([url, entry]) => {
       removeSavedFile(entry.filePath)
@@ -63,6 +86,31 @@ const pruneCache = (cache, keepUrl) => {
     })
 
   return cache
+}
+
+const pinCachedImages = async (urls = []) => {
+  const remoteUrls = Array.from(new Set(urls.filter(isRemoteUrl)))
+
+  if (!remoteUrls.length) {
+    return []
+  }
+
+  setPinnedCacheUrls([
+    ...getPinnedCacheUrls(),
+    ...remoteUrls
+  ])
+
+  return Promise.all(remoteUrls.map((url) => cacheImage(url)))
+}
+
+const unpinCachedImages = (urls = []) => {
+  const removeUrls = new Set(urls.filter(isRemoteUrl))
+
+  if (!removeUrls.size) {
+    return getPinnedCacheUrls()
+  }
+
+  return setPinnedCacheUrls(getPinnedCacheUrls().filter((url) => !removeUrls.has(url)))
 }
 
 const downloadImage = (url) => new Promise((resolve) => {
@@ -155,5 +203,7 @@ const cachePoseCategories = async (categories, fields) => Promise.all(categories
 module.exports = {
   cacheImage,
   cacheImageFields,
-  cachePoseCategories
+  cachePoseCategories,
+  pinCachedImages,
+  unpinCachedImages
 }

@@ -8,8 +8,86 @@ const {
   togglePoseFavorite,
   withFavoriteState
 } = require('../../utils/userData')
+const {
+  cacheFavoritePoseAssets,
+  unpinFavoritePoseAssets
+} = require('../../utils/favoriteAssetCache')
 
 const getPose = (poseId) => poseTemplates[findPoseIndex(poseId)]
+const MAX_ACTION_POINTS = 3
+
+const compactText = (text = '') => String(text || '').replace(/\s+/g, ' ').trim()
+const getTextAfterLabel = (text = '', label = '') => {
+  const index = text.indexOf(label)
+
+  if (index < 0) {
+    return ''
+  }
+
+  return text.slice(index + label.length).replace(/^[:：]/, '')
+}
+
+const getPreferredActionText = (text = '') => {
+  const value = compactText(text)
+  const coreText = getTextAfterLabel(value, '核心口诀')
+
+  if (coreText) {
+    return coreText
+  }
+
+  const actionText = getTextAfterLabel(value, '关键动作')
+
+  if (actionText) {
+    return actionText
+      .split(/角度要点|注意事项|适合场景与拍摄要点|适合场景/)
+      .filter(Boolean)[0] || actionText
+  }
+
+  return value
+}
+
+const trimActionPoint = (text = '') => {
+  const value = compactText(text)
+    .replace(/^(拍摄时|关键动作|角度要点|注意事项|人物|身体|高处的手|低处的手)[:：]?/, '')
+    .replace(/[，,]?适合拍.*$/, '')
+    .replace(/^(最适合|适合).*/, '')
+    .replace(/\s*\d+°\s*/g, '')
+    .replace(/的手臂/g, '手臂')
+    .replace(/另一只手/g, '一手')
+    .replace(/一只手/g, '一手')
+    .replace(/另一条腿/g, '一腿')
+    .replace(/向斜上方/g, '斜上方')
+    .replace(/自然伸展出/g, '伸出')
+    .replace(/伸展出/g, '伸出')
+    .trim()
+
+  return value
+}
+const splitActionPoints = (text = '') => getPreferredActionText(text)
+  .split(/[、，,；;。.!！?？]/)
+  .map((item) => trimActionPoint(item))
+  .filter(Boolean)
+  .slice(0, MAX_ACTION_POINTS)
+const buildDetailGuide = (pose = {}, shootingGuide = null) => {
+  const actionText = compactText(shootingGuide && shootingGuide.actionText) ||
+    compactText(pose.description)
+  const compositionText = compactText(shootingGuide && shootingGuide.compositionText)
+  const imageText = compositionText || compactText(pose.tip)
+  const actionPoints = splitActionPoints(actionText)
+  const detailItems = [
+    { label: '动作', text: actionText },
+    { label: '画面', text: compositionText }
+  ].filter((item) => item.text)
+
+  return {
+    imageText,
+    actionPoints,
+    detailItems,
+    hasImageText: Boolean(imageText),
+    hasActionPoints: actionPoints.length > 0,
+    hasDetails: detailItems.length > 0
+  }
+}
 
 Page({
   data: {
@@ -18,6 +96,8 @@ Page({
     displayImage: '',
     preloadedGuideImage: '',
     shootingGuide: null,
+    detailGuide: null,
+    detailExpanded: false,
     isFavorite: false
   },
 
@@ -27,6 +107,7 @@ Page({
     const favoritePoseIds = getFavoritePoseIds()
     const poseWithFavorite = withFavoriteState(pose, favoritePoseIds)
     const shootingGuide = getShootingGuide(pose)
+    const detailGuide = buildDetailGuide(pose, shootingGuide)
 
     this.setData({
       poseId: pose.id,
@@ -34,6 +115,8 @@ Page({
       displayImage: '',
       preloadedGuideImage: '',
       shootingGuide,
+      detailGuide,
+      detailExpanded: false,
       isFavorite: poseWithFavorite.isFavorite
     })
 
@@ -105,7 +188,8 @@ Page({
 
   toggleFavorite() {
     const result = togglePoseFavorite(this.data.poseId)
-    const pose = withFavoriteState(getPose(this.data.poseId), result.favoritePoseIds)
+    const basePose = getPose(this.data.poseId)
+    const pose = withFavoriteState(basePose, result.favoritePoseIds)
 
     this.setData({
       pose,
@@ -113,8 +197,20 @@ Page({
     })
 
     wx.showToast({
-      title: result.isFavorite ? '已收藏' : '已取消收藏',
+      title: result.isFavorite ? '已收藏，缓存中' : '已取消收藏',
       icon: 'none'
+    })
+
+    if (result.isFavorite) {
+      cacheFavoritePoseAssets(basePose).catch(() => {})
+    } else {
+      unpinFavoritePoseAssets(basePose)
+    }
+  },
+
+  toggleDetailExpanded() {
+    this.setData({
+      detailExpanded: !this.data.detailExpanded
     })
   },
 

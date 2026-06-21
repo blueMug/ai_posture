@@ -7,6 +7,10 @@ const {
   withFavoriteStateCategories
 } = require('../../utils/userData')
 const {
+  cacheFavoritePoseAssets,
+  unpinFavoritePoseAssets
+} = require('../../utils/favoriteAssetCache')
+const {
   isPoseMatchedSearch,
   normalizeSearchText
 } = require('../../utils/poseSearch')
@@ -23,6 +27,18 @@ const getGalleryDisplayImage = (pose, retryToken = '') => {
 
   const separator = imageUrl.includes('?') ? '&' : '?'
   return `${imageUrl}${separator}_retry=${retryToken}`
+}
+
+const findPoseById = (poseId) => {
+  for (const category of poseCategories) {
+    const pose = category.poses.find((item) => item.id === poseId)
+
+    if (pose) {
+      return pose
+    }
+  }
+
+  return null
 }
 
 const withGalleryDisplayImages = (categories, retryTokens = {}) => (
@@ -210,11 +226,18 @@ Page({
     }
 
     const result = togglePoseFavorite(poseId)
+    const pose = findPoseById(poseId)
 
     wx.showToast({
-      title: result.isFavorite ? '已收藏' : '已取消收藏',
+      title: result.isFavorite ? '已收藏，缓存中' : '已取消收藏',
       icon: 'none'
     })
+
+    if (result.isFavorite) {
+      cacheFavoritePoseAssets(pose).catch(() => {})
+    } else {
+      unpinFavoritePoseAssets(pose)
+    }
 
     this.refreshPoseCategories({
       favoritePoseIds: result.favoritePoseIds

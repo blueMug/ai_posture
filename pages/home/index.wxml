@@ -75,6 +75,7 @@
             src="{{plan.thumbnailImage}}"
             mode="aspectFit"
             data-pose-id="{{plan.poseId}}"
+            bindload="onPoseImageLoad"
             binderror="onPoseImageError"
           ></image>
           <view wx:if="{{failedPoseImages[plan.poseId]}}" class="mini-image-error">
@@ -87,6 +88,7 @@
             <view
               class="advisor-plan-action"
               data-pose-id="{{plan.poseId}}"
+              data-home-local="1"
               catchtap="openCamera"
             >照着拍</view>
           </view>
@@ -137,6 +139,7 @@
               src="{{pose.thumbnailImage || pose.guideImage}}"
               mode="{{pose.thumbnailMode || 'aspectFit'}}"
               data-pose-id="{{pose.id}}"
+              bindload="onPoseImageLoad"
               binderror="onPoseImageError"
             ></image>
             <view wx:if="{{failedPoseImages[pose.id]}}" class="mini-image-error">
@@ -147,6 +150,7 @@
           <view
             class="daily-action"
             data-pose-id="{{pose.id}}"
+            data-home-local="1"
             catchtap="openCamera"
           >照着拍</view>
         </view>
@@ -230,6 +234,7 @@
               src="{{pose.thumbnailImage || pose.guideImage}}"
               mode="{{pose.thumbnailMode || 'aspectFit'}}"
               data-pose-id="{{pose.id}}"
+              bindload="onPoseImageLoad"
               binderror="onPoseImageError"
             ></image>
             <view wx:if="{{failedPoseImages[pose.id]}}" class="mini-image-error">
@@ -248,7 +253,6 @@
             >拍照</view>
           </view>
           <view class="pose-tip">{{pose.tip}}</view>
-          <view class="pose-desc">{{pose.description}}</view>
         </view>
       </view>
     </view>

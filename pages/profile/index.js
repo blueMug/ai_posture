@@ -5,13 +5,16 @@ const GUIDE_MODE_OUTLINE = 'outline'
 const GUIDE_MODE_PHOTO = 'photo'
 const { adSlots } = require('../../utils/adConfig')
 const { poseTemplates } = require('../../utils/poses')
-const { cacheImageFields } = require('../../utils/imageCache')
 const { ensurePrivacyNotice } = require('../../utils/privacy')
 const { isFeedbackFormConfigured } = require('../../utils/feedbackConfig')
 const {
   getFavoritePoses,
   togglePoseFavorite
 } = require('../../utils/userData')
+const {
+  cacheFavoritePoseAssets,
+  unpinFavoritePoseAssets
+} = require('../../utils/favoriteAssetCache')
 
 const normalizeGuideMode = (guideMode) => (
   guideMode === GUIDE_MODE_PHOTO ? GUIDE_MODE_PHOTO : GUIDE_MODE_OUTLINE
@@ -55,7 +58,7 @@ Page({
       favoritePoseCount: favoritePoses.length
     })
 
-    Promise.all(favoritePoses.map((pose) => cacheImageFields(pose, ['thumbnailImage']))).then((cachedPoses) => {
+    Promise.all(favoritePoses.map((pose) => cacheFavoritePoseAssets(pose))).then((cachedPoses) => {
       if (this.favoritePoseRequestId !== requestId) {
         return
       }
@@ -152,7 +155,10 @@ Page({
       return
     }
 
+    const pose = poseTemplates.find((item) => item.id === poseId)
+
     togglePoseFavorite(poseId)
+    unpinFavoritePoseAssets(pose)
     this.loadFavoritePoses()
 
     wx.showToast({

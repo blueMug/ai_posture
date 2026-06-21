@@ -2,6 +2,7 @@ const app = getApp()
 const { ensurePrivacyNotice } = require('../../utils/privacy')
 
 const GUIDE_MODE_PHOTO = 'photo'
+const MAX_COMPOSE_CANVAS_SIZE = 1600
 
 const getAspectFitRect = (sourceWidth, sourceHeight, targetWidth, targetHeight) => {
   const sourceRatio = sourceWidth / sourceHeight
@@ -114,9 +115,29 @@ const getImageInfo = (src) => new Promise((resolve, reject) => {
   })
 })
 
+const getComposeCanvasSize = (width, height) => {
+  const sourceWidth = Number(width || 0)
+  const sourceHeight = Number(height || 0)
+
+  if (!sourceWidth || !sourceHeight) {
+    return {
+      width: 1,
+      height: 1
+    }
+  }
+
+  const scale = Math.min(1, MAX_COMPOSE_CANVAS_SIZE / Math.max(sourceWidth, sourceHeight))
+
+  return {
+    width: Math.round(sourceWidth * scale),
+    height: Math.round(sourceHeight * scale)
+  }
+}
+
 Page({
   data: {
     photoPath: '',
+    outputPhotoPath: '',
     guideImage: '',
     guideStyle: '',
     guideStyleReady: false,
@@ -129,7 +150,9 @@ Page({
     guideMode: 'outline',
     poseId: '',
     poseName: '',
-    poseShareImage: ''
+    poseShareImage: '',
+    canvasWidth: 1,
+    canvasHeight: 1
   },
 
   onLoad() {
@@ -147,8 +170,9 @@ Page({
 
     this.setData({
       photoPath,
+      outputPhotoPath: '',
       guideImage: previewGuide.image || '',
-      guideStyle: previewGuide.style || '',
+      guideStyle: '',
       guideStyleReady: false,
       confirmWithGuide: Boolean(previewGuide.needsConfirm && previewGuide.image),
       guidePreviewVisible: true,
@@ -191,7 +215,7 @@ Page({
       })
     } catch (error) {
       this.setData({
-        guideStyleReady: true
+        guideStyleReady: false
       })
     }
   },
@@ -209,13 +233,137 @@ Page({
       guideImage: '',
       guideStyle: '',
       confirmWithGuide: false,
-      guidePreviewVisible: false
+      guidePreviewVisible: false,
+      outputPhotoPath: ''
+    })
+  },
+
+  returnToCamera() {
+    app.globalData.photoPath = ''
+    app.globalData.previewGuide = null
+    app.globalData.previewPose = null
+
+    wx.navigateBack({
+      fail: () => {
+        wx.redirectTo({
+          url: '/pages/camera/index'
+        })
+      }
     })
   },
 
   toggleGuidePreview() {
     this.setData({
-      guidePreviewVisible: !this.data.guidePreviewVisible
+      guidePreviewVisible: !this.data.guidePreviewVisible,
+      outputPhotoPath: ''
+    })
+  },
+
+  onGuidePreviewError() {
+    wx.showToast({
+      title: '轮廓加载失败',
+      icon: 'none'
+    })
+  },
+
+  drawImageToCanvas(ctx, imagePath, rect) {
+    ctx.drawImage(
+      imagePath,
+      rect.left,
+      rect.top,
+      rect.width,
+      rect.height
+    )
+  },
+
+  setDataAsync(data) {
+    return new Promise((resolve) => {
+      this.setData(data, resolve)
+    })
+  },
+
+  async composeGuidePhoto() {
+    if (
+      !this.data.confirmWithGuide ||
+      !this.data.guidePreviewVisible ||
+      !this.data.guideImage
+    ) {
+      return this.data.photoPath
+    }
+
+    if (this.data.outputPhotoPath) {
+      return this.data.outputPhotoPath
+    }
+
+    let photoInfo
+    let guideInfo
+
+    try {
+      [photoInfo, guideInfo] = await Promise.all([
+        getImageInfo(this.data.photoPath),
+        getImageInfo(this.data.guideImage)
+      ])
+    } catch (error) {
+      return this.data.photoPath
+    }
+
+    const canvasSize = getComposeCanvasSize(photoInfo.width, photoInfo.height)
+    const canvasWidth = canvasSize.width
+    const canvasHeight = canvasSize.height
+
+    if (!canvasWidth || !canvasHeight || !photoInfo.path || !guideInfo.path) {
+      return this.data.photoPath
+    }
+
+    const guideRect = getGuideDisplayRect({
+      guideRect: this.data.guideRect,
+      photoInfo,
+      targetWidth: canvasWidth,
+      targetHeight: canvasHeight,
+      offsetX: this.data.guideOffsetX,
+      offsetY: this.data.guideOffsetY,
+      scale: this.data.guideScale
+    })
+
+    await this.setDataAsync({
+      canvasWidth,
+      canvasHeight
+    })
+
+    return new Promise((resolve) => {
+      const ctx = wx.createCanvasContext('guideComposer', this)
+      ctx.clearRect(0, 0, canvasWidth, canvasHeight)
+      this.drawImageToCanvas(ctx, photoInfo.path, {
+        left: 0,
+        top: 0,
+        width: canvasWidth,
+        height: canvasHeight
+      })
+      ctx.setGlobalAlpha(this.data.guideMode === GUIDE_MODE_PHOTO ? 0.42 : 0.92)
+      this.drawImageToCanvas(ctx, guideInfo.path, guideRect)
+      ctx.setGlobalAlpha(1)
+      ctx.draw(false, () => {
+        wx.canvasToTempFilePath({
+          canvasId: 'guideComposer',
+          width: canvasWidth,
+          height: canvasHeight,
+          destWidth: canvasWidth,
+          destHeight: canvasHeight,
+          success: (res) => {
+            this.setData({
+              outputPhotoPath: res.tempFilePath
+            })
+            resolve(res.tempFilePath)
+          },
+          fail: () => {
+            wx.showToast({
+              title: '合成轮廓失败',
+              icon: 'none'
+            })
+            resolve(this.data.photoPath)
+          }
+        }, this)
+      })
     })
   },
 
@@ -226,13 +374,18 @@ Page({
       return
     }
 
+    const outputPhotoPath = await this.composeGuidePhoto()
+
     wx.saveImageToPhotosAlbum({
-      filePath: this.data.photoPath,
+      filePath: outputPhotoPath,
       success: () => {
         wx.showToast({
           title: '已保存',
           icon: 'success'
         })
+        setTimeout(() => {
+          this.returnToCamera()
+        }, 500)
       },
       fail: (error) => {
         const message = error.errMsg && error.errMsg.includes('auth deny')
@@ -253,7 +406,7 @@ Page({
     })
   },
 
-  sharePhoto() {
+  async sharePhoto() {
     if (!this.data.photoPath) {
       wx.showToast({
         title: '照片不存在',
@@ -272,6 +425,12 @@ Page({
 
     wx.showShareImageMenu({
       path: this.data.photoPath,
+      success: () => {
+        wx.showToast({
+          title: '已分享',
+          icon: 'success'
+        })
+      },
       fail: () => {
         wx.showToast({
           title: '分享取消',

@@ -28,6 +28,10 @@
         "type": "folder"
       },
       {
+        "value": "static/recommend_guides",
+        "type": "folder"
+      },
+      {
         "value": ".DS_Store",
         "type": "file"
       },

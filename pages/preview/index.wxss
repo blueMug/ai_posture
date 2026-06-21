@@ -69,7 +69,7 @@
   text-align: center;
   background: rgba(0, 0, 0, 0.56);
   border: 1rpx solid rgba(255, 255, 255, 0.42);
-  transform: translateY(34rpx);
+  transform: translateY(108rpx);
 }
 
 .guide-visibility-btn.active {
@@ -87,52 +87,6 @@
   padding: 36rpx 32rpx 56rpx;
   box-sizing: border-box;
   background: linear-gradient(0deg, rgba(0, 0, 0, 0.68), rgba(0, 0, 0, 0));
-}
-
-.share-template-card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20rpx;
-  padding: 24rpx;
-  border-radius: 32rpx;
-  background: rgba(255, 255, 255, 0.14);
-  border: 1rpx solid rgba(255, 255, 255, 0.18);
-  backdrop-filter: blur(18rpx);
-}
-
-.share-template-copy {
-  min-width: 0;
-  flex: 1;
-  margin-right: 20rpx;
-}
-
-.share-template-title {
-  color: #ffffff;
-  font-size: 28rpx;
-  font-weight: 700;
-}
-
-.share-template-desc {
-  margin-top: 8rpx;
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 24rpx;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.share-template-btn {
-  flex: none;
-  width: 172rpx;
-  height: 68rpx;
-  line-height: 68rpx;
-  margin: 0;
-  border-radius: 34rpx;
-  color: #111111;
-  font-size: 26rpx;
-  font-weight: 700;
-  background: #ffe95c;
 }
 
 .save-btn,
@@ -164,6 +118,7 @@
 .confirm-actions {
   display: flex;
   align-items: center;
+  gap: 14rpx;
 }
 
 .discard-btn,
@@ -178,7 +133,6 @@
 }
 
 .discard-btn {
-  margin-right: 20rpx;
   color: #ffffff;
   background: rgba(255, 255, 255, 0.28);
 }
@@ -188,9 +142,27 @@
   background: #ffe95c;
 }
 
+.confirm-actions .share-photo-btn {
+  flex: 1;
+  margin: 0;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.22);
+  border: 1rpx solid rgba(255, 255, 255, 0.36);
+}
+
+.guide-composer {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .save-btn::after,
 .share-photo-btn::after,
-.share-template-btn::after,
 .guide-visibility-btn::after,
 .discard-btn::after,
 .accept-btn::after {

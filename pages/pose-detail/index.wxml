@@ -8,8 +8,6 @@
   <view class="content">
     <view class="copy">
       <view class="pose-name">{{pose.name}}</view>
-      <view class="pose-tip">{{pose.tip}}</view>
-      <view class="pose-desc">{{pose.description}}</view>
     </view>
 
     <view class="photo-card" style="background: {{pose.gradient}};">
@@ -24,13 +22,36 @@
       <view class="tap-tip">点图拍照</view>
     </view>
 
-    <view wx:if="{{shootingGuide}}" class="shooting-guide-card">
-      <view wx:if="{{shootingGuide.items.length}}" class="guide-list">
+    <view wx:if="{{detailGuide && detailGuide.hasImageText}}" class="image-note">
+      <view class="image-note-label">适合</view>
+      <view class="image-note-text">{{detailGuide.imageText}}</view>
+    </view>
+
+    <view wx:if="{{detailGuide && detailGuide.hasActionPoints}}" class="action-card">
+      <view class="section-title">动作要点</view>
+      <view class="action-list">
         <view
-          wx:for="{{shootingGuide.items}}"
+          wx:for="{{detailGuide.actionPoints}}"
+          wx:key="*this"
+          class="action-item"
+        >
+          <view class="action-dot"></view>
+          <view class="action-text">{{item}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{detailGuide && detailGuide.hasDetails}}" class="detail-card">
+      <view class="detail-header" bindtap="toggleDetailExpanded">
+        <view class="section-title">详细说明</view>
+        <view class="detail-toggle">{{detailExpanded ? '收起' : '展开'}}</view>
+      </view>
+      <view wx:if="{{detailExpanded}}" class="guide-list">
+        <view
+          wx:for="{{detailGuide.detailItems}}"
           wx:key="label"
           wx:for-item="item"
-          class="guide-item {{item.label == '避坑' ? 'avoid' : ''}}"
+          class="guide-item"
         >
           <view class="guide-label">{{item.label}}</view>
           <view class="guide-text">{{item.text}}</view>

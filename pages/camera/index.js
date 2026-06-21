@@ -1,6 +1,7 @@
 const app = getApp()
 const { poseTemplates, findPoseIndex } = require('../../utils/poses')
 const { cacheImageFields } = require('../../utils/imageCache')
+const { homeLocalAssetUrl } = require('../../utils/assets')
 const { recordPoseUsage } = require('../../utils/userData')
 const { ensurePrivacyNotice, hasAcceptedPrivacyNotice } = require('../../utils/privacy')
 const { getShootingGuide } = require('../../utils/shootingGuide')
@@ -248,6 +249,18 @@ const getPreviewGuideStyle = (offsetX, offsetY, guideScale, guideMode, rect = ge
     `transform: translate3d(${offsetX}px, ${offsetY}px, 0) scale(${guideScale})`
   ].join('; ')
 }
+const queryRects = (selectorQuery) => new Promise((resolve) => {
+  selectorQuery.exec((res) => {
+    resolve(res || [])
+  })
+})
+const withHomeLocalTemplateAssets = (template) => ({
+  ...template,
+  guideImage: homeLocalAssetUrl(template.guideImage),
+  thumbnailImage: homeLocalAssetUrl(template.thumbnailImage),
+  modelImage: template.modelImage,
+  detailImage: template.detailImage
+})
 
 Page({
   data: {
@@ -282,6 +295,10 @@ Page({
     guideUsageTipVisible: false,
     shootingTipsEnabled: false,
     shootingGuide: null,
+    homeLocalAssets: false,
+    sessionPhotoPaths: [],
+    sessionPhotoCount: 0,
+    latestPhotoPath: '',
     privacyAccepted: hasAcceptedPrivacyNotice()
   },
 
@@ -289,6 +306,7 @@ Page({
     const guideSettings = this.loadGuideSettings()
     const templateIndex = findPoseIndex(options.poseId)
     const template = poseTemplates[(templateIndex + poseTemplates.length) % poseTemplates.length]
+    const homeLocalAssets = options.homeLocal === '1'
 
     if (!this.data.privacyAccepted) {
       const accepted = await ensurePrivacyNotice('打开相机拍照')
@@ -306,7 +324,8 @@ Page({
     this.cameraContext = wx.createCameraContext()
     this.setData({
       devicePosition: getDefaultDevicePosition(template),
-      currentIsSelfie: isSelfiePose(template)
+      currentIsSelfie: isSelfiePose(template),
+      homeLocalAssets
     })
     this.setTemplate(templateIndex, guideSettings.guideMode)
     this.scheduleGuideUsageTip()
@@ -337,7 +356,9 @@ Page({
 
   setTemplate(index, guideMode = this.data.guideMode) {
     const nextIndex = (index + poseTemplates.length) % poseTemplates.length
-    const template = poseTemplates[nextIndex]
+    const template = this.data.homeLocalAssets
+      ? withHomeLocalTemplateAssets(poseTemplates[nextIndex])
+      : poseTemplates[nextIndex]
     const requestId = (this.templateRequestId || 0) + 1
     this.templateRequestId = requestId
 
@@ -369,7 +390,9 @@ Page({
   },
 
   toggleGuide() {
-    const currentTemplate = poseTemplates[this.data.currentIndex]
+    const currentTemplate = this.data.homeLocalAssets
+      ? withHomeLocalTemplateAssets(poseTemplates[this.data.currentIndex])
+      : poseTemplates[this.data.currentIndex]
     const canUsePhoto = canUseModelPhotoGuide(currentTemplate)
     const nextVisible = !this.data.guideVisible ||
       (this.data.guideMode === GUIDE_MODE_OUTLINE && canUsePhoto)
@@ -418,7 +441,9 @@ Page({
   },
 
   refreshCurrentGuide(guideMode = this.data.guideMode) {
-    const currentTemplate = poseTemplates[this.data.currentIndex]
+    const currentTemplate = this.data.homeLocalAssets
+      ? withHomeLocalTemplateAssets(poseTemplates[this.data.currentIndex])
+      : poseTemplates[this.data.currentIndex]
 
     cacheImageFields(currentTemplate, CACHE_TEMPLATE_IMAGE_FIELDS).then(async (cachedTemplate) => {
       const guideModeState = getGuideModeState(cachedTemplate, guideMode)
@@ -866,19 +891,87 @@ Page({
     this.capturePhoto()
   },
 
-  capturePhoto() {
+  async measureCurrentGuidePreviewRect() {
+    const guideBoxRect = this.data.guideBoxRect
+
+    if (!guideBoxRect) {
+      return null
+    }
+
+    const query = wx.createSelectorQuery().in(this)
+    query.select('.camera').boundingClientRect()
+    query.select('.pose-stage').boundingClientRect()
+
+    const [cameraRect, stageRect] = await queryRects(query)
+
+    if (
+      !cameraRect ||
+      !stageRect ||
+      !cameraRect.width ||
+      !cameraRect.height ||
+      !stageRect.width ||
+      !stageRect.height
+    ) {
+      return null
+    }
+
+    const scale = Number(this.data.guideScale || 1)
+    const width = Number(guideBoxRect.width || 0) * scale
+    const height = Number(guideBoxRect.height || 0) * scale
+
+    if (!width || !height) {
+      return null
+    }
+
+    const offsetX = Number(this.data.guideOffsetX || 0)
+    const offsetY = Number(this.data.guideOffsetY || 0)
+    const left = Number(stageRect.left || 0) +
+      Number(guideBoxRect.left || 0) +
+      offsetX -
+      (width - Number(guideBoxRect.width || 0)) / 2
+    const top = Number(stageRect.top || 0) +
+      Number(guideBoxRect.top || 0) +
+      offsetY -
+      (height - Number(guideBoxRect.height || 0)) / 2
+
+    return {
+      left,
+      top,
+      width,
+      height,
+      cameraLeft: Number(cameraRect.left || 0),
+      cameraTop: Number(cameraRect.top || 0),
+      cameraWidth: Number(cameraRect.width || 0),
+      cameraHeight: Number(cameraRect.height || 0),
+      baseWidth: Number(cameraRect.width || wx.getSystemInfoSync().windowWidth || 0),
+      baseHeight: Number(cameraRect.height || wx.getSystemInfoSync().windowHeight || 0),
+      measured: true
+    }
+  },
+
+  async capturePhoto() {
     if (!this.cameraContext) {
       this.cameraContext = wx.createCameraContext()
     }
 
+    const shouldConfirmWithGuide = Boolean(
+      this.data.keepGuideForConfirm &&
+      this.data.guideVisible &&
+      this.data.currentTemplate.guideImage
+    )
+    const measuredGuideRect = shouldConfirmWithGuide
+      ? await this.measureCurrentGuidePreviewRect()
+      : null
+    const previewGuideRect = measuredGuideRect ||
+      this.data.guidePreviewRect ||
+      getCameraGuideRect()
+    const previewGuideOffsetX = measuredGuideRect ? 0 : this.data.guideOffsetX
+    const previewGuideOffsetY = measuredGuideRect ? 0 : this.data.guideOffsetY
+    const previewGuideScale = measuredGuideRect ? 1 : this.data.guideScale
+
     this.cameraContext.takePhoto({
       quality: 'high',
       success: (res) => {
-        const shouldConfirmWithGuide = Boolean(
-          this.data.keepGuideForConfirm &&
-          this.data.guideVisible &&
-          this.data.currentTemplate.guideImage
-        )
         const poseId = this.data.currentTemplate.id
 
         app.globalData.photoPath = res.tempImagePath
@@ -891,16 +984,16 @@ Page({
           ? {
               image: this.data.currentTemplate.guideImage,
               style: getPreviewGuideStyle(
-                this.data.guideOffsetX,
-                this.data.guideOffsetY,
-                this.data.guideScale,
+                previewGuideOffsetX,
+                previewGuideOffsetY,
+                previewGuideScale,
                 this.data.guideMode,
-                this.data.guidePreviewRect || getCameraGuideRect()
+                previewGuideRect
               ),
-              offsetX: this.data.guideOffsetX,
-              offsetY: this.data.guideOffsetY,
-              scale: this.data.guideScale,
-              rect: this.data.guidePreviewRect || getCameraGuideRect(),
+              offsetX: previewGuideOffsetX,
+              offsetY: previewGuideOffsetY,
+              scale: previewGuideScale,
+              rect: previewGuideRect,
               guideMode: this.data.guideMode,
               needsConfirm: true
             }
@@ -911,6 +1004,11 @@ Page({
           guideMode: this.data.guideMode
         })
 
+        if (!shouldConfirmWithGuide) {
+          this.saveCapturedPhoto(res.tempImagePath)
+          return
+        }
+
         wx.navigateTo({
           url: '/pages/preview/index'
         })
@@ -918,6 +1016,80 @@ Page({
       fail: () => {
         wx.showToast({
           title: '拍照失败',
+          icon: 'none'
+        })
+      }
+    })
+  },
+
+  async saveCapturedPhoto(filePath) {
+    if (!filePath) {
+      return
+    }
+
+    const accepted = await ensurePrivacyNotice('保存照片到相册')
+
+    if (!accepted) {
+      return
+    }
+
+    wx.saveImageToPhotosAlbum({
+      filePath,
+      success: () => {
+        app.globalData.photoPath = ''
+        app.globalData.previewGuide = null
+        app.globalData.previewPose = null
+
+        const sessionPhotoPaths = [
+          ...this.data.sessionPhotoPaths,
+          filePath
+        ]
+
+        this.setData({
+          sessionPhotoPaths,
+          sessionPhotoCount: sessionPhotoPaths.length,
+          latestPhotoPath: filePath
+        })
+
+        wx.showToast({
+          title: '已保存，继续拍',
+          icon: 'success'
+        })
+      },
+      fail: (error) => {
+        const message = error.errMsg && error.errMsg.includes('auth deny')
+          ? '请授权保存到相册'
+          : '保存失败'
+
+        wx.showModal({
+          title: '提示',
+          content: message,
+          confirmText: '去设置',
+          success: (res) => {
+            if (res.confirm) {
+              wx.openSetting()
+            }
+          }
+        })
+      }
+    })
+  },
+
+  previewSessionPhotos() {
+    if (!this.data.sessionPhotoPaths.length) {
+      wx.showToast({
+        title: '还没有本次照片',
+        icon: 'none'
+      })
+      return
+    }
+
+    wx.previewImage({
+      current: this.data.sessionPhotoPaths[0],
+      urls: this.data.sessionPhotoPaths,
+      fail: () => {
+        wx.showToast({
+          title: '预览失败',
           icon: 'none'
         })
       }
