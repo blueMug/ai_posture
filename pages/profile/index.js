@@ -1,5 +1,6 @@
 const GUIDE_CONFIRM_STORAGE_KEY = 'keepGuideForConfirm'
 const GUIDE_MODE_STORAGE_KEY = 'cameraGuideMode'
+const SHOOTING_TIPS_DEFAULT_STORAGE_KEY = 'cameraShootingTipsDefaultEnabled'
 const GUIDE_MODE_OUTLINE = 'outline'
 const GUIDE_MODE_PHOTO = 'photo'
 const { adSlots } = require('../../utils/adConfig')
@@ -19,6 +20,7 @@ const normalizeGuideMode = (guideMode) => (
 Page({
   data: {
     keepGuideForConfirm: false,
+    shootingTipsDefaultEnabled: false,
     guideMode: GUIDE_MODE_OUTLINE,
     favoritePoses: [],
     favoritePoseCount: 0,
@@ -38,6 +40,7 @@ Page({
   loadGuideConfirmSetting() {
     this.setData({
       keepGuideForConfirm: Boolean(wx.getStorageSync(GUIDE_CONFIRM_STORAGE_KEY)),
+      shootingTipsDefaultEnabled: wx.getStorageSync(SHOOTING_TIPS_DEFAULT_STORAGE_KEY) === true,
       guideMode: normalizeGuideMode(wx.getStorageSync(GUIDE_MODE_STORAGE_KEY))
     })
   },
@@ -69,6 +72,15 @@ Page({
     wx.setStorageSync(GUIDE_CONFIRM_STORAGE_KEY, keepGuideForConfirm)
     this.setData({
       keepGuideForConfirm
+    })
+  },
+
+  onShootingTipsDefaultChange(event) {
+    const shootingTipsDefaultEnabled = Boolean(event.detail.value)
+
+    wx.setStorageSync(SHOOTING_TIPS_DEFAULT_STORAGE_KEY, shootingTipsDefaultEnabled)
+    this.setData({
+      shootingTipsDefaultEnabled
     })
   },
 

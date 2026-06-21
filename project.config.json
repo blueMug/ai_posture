@@ -1,5 +1,5 @@
 {
-  "description": "摆拍助手：拍照姿势参考相机，提供姿势模板、自拍穿搭旅行街拍姿势参考",
+  "description": "出片姿势：场景拍照姿势推荐，提供拍照姿势模板、姿势相机、自拍穿搭旅行街拍姿势参考",
   "miniprogramRoot": "./",
   "packOptions": {
     "ignore": [
@@ -72,7 +72,7 @@
   "compileType": "miniprogram",
   "libVersion": "3.7.0",
   "appid": "wxa3858e3346b96612",
-  "projectname": "摆拍助手",
+  "projectname": "出片姿势",
   "condition": {},
   "editorSetting": {
     "tabIndent": "insertSpaces",

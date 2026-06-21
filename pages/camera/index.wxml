@@ -10,7 +10,6 @@
     binderror="onCameraError"
   >
     <cover-view class="pose-stage" bindtap="closeSettingsPanel">
-      <cover-view class="pose-name">{{currentTemplate.name}}</cover-view>
       <cover-view
         wx:if="{{currentTemplate.guideImage}}"
         class="pose-guide-box"
@@ -71,7 +70,25 @@
             class="settings-chip {{countdownSeconds > 0 ? 'active' : ''}}"
             catchtap="cycleCountdown"
           >{{countdownText}}</cover-view>
+          <cover-view
+            class="settings-chip {{shootingTipsEnabled ? 'active' : ''}}"
+            catchtap="toggleShootingTips"
+          >拍摄提示 {{shootingTipsEnabled ? '开' : '关'}}</cover-view>
         </cover-view>
+      </cover-view>
+    </cover-view>
+
+    <cover-view
+      wx:if="{{shootingTipsEnabled && shootingGuide && shootingGuide.hasText && !countdownActive}}"
+      class="camera-shooting-guide"
+    >
+      <cover-view wx:if="{{shootingGuide.actionText}}" class="camera-guide-item">
+        <cover-view class="camera-guide-label">动作</cover-view>
+        <cover-view class="camera-guide-text">{{shootingGuide.actionText}}</cover-view>
+      </cover-view>
+      <cover-view wx:if="{{shootingGuide.compositionText}}" class="camera-guide-item">
+        <cover-view class="camera-guide-label">构图</cover-view>
+        <cover-view class="camera-guide-text">{{shootingGuide.compositionText}}</cover-view>
       </cover-view>
     </cover-view>
 
@@ -81,7 +98,7 @@
       catchtap="dismissGuideUsageTip"
     >
       <cover-view class="guide-usage-title">姿势可以拖动对齐</cover-view>
-      <cover-view class="guide-usage-desc">双指缩放，或点左上设置调整轮廓大小</cover-view>
+      <cover-view class="guide-usage-desc">点左上设置，可调整轮廓大小和倒计时</cover-view>
     </cover-view>
   </camera>
   <view wx:else class="privacy-wait">
@@ -113,7 +130,13 @@
         <view class="shutter" bindtap="takePhoto">
           <view class="shutter-inner"></view>
         </view>
-        <view class="switch-icon-btn" bindtap="switchCamera">⟳</view>
+        <view class="switch-icon-btn" bindtap="switchCamera" aria-label="切换前后镜头">
+          <image
+            class="switch-camera-image"
+            src="/static/icons/camera-switch.svg"
+            mode="aspectFit"
+          ></image>
+        </view>
       </view>
       <view class="select-pose-btn" bindtap="backToPoseGallery">选姿势</view>
     </view>

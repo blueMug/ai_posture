@@ -1,7 +1,7 @@
 <view class="page" style="{{pageTopStyle}}">
   <view class="brand-copy">
-    <view class="brand-name">摆拍助手</view>
-    <view class="brand-tagline">拍照姿势参考相机，姿势模板照着拍</view>
+    <view class="brand-name">出片姿势</view>
+    <view class="brand-tagline">按场景推荐拍照姿势，照着模板轻松出片</view>
   </view>
 
   <view class="search-card">
@@ -9,12 +9,92 @@
     <input
       class="search-input"
       value="{{searchKeyword}}"
-      placeholder="搜索拍照姿势、姿势相机、自拍、穿搭、旅行"
+      placeholder="搜索拍照姿势、姿势相机、旅行、街拍、穿搭"
       placeholder-class="search-placeholder"
       confirm-type="search"
       bindinput="onSearchInput"
     />
     <view wx:if="{{searchKeyword}}" class="search-clear" bindtap="clearSearch">清除</view>
+  </view>
+
+  <view wx:if="{{!searchKeyword && sceneAdvisor.plans.length}}" class="advisor-section">
+    <view class="advisor-hero">
+      <view class="advisor-kicker">场景拍照导演</view>
+      <view class="advisor-title">先选你在哪，再决定怎么拍</view>
+    </view>
+
+    <scroll-view
+      class="scene-tab-scroll"
+      scroll-x
+      enhanced
+      show-scrollbar="{{false}}"
+    >
+      <view class="scene-tab-list">
+        <view
+          wx:for="{{sceneTabs}}"
+          wx:key="id"
+          wx:for-item="scene"
+          class="scene-tab {{scene.active ? 'active' : ''}}"
+          data-scene-id="{{scene.id}}"
+          bindtap="selectScene"
+        >
+          <image class="scene-tab-image" src="{{scene.coverImage}}" mode="aspectFit"></image>
+          <view class="scene-tab-copy">
+            <view class="scene-tab-title">{{scene.title}}</view>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+
+    <view class="advisor-head">
+      <view>
+        <view class="section-title">{{sceneAdvisor.title}}怎么拍</view>
+        <view class="section-subtitle">{{sceneAdvisor.desc}}</view>
+      </view>
+      <view
+        class="section-link"
+        data-category-id="{{sceneAdvisor.categoryId}}"
+        bindtap="openCategory"
+      >更多</view>
+    </view>
+
+    <view class="advisor-plan-list">
+      <view
+        wx:for="{{sceneAdvisor.plans}}"
+        wx:key="poseId"
+        wx:for-item="plan"
+        wx:for-index="planIndex"
+        class="advisor-plan"
+        data-pose-id="{{plan.poseId}}"
+        data-plan-index="{{planIndex}}"
+        bindtap="openAdvisorPlanDetail"
+      >
+        <view class="advisor-plan-preview" style="background: {{plan.gradient}};">
+          <image
+            class="advisor-plan-image"
+            src="{{plan.thumbnailImage}}"
+            mode="aspectFit"
+            data-pose-id="{{plan.poseId}}"
+            binderror="onPoseImageError"
+          ></image>
+          <view wx:if="{{failedPoseImages[plan.poseId]}}" class="mini-image-error">
+            图片加载失败
+          </view>
+        </view>
+        <view class="advisor-plan-body">
+          <view class="advisor-plan-top">
+            <view class="advisor-plan-badge">{{plan.badge}}</view>
+            <view
+              class="advisor-plan-action"
+              data-pose-id="{{plan.poseId}}"
+              catchtap="openCamera"
+            >照着拍</view>
+          </view>
+          <view class="advisor-plan-title">{{plan.title}}</view>
+          <view class="advisor-plan-reason">{{plan.reason}}</view>
+        </view>
+      </view>
+    </view>
   </view>
 
   <view wx:if="{{!hasSearchResult}}" class="empty-state">

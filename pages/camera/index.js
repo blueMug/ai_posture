@@ -3,10 +3,12 @@ const { poseTemplates, findPoseIndex } = require('../../utils/poses')
 const { cacheImageFields } = require('../../utils/imageCache')
 const { recordPoseUsage } = require('../../utils/userData')
 const { ensurePrivacyNotice, hasAcceptedPrivacyNotice } = require('../../utils/privacy')
+const { getShootingGuide } = require('../../utils/shootingGuide')
 
 const GUIDE_CONFIRM_STORAGE_KEY = 'keepGuideForConfirm'
 const GUIDE_MODE_STORAGE_KEY = 'cameraGuideMode'
-const CAMERA_GUIDE_TIP_STORAGE_KEY = 'cameraGuideUsageTipSeen'
+const SHOOTING_TIPS_DEFAULT_STORAGE_KEY = 'cameraShootingTipsDefaultEnabled'
+const GALLERY_TARGET_CATEGORY_KEY = 'galleryTargetCategoryId'
 const CACHE_TEMPLATE_IMAGE_FIELDS = ['guideImage', 'thumbnailImage', 'modelImage']
 const POSE_GALLERY_ROUTE = 'pages/pose-gallery/index'
 const POSE_GALLERY_URL = `/${POSE_GALLERY_ROUTE}`
@@ -27,6 +29,9 @@ const GUIDE_HEIGHT_IN_STAGE_RATIO = 0.88
 const GUIDE_MODE_OUTLINE = 'outline'
 const GUIDE_MODE_PHOTO = 'photo'
 const COUNTDOWN_SECONDS_OPTIONS = [0, 3, 5, 10]
+const CAMERA_GUIDE_TIP_DELAY = 500
+
+let cameraGuideTipShownInSession = false
 
 const getImageInfo = (src) => new Promise((resolve) => {
   if (!src) {
@@ -68,6 +73,7 @@ const getStoredGuideMode = () => (
     ? GUIDE_MODE_PHOTO
     : GUIDE_MODE_OUTLINE
 )
+const getStoredShootingTipsDefaultEnabled = () => wx.getStorageSync(SHOOTING_TIPS_DEFAULT_STORAGE_KEY) === true
 const normalizeGuideMode = (template, guideMode) => (
   guideMode === GUIDE_MODE_PHOTO && canUseModelPhotoGuide(template)
     ? GUIDE_MODE_PHOTO
@@ -274,6 +280,8 @@ Page({
     countdownActive: false,
     countdownRemaining: 0,
     guideUsageTipVisible: false,
+    shootingTipsEnabled: false,
+    shootingGuide: null,
     privacyAccepted: hasAcceptedPrivacyNotice()
   },
 
@@ -301,14 +309,16 @@ Page({
       currentIsSelfie: isSelfiePose(template)
     })
     this.setTemplate(templateIndex, guideSettings.guideMode)
-    this.showGuideUsageTipOnce()
+    this.scheduleGuideUsageTip()
   },
 
   onShow() {
     const nextGuideMode = getStoredGuideMode()
     const guideModeChanged = nextGuideMode !== this.data.guideMode
 
-    this.loadGuideSettings()
+    this.loadGuideSettings({
+      includeShootingTips: false
+    })
 
     if (guideModeChanged && this.hasTemplateLoaded) {
       this.refreshCurrentGuide(nextGuideMode)
@@ -349,6 +359,7 @@ Page({
         currentIsSelfie: isSelfiePose(cachedTemplate),
         guideLoadFailed: false,
         currentTemplate,
+        shootingGuide: getShootingGuide(cachedTemplate),
         ...getGuideLayoutState(guideImageInfo, 0, 0, 1),
         ...guideModeState
       }, () => {
@@ -642,6 +653,8 @@ Page({
   onCameraInitDone(event) {
     const maxZoom = Number(event.detail && event.detail.maxZoom)
 
+    this.scheduleGuideUsageTip()
+
     if (maxZoom > CAMERA_MIN_ZOOM) {
       this.setData(
         {
@@ -745,7 +758,8 @@ Page({
     this.countdownTimer = setTimeout(tick, 1000)
   },
 
-  loadGuideSettings() {
+  loadGuideSettings(options = {}) {
+    const includeShootingTips = options.includeShootingTips !== false
     const keepGuideForConfirm = Boolean(wx.getStorageSync(GUIDE_CONFIRM_STORAGE_KEY))
     const guideMode = getStoredGuideMode()
     const guideSettings = {
@@ -753,16 +767,28 @@ Page({
       guideMode
     }
 
+    if (includeShootingTips) {
+      guideSettings.shootingTipsEnabled = getStoredShootingTipsDefaultEnabled()
+    }
+
     this.setData(guideSettings)
     return guideSettings
   },
 
+  toggleShootingTips() {
+    const shootingTipsEnabled = !this.data.shootingTipsEnabled
+
+    this.setData({
+      shootingTipsEnabled
+    })
+  },
+
   showGuideUsageTipOnce() {
-    if (wx.getStorageSync(CAMERA_GUIDE_TIP_STORAGE_KEY)) {
+    if (cameraGuideTipShownInSession || !this.data.privacyAccepted) {
       return
     }
 
-    wx.setStorageSync(CAMERA_GUIDE_TIP_STORAGE_KEY, true)
+    cameraGuideTipShownInSession = true
     this.setData({
       guideUsageTipVisible: true
     })
@@ -771,6 +797,17 @@ Page({
     this.guideUsageTipTimer = setTimeout(() => {
       this.dismissGuideUsageTip()
     }, 3200)
+  },
+
+  scheduleGuideUsageTip() {
+    if (cameraGuideTipShownInSession || !this.data.privacyAccepted || this.guideUsageTipPendingTimer) {
+      return
+    }
+
+    this.guideUsageTipPendingTimer = setTimeout(() => {
+      this.guideUsageTipPendingTimer = null
+      this.showGuideUsageTipOnce()
+    }, CAMERA_GUIDE_TIP_DELAY)
   },
 
   dismissGuideUsageTip() {
@@ -786,6 +823,11 @@ Page({
   },
 
   clearGuideUsageTipTimer() {
+    if (this.guideUsageTipPendingTimer) {
+      clearTimeout(this.guideUsageTipPendingTimer)
+      this.guideUsageTipPendingTimer = null
+    }
+
     if (this.guideUsageTipTimer) {
       clearTimeout(this.guideUsageTipTimer)
       this.guideUsageTipTimer = null
@@ -793,6 +835,13 @@ Page({
   },
 
   backToPoseGallery() {
+    const currentTemplate = this.data.currentTemplate || poseTemplates[this.data.currentIndex] || {}
+    const categoryId = currentTemplate.categoryId || (poseTemplates[this.data.currentIndex] || {}).categoryId
+
+    if (this.hasTemplateLoaded && categoryId) {
+      wx.setStorageSync(GALLERY_TARGET_CATEGORY_KEY, categoryId)
+    }
+
     const pages = getCurrentPages()
     const galleryIndex = pages.findIndex((page) => page.route === POSE_GALLERY_ROUTE)
 

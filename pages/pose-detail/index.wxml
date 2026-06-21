@@ -24,6 +24,20 @@
       <view class="tap-tip">点图拍照</view>
     </view>
 
+    <view wx:if="{{shootingGuide}}" class="shooting-guide-card">
+      <view wx:if="{{shootingGuide.items.length}}" class="guide-list">
+        <view
+          wx:for="{{shootingGuide.items}}"
+          wx:key="label"
+          wx:for-item="item"
+          class="guide-item {{item.label == '避坑' ? 'avoid' : ''}}"
+        >
+          <view class="guide-label">{{item.label}}</view>
+          <view class="guide-text">{{item.text}}</view>
+        </view>
+      </view>
+    </view>
+
   </view>
 
   <image

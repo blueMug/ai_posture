@@ -287,8 +287,8 @@ Page({
 
     return {
       title: poseName
-        ? `摆拍助手｜${poseName} 拍照姿势参考`
-        : '摆拍助手｜拍照姿势参考相机，姿势模板照着拍',
+        ? `照着这个姿势拍｜${poseName}`
+        : '照着这个姿势拍｜拍照姿势模板',
       path: poseId
         ? `/pages/pose-detail/index?poseId=${poseId}`
         : '/pages/home/index',

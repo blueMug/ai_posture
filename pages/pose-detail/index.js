@@ -1,6 +1,7 @@
 const { poseTemplates, findPoseIndex } = require('../../utils/poses')
 const { cacheImage } = require('../../utils/imageCache')
 const { ensurePrivacyNotice } = require('../../utils/privacy')
+const { getShootingGuide } = require('../../utils/shootingGuide')
 const {
   getFavoritePoseIds,
   recordPoseUsage,
@@ -16,6 +17,7 @@ Page({
     pose: null,
     displayImage: '',
     preloadedGuideImage: '',
+    shootingGuide: null,
     isFavorite: false
   },
 
@@ -24,12 +26,14 @@ Page({
     const displayImage = pose.detailImage || pose.thumbnailImage || pose.guideImage
     const favoritePoseIds = getFavoritePoseIds()
     const poseWithFavorite = withFavoriteState(pose, favoritePoseIds)
+    const shootingGuide = getShootingGuide(pose)
 
     this.setData({
       poseId: pose.id,
       pose: poseWithFavorite,
       displayImage: '',
       preloadedGuideImage: '',
+      shootingGuide,
       isFavorite: poseWithFavorite.isFavorite
     })
 
@@ -127,8 +131,8 @@ Page({
 
     return {
       title: pose.name
-        ? `摆拍助手｜${pose.name} 拍照姿势参考`
-        : '摆拍助手｜姿势相机·自拍穿搭旅行拍照姿势参考',
+        ? `照着这个姿势拍｜${pose.name}`
+        : '照着这个姿势拍｜拍照姿势模板',
       path: `/pages/pose-detail/index?poseId=${poseId}`,
       imageUrl: pose.thumbnailImage || pose.detailImage || pose.guideImage || ''
     }

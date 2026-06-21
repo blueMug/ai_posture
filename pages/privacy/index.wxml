@@ -6,7 +6,7 @@
   </view>
 
   <view class="hero-card">
-    <view class="hero-title">摆拍助手如何使用权限</view>
+    <view class="hero-title">出片姿势如何使用权限</view>
     <view class="hero-desc">
       我们只在你主动使用相关功能时申请相机和相册权限。收藏、使用记录等数据用于改善本机体验，当前仅保存在你的设备本地。
     </view>

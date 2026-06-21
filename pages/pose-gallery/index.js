@@ -6,21 +6,13 @@ const {
   togglePoseFavorite,
   withFavoriteStateCategories
 } = require('../../utils/userData')
+const {
+  isPoseMatchedSearch,
+  normalizeSearchText
+} = require('../../utils/poseSearch')
 
 const GALLERY_TARGET_CATEGORY_KEY = 'galleryTargetCategoryId'
 const DEFAULT_PAGE_TOP_PX = 52
-
-const normalizeKeyword = (value) => String(value || '').trim().toLowerCase()
-
-const getPoseSearchText = (pose, category) => [
-  pose.name,
-  pose.tip,
-  pose.description,
-  pose.badge,
-  pose.categoryName,
-  category.name,
-  category.subtitle
-].join(' ').toLowerCase()
 
 const getGalleryDisplayImage = (pose, retryToken = '') => {
   const imageUrl = pose.modelImage || pose.detailImage || pose.thumbnailImage || ''
@@ -44,7 +36,7 @@ const withGalleryDisplayImages = (categories, retryTokens = {}) => (
 )
 
 const filterPoseCategories = (keyword) => {
-  const query = normalizeKeyword(keyword)
+  const query = normalizeSearchText(keyword)
 
   if (!query) {
     return poseCategories
@@ -53,7 +45,7 @@ const filterPoseCategories = (keyword) => {
   return poseCategories
     .map((category) => ({
       ...category,
-      poses: category.poses.filter((pose) => getPoseSearchText(pose, category).includes(query))
+      poses: category.poses.filter((pose) => isPoseMatchedSearch(pose, category, query))
     }))
     .filter((category) => category.poses.length > 0)
 }

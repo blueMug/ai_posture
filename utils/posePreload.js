@@ -35,7 +35,7 @@ const collectHomeInspirationImageUrls = () => {
 
   HOME_INSPIRATION_POSE_IDS.forEach((poseId) => {
     const pose = poseTemplateMap.get(poseId)
-    const url = pose && cdnAssetUrl(pose.thumbnailImage || pose.guideImage)
+    const url = pose && cdnAssetUrl(pose.detailImage || pose.modelImage || pose.thumbnailImage || pose.guideImage)
 
     if (url && /^https?:\/\//.test(url) && !seen.has(url)) {
       seen.add(url)
