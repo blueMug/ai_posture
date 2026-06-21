@@ -11,6 +11,7 @@ const {
 } = require('../../utils/userData')
 const {
   cacheFavoritePoseAssets,
+  getCachedFavoritePoseAssets,
   unpinFavoritePoseAssets
 } = require('../../utils/favoriteAssetCache')
 
@@ -106,7 +107,6 @@ Page({
 
   onLoad(options = {}) {
     const pose = getPose(options.poseId)
-    const displayImage = pose.detailImage || pose.thumbnailImage || pose.guideImage
     const favoritePoseIds = getFavoritePoseIds()
     const poseWithFavorite = withFavoriteState(pose, favoritePoseIds)
     const shootingGuide = getShootingGuide(pose)
@@ -129,22 +129,7 @@ Page({
       source: 'pose_detail'
     })
 
-    cacheImage(displayImage).then((cachedImage) => {
-      this.setData({
-        displayImage: cachedImage,
-        imageLoading: true
-      })
-    }).catch(() => {
-      this.setData({
-        imageLoading: false
-      })
-      wx.showToast({
-        title: '大图加载失败',
-        icon: 'none'
-      })
-    })
-
-    this.prefetchGuideImage(pose)
+    this.loadDetailImages(poseWithFavorite)
 
     wx.showShareMenu({
       withShareTicket: true,
@@ -160,6 +145,18 @@ Page({
       pose: poseWithFavorite,
       isFavorite: poseWithFavorite.isFavorite
     })
+
+    if (poseWithFavorite.isFavorite) {
+      getCachedFavoritePoseAssets(poseWithFavorite).then((localPose) => {
+        if (this.data.poseId !== poseWithFavorite.id) {
+          return
+        }
+
+        this.setData({
+          pose: withFavoriteState(localPose, getFavoritePoseIds())
+        })
+      })
+    }
   },
 
   prefetchGuideImage(pose) {
@@ -174,6 +171,50 @@ Page({
 
       this.setData({
         preloadedGuideImage: cachedGuideImage
+      })
+    })
+  },
+
+  loadDetailImages(pose) {
+    const requestId = (this.detailImageRequestId || 0) + 1
+    this.detailImageRequestId = requestId
+    const localPosePromise = pose.isFavorite
+      ? cacheFavoritePoseAssets(pose)
+      : Promise.resolve(pose)
+
+    localPosePromise.then((resolvedPose) => {
+      if (this.detailImageRequestId !== requestId) {
+        return null
+      }
+
+      const displayImage = resolvedPose.detailImage || resolvedPose.thumbnailImage || resolvedPose.guideImage
+      const displayImagePromise = pose.isFavorite
+        ? Promise.resolve(displayImage)
+        : cacheImage(displayImage)
+
+      return displayImagePromise.then((cachedImage) => {
+        if (this.detailImageRequestId !== requestId) {
+          return
+        }
+
+        this.setData({
+          pose: withFavoriteState(resolvedPose, getFavoritePoseIds()),
+          displayImage: cachedImage,
+          imageLoading: true,
+          preloadedGuideImage: resolvedPose.guideImage || ''
+        })
+      })
+    }).catch(() => {
+      if (this.detailImageRequestId !== requestId) {
+        return
+      }
+
+      this.setData({
+        imageLoading: false
+      })
+      wx.showToast({
+        title: '大图加载失败',
+        icon: 'none'
       })
     })
   },

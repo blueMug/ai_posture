@@ -2,6 +2,7 @@
   <camera
     wx:if="{{privacyAccepted}}"
     class="camera"
+    style="{{cameraStyle}}"
     device-position="{{devicePosition}}"
     flash="off"
     resolution="high"
@@ -9,7 +10,7 @@
     bindinitdone="onCameraInitDone"
     binderror="onCameraError"
   >
-    <cover-view class="pose-stage" bindtap="closeSettingsPanel">
+    <cover-view class="pose-stage" style="{{poseStageStyle}}" bindtap="closeSettingsPanel">
       <cover-view
         wx:if="{{currentTemplate.guideImage}}"
         class="pose-guide-box"
@@ -24,16 +25,16 @@
           <cover-image
             wx:if="{{guideMode == 'outline'}}"
             class="pose-guide-image pose-guide-shadow"
-            src="{{currentTemplate.guideImage}}"
+            src="{{guideDisplayImage || currentTemplate.guideImage}}"
           ></cover-image>
           <cover-image
             wx:if="{{guideMode == 'outline'}}"
             class="pose-guide-image pose-guide-boost"
-            src="{{currentTemplate.guideImage}}"
+            src="{{guideDisplayImage || currentTemplate.guideImage}}"
           ></cover-image>
           <cover-image
             class="pose-guide-image pose-guide-main {{guideImageClass}}"
-            src="{{currentTemplate.guideImage}}"
+            src="{{guideDisplayImage || currentTemplate.guideImage}}"
             binderror="onGuideImageError"
           ></cover-image>
         </cover-view>
@@ -65,34 +66,24 @@
           <cover-view
             class="settings-chip {{guideVisible ? 'active' : ''}}"
             catchtap="toggleGuide"
-          >引导 {{guideVisible ? guideModeText : '关'}}</cover-view>
+          >引导 {{guideVisible ? guideModeText : ''}}</cover-view>
           <cover-view
             class="settings-chip {{keepGuideForConfirm ? 'active' : ''}}"
             catchtap="toggleKeepGuideForConfirm"
-          >拍后带轮廓 {{keepGuideForConfirm ? '开' : '关'}}</cover-view>
+          >拍后带轮廓</cover-view>
+          <cover-view
+            class="settings-chip {{guideRotateAngle > 0 ? 'active' : ''}}"
+            catchtap="toggleGuideRotate"
+          >旋转</cover-view>
+          <cover-view
+            class="settings-chip {{cameraAspectRatio == '9:16' ? 'active' : ''}}"
+            catchtap="toggleCameraAspectRatio"
+          >{{cameraAspectText}}</cover-view>
           <cover-view
             class="settings-chip {{countdownSeconds > 0 ? 'active' : ''}}"
             catchtap="cycleCountdown"
           >{{countdownText}}</cover-view>
-          <cover-view
-            class="settings-chip {{shootingTipsEnabled ? 'active' : ''}}"
-            catchtap="toggleShootingTips"
-          >拍摄提示 {{shootingTipsEnabled ? '开' : '关'}}</cover-view>
         </cover-view>
-      </cover-view>
-    </cover-view>
-
-    <cover-view
-      wx:if="{{shootingTipsEnabled && shootingGuide && shootingGuide.hasText && !countdownActive}}"
-      class="camera-shooting-guide"
-    >
-      <cover-view wx:if="{{shootingGuide.actionText}}" class="camera-guide-item">
-        <cover-view class="camera-guide-label">动作</cover-view>
-        <cover-view class="camera-guide-text">{{shootingGuide.actionText}}</cover-view>
-      </cover-view>
-      <cover-view wx:if="{{shootingGuide.compositionText}}" class="camera-guide-item">
-        <cover-view class="camera-guide-label">画面</cover-view>
-        <cover-view class="camera-guide-text">{{shootingGuide.compositionText}}</cover-view>
       </cover-view>
     </cover-view>
 
@@ -102,10 +93,14 @@
       catchtap="dismissGuideUsageTip"
     >
       <cover-view class="guide-usage-title">姿势可以拖动对齐</cover-view>
-      <cover-view class="guide-usage-desc">点左上设置，可调整轮廓大小和倒计时</cover-view>
+      <cover-view class="guide-usage-desc">
+        <cover-view class="guide-usage-desc-line">点左上设置，可调整轮廓大小</cover-view>
+        <cover-view class="guide-usage-desc-line">旋转和倒计时</cover-view>
+      </cover-view>
     </cover-view>
   </camera>
-  <view wx:else class="privacy-wait">
+
+  <view wx:if="{{!privacyAccepted}}" class="privacy-wait">
     <view class="privacy-title">使用相机前需要确认权限说明</view>
     <view class="privacy-desc">我们会先说明相机、相册、本地收藏和使用记录的用途。</view>
   </view>

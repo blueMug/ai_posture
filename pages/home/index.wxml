@@ -47,6 +47,12 @@
             bindload="onPoseImageLoad"
             binderror="onPoseImageError"
           ></image>
+          <view
+            wx:if="{{!loadedPoseImages[scene.id] && !failedPoseImages[scene.id] && !retryingPoseImages[scene.id]}}"
+            class="home-image-loading compact scene-tab-loading"
+          >
+            <view class="home-loading-spinner"></view>
+          </view>
           <view class="scene-tab-copy">
             <view class="scene-tab-title">{{scene.title}}</view>
           </view>
@@ -87,6 +93,13 @@
             bindload="onPoseImageLoad"
             binderror="onPoseImageError"
           ></image>
+          <view
+            wx:if="{{!loadedPoseImages[plan.poseId] && !failedPoseImages[plan.poseId] && !retryingPoseImages[plan.poseId]}}"
+            class="home-image-loading"
+          >
+            <view class="home-loading-spinner"></view>
+            <view class="home-loading-text">图片加载中</view>
+          </view>
           <view wx:if="{{failedPoseImages[plan.poseId]}}" class="mini-image-error">
             图片加载失败
           </view>
@@ -152,6 +165,13 @@
               bindload="onPoseImageLoad"
               binderror="onPoseImageError"
             ></image>
+            <view
+              wx:if="{{!loadedPoseImages[pose.id] && !failedPoseImages[pose.id] && !retryingPoseImages[pose.id]}}"
+              class="home-image-loading"
+            >
+              <view class="home-loading-spinner"></view>
+              <view class="home-loading-text">图片加载中</view>
+            </view>
             <view wx:if="{{failedPoseImages[pose.id]}}" class="mini-image-error">
               图片加载失败
             </view>
@@ -194,6 +214,12 @@
           bindload="onPoseImageLoad"
           binderror="onPoseImageError"
         ></image>
+        <view
+          wx:if="{{!loadedPoseImages[scene.categoryId] && !failedPoseImages[scene.categoryId] && !retryingPoseImages[scene.categoryId]}}"
+          class="home-image-loading compact scene-card-loading"
+        >
+          <view class="home-loading-spinner"></view>
+        </view>
         <view class="scene-mask"></view>
         <view class="scene-copy">
           <view class="scene-title">{{scene.title}}</view>
@@ -256,6 +282,13 @@
               bindload="onPoseImageLoad"
               binderror="onPoseImageError"
             ></image>
+            <view
+              wx:if="{{!loadedPoseImages[pose.id] && !failedPoseImages[pose.id] && !retryingPoseImages[pose.id]}}"
+              class="home-image-loading"
+            >
+              <view class="home-loading-spinner"></view>
+              <view class="home-loading-text">图片加载中</view>
+            </view>
             <view wx:if="{{failedPoseImages[pose.id]}}" class="mini-image-error">
               图片加载失败
             </view>

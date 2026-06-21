@@ -83,6 +83,7 @@ module.exports = {
   getFavoritePoseIds,
   getFavoritePoses,
   getPoseUsageRecords,
+  isPoseFavorite,
   recordPoseUsage,
   togglePoseFavorite,
   withFavoriteState,

@@ -50,6 +50,34 @@ const withGalleryDisplayImages = (categories, retryTokens = {}) => (
     }))
   }))
 )
+const getPoseImageUrls = (categories) => (
+  categories.reduce((map, category) => {
+    category.poses.forEach((pose) => {
+      if (pose.galleryDisplayImage) {
+        map[pose.id] = pose.galleryDisplayImage
+      }
+    })
+
+    return map
+  }, {})
+)
+const getPoseImageLoadingState = (categories, previousImageUrls = {}, previousLoading = {}) => {
+  const nextLoading = {}
+
+  categories.forEach((category) => {
+    category.poses.forEach((pose) => {
+      if (!pose.galleryDisplayImage) {
+        return
+      }
+
+      const previousUrl = previousImageUrls[pose.id]
+      const wasLoaded = previousUrl === pose.galleryDisplayImage && previousLoading[pose.id] === false
+      nextLoading[pose.id] = !wasLoaded
+    })
+  })
+
+  return nextLoading
+}
 
 const filterPoseCategories = (keyword) => {
   const query = normalizeSearchText(keyword)
@@ -90,6 +118,8 @@ Page({
     favoritePoseIds: [],
     hasSearchResult: true,
     failedPoseImages: {},
+    loadingPoseImages: {},
+    poseImageUrls: {},
     imageRetryTokens: {},
     adSlot: adSlots.poseGalleryFeed
   },
@@ -151,6 +181,12 @@ Page({
     }
 
     const cachedCategories = nextCategoriesWithFavorites
+    const poseImageUrls = getPoseImageUrls(cachedCategories)
+    const loadingPoseImages = getPoseImageLoadingState(
+      cachedCategories,
+      this.data.poseImageUrls,
+      this.data.loadingPoseImages
+    )
     const activeCategoryId = cachedCategories.some((category) => category.id === targetCategoryId)
       ? targetCategoryId
       : cachedCategories[0].id
@@ -159,6 +195,8 @@ Page({
       ...extraData,
       favoritePoseIds,
       poseCategories: cachedCategories,
+      loadingPoseImages,
+      poseImageUrls,
       categoryNavs: cachedCategories.map((category) => ({
         id: category.id,
         name: category.name,
@@ -274,6 +312,19 @@ Page({
     })
   },
 
+  onPoseImageLoad(event) {
+    const { poseId } = event.currentTarget.dataset
+
+    if (!poseId) {
+      return
+    }
+
+    this.setData({
+      [`loadingPoseImages.${poseId}`]: false,
+      [`failedPoseImages.${poseId}`]: false
+    })
+  },
+
   onPoseImageError(event) {
     const { poseId } = event.currentTarget.dataset
 
@@ -282,7 +333,8 @@ Page({
     }
 
     this.setData({
-      [`failedPoseImages.${poseId}`]: true
+      [`failedPoseImages.${poseId}`]: true,
+      [`loadingPoseImages.${poseId}`]: false
     })
   },
 
@@ -297,6 +349,7 @@ Page({
 
     this.setData({
       [`failedPoseImages.${poseId}`]: false,
+      [`loadingPoseImages.${poseId}`]: true,
       [`imageRetryTokens.${poseId}`]: retryToken
     }, () => {
       this.refreshPoseCategories()

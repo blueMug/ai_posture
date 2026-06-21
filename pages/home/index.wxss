@@ -216,6 +216,75 @@
   height: calc(100% - 24rpx);
 }
 
+.home-image-loading {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.22);
+  pointer-events: none;
+}
+
+.home-image-loading.compact {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.scene-tab-loading {
+  left: auto;
+  right: 0;
+  width: 92rpx;
+  z-index: 1;
+  background: transparent;
+}
+
+.scene-card-loading {
+  left: auto;
+  right: 8rpx;
+  top: 18rpx;
+  bottom: 18rpx;
+  width: 132rpx;
+  z-index: 1;
+  background: transparent;
+}
+
+.home-loading-spinner {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 999rpx;
+  border: 5rpx solid rgba(255, 255, 255, 0.2);
+  border-top-color: #ffe95c;
+  animation: home-image-loading-spin 0.8s linear infinite;
+}
+
+.home-image-loading.compact .home-loading-spinner {
+  width: 30rpx;
+  height: 30rpx;
+  border-width: 4rpx;
+}
+
+.home-loading-text {
+  margin-top: 12rpx;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 21rpx;
+  font-weight: 800;
+}
+
+@keyframes home-image-loading-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .advisor-plan-body {
   flex: 1;
   min-width: 0;

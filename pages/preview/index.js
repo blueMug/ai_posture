@@ -3,6 +3,22 @@ const { ensurePrivacyNotice } = require('../../utils/privacy')
 
 const GUIDE_MODE_PHOTO = 'photo'
 const MAX_COMPOSE_CANVAS_SIZE = 1600
+const GUIDE_ROTATE_STEP = 90
+const GUIDE_ROTATE_FULL_DEGREES = 360
+
+const normalizeGuideRotateAngle = (angle) => {
+  if (angle === true) {
+    return GUIDE_ROTATE_STEP
+  }
+
+  const numericAngle = Number(angle || 0)
+
+  if (!Number.isFinite(numericAngle)) {
+    return 0
+  }
+
+  return ((Math.round(numericAngle / GUIDE_ROTATE_STEP) * GUIDE_ROTATE_STEP) % GUIDE_ROTATE_FULL_DEGREES + GUIDE_ROTATE_FULL_DEGREES) % GUIDE_ROTATE_FULL_DEGREES
+}
 
 const getAspectFitRect = (sourceWidth, sourceHeight, targetWidth, targetHeight) => {
   const sourceRatio = sourceWidth / sourceHeight
@@ -95,7 +111,7 @@ const getGuideDisplayRect = ({
   }
 }
 
-const getGuideDisplayStyle = ({ guideMode, ...options }) => {
+const getGuideDisplayStyle = ({ guideMode, guideRotateAngle = 0, ...options }) => {
   const rect = getGuideDisplayRect(options)
 
   return [
@@ -103,7 +119,9 @@ const getGuideDisplayStyle = ({ guideMode, ...options }) => {
     `top: ${rect.top}px`,
     `width: ${rect.width}px`,
     `height: ${rect.height}px`,
-    `opacity: ${guideMode === GUIDE_MODE_PHOTO ? 0.42 : 0.92}`
+    `opacity: ${guideMode === GUIDE_MODE_PHOTO ? 0.42 : 0.92}`,
+    'transform-origin: center center',
+    `transform: rotate(${normalizeGuideRotateAngle(guideRotateAngle)}deg)`
   ].join('; ')
 }
 
@@ -148,6 +166,7 @@ Page({
     guideScale: 1,
     guideRect: null,
     guideMode: 'outline',
+    guideRotateAngle: 0,
     poseId: '',
     poseName: '',
     poseShareImage: '',
@@ -181,6 +200,7 @@ Page({
       guideScale: Number(previewGuide.scale || 1),
       guideRect: previewGuide.rect || null,
       guideMode: previewGuide.guideMode || 'outline',
+      guideRotateAngle: normalizeGuideRotateAngle(previewGuide.guideRotateAngle || previewGuide.guideRotated),
       poseId: previewPose.id || '',
       poseName: previewPose.name || '',
       poseShareImage: previewPose.thumbnailImage || ''
@@ -209,7 +229,8 @@ Page({
           offsetX: Number(previewGuide.offsetX || 0),
           offsetY: Number(previewGuide.offsetY || 0),
           scale: Number(previewGuide.scale || 1),
-          guideMode: previewGuide.guideMode || 'outline'
+          guideMode: previewGuide.guideMode || 'outline',
+          guideRotateAngle: normalizeGuideRotateAngle(previewGuide.guideRotateAngle || previewGuide.guideRotated)
         }),
         guideStyleReady: true
       })
@@ -276,6 +297,30 @@ Page({
     )
   },
 
+  drawGuideImageToCanvas(ctx, imagePath, rect) {
+    const guideRotateAngle = normalizeGuideRotateAngle(this.data.guideRotateAngle)
+
+    if (!guideRotateAngle) {
+      this.drawImageToCanvas(ctx, imagePath, rect)
+      return
+    }
+
+    const centerX = rect.left + rect.width / 2
+    const centerY = rect.top + rect.height / 2
+
+    ctx.save()
+    ctx.translate(centerX, centerY)
+    ctx.rotate(guideRotateAngle * Math.PI / 180)
+    ctx.drawImage(
+      imagePath,
+      -rect.width / 2,
+      -rect.height / 2,
+      rect.width,
+      rect.height
+    )
+    ctx.restore()
+  },
+
   setDataAsync(data) {
     return new Promise((resolve) => {
       this.setData(data, resolve)
@@ -340,7 +385,7 @@ Page({
         height: canvasHeight
       })
       ctx.setGlobalAlpha(this.data.guideMode === GUIDE_MODE_PHOTO ? 0.42 : 0.92)
-      this.drawImageToCanvas(ctx, guideInfo.path, guideRect)
+      this.drawGuideImageToCanvas(ctx, guideInfo.path, guideRect)
       ctx.setGlobalAlpha(1)
       ctx.draw(false, () => {
         wx.canvasToTempFilePath({

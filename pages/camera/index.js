@@ -2,13 +2,14 @@ const app = getApp()
 const { poseTemplates, findPoseIndex } = require('../../utils/poses')
 const { cacheImageFields } = require('../../utils/imageCache')
 const { cdnAssetUrl, homeLocalAssetUrl } = require('../../utils/assets')
-const { recordPoseUsage } = require('../../utils/userData')
+const { isPoseFavorite, recordPoseUsage } = require('../../utils/userData')
 const { ensurePrivacyNotice, hasAcceptedPrivacyNotice } = require('../../utils/privacy')
-const { getSimpleShootingGuide } = require('../../utils/shootingGuide')
+const { cacheFavoritePoseAssets } = require('../../utils/favoriteAssetCache')
 
 const GUIDE_CONFIRM_STORAGE_KEY = 'keepGuideForConfirm'
 const GUIDE_MODE_STORAGE_KEY = 'cameraGuideMode'
-const SHOOTING_TIPS_DEFAULT_STORAGE_KEY = 'cameraShootingTipsDefaultEnabled'
+const GUIDE_ROTATE_STORAGE_KEY = 'cameraGuideRotate90'
+const CAMERA_ASPECT_STORAGE_KEY = 'cameraAspectRatio'
 const GALLERY_TARGET_CATEGORY_KEY = 'galleryTargetCategoryId'
 const CACHE_TEMPLATE_SUPPORT_IMAGE_FIELDS = ['thumbnailImage', 'modelImage']
 const POSE_GALLERY_ROUTE = 'pages/pose-gallery/index'
@@ -21,7 +22,14 @@ const GUIDE_MIN_SCALE = 0.35
 const GUIDE_MAX_SCALE = 2.2
 const GUIDE_SCALE_STEP = 0.1
 const BOTTOM_PANEL_RPX = 330
-const CAMERA_PREVIEW_HEIGHT_RATIO = 4 / 3
+const CAMERA_VERTICAL_OFFSET_RPX = 36
+const CAMERA_ASPECT_3_4 = '3:4'
+const CAMERA_ASPECT_9_16 = '9:16'
+const CAMERA_ASPECT_OPTIONS = [CAMERA_ASPECT_3_4, CAMERA_ASPECT_9_16]
+const CAMERA_ASPECT_HEIGHT_RATIOS = {
+  [CAMERA_ASPECT_3_4]: 4 / 3,
+  [CAMERA_ASPECT_9_16]: 16 / 9
+}
 const STAGE_TOP_CAMERA_RATIO = 0.08
 const STAGE_BOTTOM_CAMERA_RATIO = 0.04
 const GUIDE_LEFT_RATIO = 0.07
@@ -32,6 +40,8 @@ const GUIDE_MODE_OUTLINE = 'outline'
 const GUIDE_MODE_PHOTO = 'photo'
 const COUNTDOWN_SECONDS_OPTIONS = [0, 3, 5, 10]
 const CAMERA_GUIDE_TIP_DELAY = 500
+const GUIDE_ROTATE_STEP = 90
+const GUIDE_ROTATE_FULL_DEGREES = 360
 
 let cameraGuideTipShownInSession = false
 
@@ -75,7 +85,19 @@ const getStoredGuideMode = () => (
     ? GUIDE_MODE_PHOTO
     : GUIDE_MODE_OUTLINE
 )
-const getStoredShootingTipsDefaultEnabled = () => wx.getStorageSync(SHOOTING_TIPS_DEFAULT_STORAGE_KEY) === true
+const normalizeCameraAspectRatio = (aspectRatio) => (
+  CAMERA_ASPECT_OPTIONS.includes(aspectRatio)
+    ? aspectRatio
+    : CAMERA_ASPECT_3_4
+)
+const getStoredCameraAspectRatio = () => normalizeCameraAspectRatio(wx.getStorageSync(CAMERA_ASPECT_STORAGE_KEY))
+const getNextCameraAspectRatio = (aspectRatio) => (
+  normalizeCameraAspectRatio(aspectRatio) === CAMERA_ASPECT_3_4
+    ? CAMERA_ASPECT_9_16
+    : CAMERA_ASPECT_3_4
+)
+const getCameraAspectText = (aspectRatio) => `比例 ${normalizeCameraAspectRatio(aspectRatio)}`
+const getCameraHeightRatio = (aspectRatio) => CAMERA_ASPECT_HEIGHT_RATIOS[normalizeCameraAspectRatio(aspectRatio)]
 const normalizeGuideMode = (template, guideMode) => (
   guideMode === GUIDE_MODE_PHOTO && canUseModelPhotoGuide(template)
     ? GUIDE_MODE_PHOTO
@@ -85,6 +107,22 @@ const getActiveGuideImage = (template, guideMode) => (
   normalizeGuideMode(template, guideMode) === GUIDE_MODE_PHOTO
     ? template.modelImage
     : template.guideImage
+)
+const normalizeGuideRotateAngle = (angle) => {
+  if (angle === true) {
+    return GUIDE_ROTATE_STEP
+  }
+
+  const numericAngle = Number(angle || 0)
+
+  if (!Number.isFinite(numericAngle)) {
+    return 0
+  }
+
+  return ((Math.round(numericAngle / GUIDE_ROTATE_STEP) * GUIDE_ROTATE_STEP) % GUIDE_ROTATE_FULL_DEGREES + GUIDE_ROTATE_FULL_DEGREES) % GUIDE_ROTATE_FULL_DEGREES
+}
+const getNextGuideRotateAngle = (angle) => (
+  (normalizeGuideRotateAngle(angle) + GUIDE_ROTATE_STEP) % GUIDE_ROTATE_FULL_DEGREES
 )
 const getTouchCenter = (touches) => ({
   x: (touches[0].pageX + touches[1].pageX) / 2,
@@ -146,44 +184,97 @@ const getAspectFitRect = (sourceWidth, sourceHeight, targetWidth, targetHeight) 
     height
   }
 }
-const getGuideBoxStyle = (offsetX, offsetY, scale = 1, guideBoxRect = null) => (
+const getGuideTransformStyle = (offsetX, offsetY, scale = 1, guideRotateAngle = 0) => (
+  [
+    `translate3d(${offsetX}px, ${offsetY}px, 0)`,
+    `scale(${scale})`,
+    `rotate(${normalizeGuideRotateAngle(guideRotateAngle)}deg)`
+  ].filter(Boolean).join(' ')
+)
+const getGuideBoxStyle = (offsetX, offsetY, scale = 1, guideBoxRect = null, guideRotateAngle = 0) => (
   [
     guideBoxRect ? `left: ${guideBoxRect.left}px` : '',
     guideBoxRect ? `top: ${guideBoxRect.top}px` : '',
     guideBoxRect ? `width: ${guideBoxRect.width}px` : '',
     guideBoxRect ? `height: ${guideBoxRect.height}px` : '',
     'transform-origin: center center',
-    `transform: translate3d(${offsetX}px, ${offsetY}px, 0) scale(${scale})`
+    `transform: ${getGuideTransformStyle(offsetX, offsetY, scale, guideRotateAngle)}`
   ].filter(Boolean).join('; ')
 )
 const getGuideScaleText = (scale) => `${Math.round(scale * 100)}%`
-const getCameraPreviewHeight = (windowWidth, windowHeight) => {
+const getCameraPreviewLayout = (windowWidth, windowHeight, aspectRatio = CAMERA_ASPECT_3_4) => {
   const rpxToPx = windowWidth / 750
   const bottomPanelHeight = BOTTOM_PANEL_RPX * rpxToPx
+  const cameraVerticalOffset = CAMERA_VERTICAL_OFFSET_RPX * rpxToPx
   const availableHeight = Math.max(windowHeight - bottomPanelHeight, 1)
-  const nativePhotoHeight = windowWidth * CAMERA_PREVIEW_HEIGHT_RATIO
+  const cameraHeightRatio = getCameraHeightRatio(aspectRatio)
+  const nativePhotoHeight = windowWidth * cameraHeightRatio
+  const cameraHeight = Math.min(availableHeight, nativePhotoHeight)
+  const frameWidth = Math.min(windowWidth, cameraHeight / cameraHeightRatio)
+  const frameLeft = Math.max((windowWidth - frameWidth) / 2, 0)
+  const maxCameraTop = Math.max(availableHeight - cameraHeight, 0)
+  const cameraTop = Math.min(Math.max((availableHeight - cameraHeight) / 2 + cameraVerticalOffset, 0), maxCameraTop)
 
-  return Math.min(availableHeight, nativePhotoHeight)
+  return {
+    frameLeft,
+    frameWidth,
+    cameraTop,
+    cameraWidth: windowWidth,
+    cameraHeight,
+    availableHeight
+  }
 }
-const getGuideTransformState = (offsetX, offsetY, scale, guideBoxRect = null) => ({
-  guideOffsetX: offsetX,
-  guideOffsetY: offsetY,
-  guideScale: scale,
-  guideScaleText: getGuideScaleText(scale),
-  guideBoxStyle: getGuideBoxStyle(offsetX, offsetY, scale, guideBoxRect),
-  ...(guideBoxRect ? { guideBoxRect } : {})
-})
-const getCameraGuideLayout = (guideImageInfo = null) => {
+const getCameraStyle = (aspectRatio = getStoredCameraAspectRatio()) => {
   const systemInfo = wx.getSystemInfoSync()
   const windowWidth = Number(systemInfo.windowWidth || 375)
   const windowHeight = Number(systemInfo.windowHeight || 667)
-  const cameraHeight = getCameraPreviewHeight(windowWidth, windowHeight)
-  const stageTop = cameraHeight * STAGE_TOP_CAMERA_RATIO
-  const stageBottom = cameraHeight * STAGE_BOTTOM_CAMERA_RATIO
-  const stageHeight = Math.max(cameraHeight - stageTop - stageBottom, 1)
+  const { cameraTop, cameraWidth, cameraHeight } = getCameraPreviewLayout(windowWidth, windowHeight, aspectRatio)
 
+  return `width: ${cameraWidth}px; height: ${cameraHeight}px; margin-top: ${cameraTop}px`
+}
+const getGuideStageLayout = (windowWidth, windowHeight, aspectRatio = getStoredCameraAspectRatio()) => {
+  const { cameraHeight } = getCameraPreviewLayout(windowWidth, windowHeight, aspectRatio)
+  const guideReferenceHeight = Math.min(cameraHeight, windowWidth * getCameraHeightRatio(CAMERA_ASPECT_3_4))
+  const stageTop = guideReferenceHeight * STAGE_TOP_CAMERA_RATIO
+  const stageBottom = guideReferenceHeight * STAGE_BOTTOM_CAMERA_RATIO
+  const stageHeight = Math.max(guideReferenceHeight - stageTop - stageBottom, 1)
   const stageLeft = windowWidth * GUIDE_LEFT_RATIO
   const stageWidth = windowWidth * GUIDE_WIDTH_RATIO
+
+  return {
+    stageLeft,
+    stageTop,
+    stageWidth,
+    stageHeight
+  }
+}
+const getPoseStageStyle = (aspectRatio = getStoredCameraAspectRatio()) => {
+  const systemInfo = wx.getSystemInfoSync()
+  const windowWidth = Number(systemInfo.windowWidth || 375)
+  const windowHeight = Number(systemInfo.windowHeight || 667)
+  const { stageLeft, stageTop, stageWidth, stageHeight } = getGuideStageLayout(windowWidth, windowHeight, aspectRatio)
+
+  return `left: ${stageLeft}px; top: ${stageTop}px; width: ${stageWidth}px; height: ${stageHeight}px`
+}
+const getGuideTransformState = (offsetX, offsetY, scale, guideBoxRect = null, guideRotateAngle = 0) => {
+  const normalizedAngle = normalizeGuideRotateAngle(guideRotateAngle)
+
+  return {
+    guideOffsetX: offsetX,
+    guideOffsetY: offsetY,
+    guideScale: scale,
+    guideScaleText: getGuideScaleText(scale),
+    guideRotateAngle: normalizedAngle,
+    guideBoxStyle: getGuideBoxStyle(offsetX, offsetY, scale, guideBoxRect, normalizedAngle),
+    ...(guideBoxRect ? { guideBoxRect } : {})
+  }
+}
+const getCameraGuideLayout = (guideImageInfo = null, aspectRatio = getStoredCameraAspectRatio()) => {
+  const systemInfo = wx.getSystemInfoSync()
+  const windowWidth = Number(systemInfo.windowWidth || 375)
+  const windowHeight = Number(systemInfo.windowHeight || 667)
+  const { cameraTop, cameraHeight } = getCameraPreviewLayout(windowWidth, windowHeight, aspectRatio)
+  const { stageLeft, stageTop, stageWidth, stageHeight } = getGuideStageLayout(windowWidth, windowHeight, aspectRatio)
   const guideAreaTop = stageHeight * GUIDE_TOP_IN_STAGE_RATIO
   const guideAreaWidth = stageWidth
   const guideAreaHeight = stageHeight * GUIDE_HEIGHT_IN_STAGE_RATIO
@@ -208,30 +299,32 @@ const getCameraGuideLayout = (guideImageInfo = null) => {
     boxRect,
     previewRect: {
       left: stageLeft + boxRect.left,
-      top: stageTop + boxRect.top,
+      top: cameraTop + stageTop + boxRect.top,
       width: boxRect.width,
       height: boxRect.height
     },
+    poseStageStyle: getPoseStageStyle(aspectRatio),
     cameraLeft: 0,
-    cameraTop: 0,
+    cameraTop,
     cameraWidth: windowWidth,
     cameraHeight,
     baseWidth: windowWidth,
     baseHeight: windowHeight
   }
 }
-const getCameraGuideRect = (guideImageInfo = null) => {
-  const { previewRect, ...layout } = getCameraGuideLayout(guideImageInfo)
+const getCameraGuideRect = (guideImageInfo = null, aspectRatio = getStoredCameraAspectRatio()) => {
+  const { previewRect, ...layout } = getCameraGuideLayout(guideImageInfo, aspectRatio)
 
   return {
     ...previewRect,
     ...layout
   }
 }
-const getGuideLayoutState = (guideImageInfo, offsetX = 0, offsetY = 0, scale = 1) => {
-  const layout = getCameraGuideLayout(guideImageInfo)
+const getGuideLayoutState = (guideImageInfo, offsetX = 0, offsetY = 0, scale = 1, guideRotateAngle = 0, aspectRatio = getStoredCameraAspectRatio()) => {
+  const layout = getCameraGuideLayout(guideImageInfo, aspectRatio)
   const guidePreviewRect = {
     ...layout.previewRect,
+    poseStageStyle: layout.poseStageStyle,
     cameraLeft: layout.cameraLeft,
     cameraTop: layout.cameraTop,
     cameraWidth: layout.cameraWidth,
@@ -242,10 +335,11 @@ const getGuideLayoutState = (guideImageInfo, offsetX = 0, offsetY = 0, scale = 1
 
   return {
     guidePreviewRect,
-    ...getGuideTransformState(offsetX, offsetY, scale, layout.boxRect)
+    poseStageStyle: layout.poseStageStyle,
+    ...getGuideTransformState(offsetX, offsetY, scale, layout.boxRect, guideRotateAngle)
   }
 }
-const getPreviewGuideStyle = (offsetX, offsetY, guideScale, guideMode, rect = getCameraGuideRect()) => {
+const getPreviewGuideStyle = (offsetX, offsetY, guideScale, guideMode, rect = getCameraGuideRect(), guideRotateAngle = 0) => {
   return [
     `left: ${rect.left}px`,
     `top: ${rect.top}px`,
@@ -253,7 +347,7 @@ const getPreviewGuideStyle = (offsetX, offsetY, guideScale, guideMode, rect = ge
     `height: ${rect.height}px`,
     `opacity: ${guideMode === GUIDE_MODE_PHOTO ? 0.42 : 0.92}`,
     'transform-origin: center center',
-    `transform: translate3d(${offsetX}px, ${offsetY}px, 0) scale(${guideScale})`
+    `transform: ${getGuideTransformStyle(offsetX, offsetY, guideScale, guideRotateAngle)}`
   ].join('; ')
 }
 const queryRects = (selectorQuery) => new Promise((resolve) => {
@@ -277,6 +371,11 @@ const cacheTemplatePrimaryGuide = (template, guideMode) => (
 const cacheTemplateSupportImages = (template) => {
   cacheImageFields(template, CACHE_TEMPLATE_SUPPORT_IMAGE_FIELDS).catch(() => {})
 }
+const resolveTemplateForCamera = (template) => (
+  isPoseFavorite(template.id)
+    ? cacheFavoritePoseAssets(template)
+    : Promise.resolve(template)
+)
 const getGuideFallbackImage = (guideImage) => {
   if (!guideImage) {
     return ''
@@ -296,6 +395,9 @@ const getGuideFallbackImage = (guideImage) => {
 Page({
   data: {
     devicePosition: 'back',
+    cameraStyle: getCameraStyle(),
+    cameraAspectRatio: getStoredCameraAspectRatio(),
+    cameraAspectText: getCameraAspectText(getStoredCameraAspectRatio()),
     currentIndex: 0,
     currentTemplate: hideTemplateGuide(poseTemplates[0]),
     guideVisible: true,
@@ -310,22 +412,23 @@ Page({
     guideMode: GUIDE_MODE_OUTLINE,
     guideModeText: '轮廓',
     guideImageClass: 'outline-guide-image',
+    guideDisplayImage: '',
     showModelToggle: false,
     modelToggleImage: '',
     guideOffsetX: 0,
     guideOffsetY: 0,
     guideScale: 1,
     guideScaleText: getGuideScaleText(1),
+    guideRotateAngle: 0,
     guideBoxStyle: getGuideBoxStyle(0, 0, 1),
+    poseStageStyle: getPoseStageStyle(),
     guideBoxRect: null,
     guidePreviewRect: null,
     countdownSeconds: 0,
-    countdownText: '倒计时 关',
+    countdownText: '倒计时',
     countdownActive: false,
     countdownRemaining: 0,
     guideUsageTipVisible: false,
-    shootingTipsEnabled: false,
-    shootingGuide: null,
     homeLocalAssets: false,
     sessionPhotoPaths: [],
     sessionPhotoCount: 0,
@@ -354,6 +457,7 @@ Page({
 
     this.cameraContext = wx.createCameraContext()
     this.setData({
+      cameraStyle: getCameraStyle(guideSettings.cameraAspectRatio),
       devicePosition: getDefaultDevicePosition(template),
       currentIsSelfie: isSelfiePose(template),
       homeLocalAssets
@@ -365,13 +469,21 @@ Page({
   onShow() {
     const nextGuideMode = getStoredGuideMode()
     const guideModeChanged = nextGuideMode !== this.data.guideMode
+    const nextCameraAspectRatio = getStoredCameraAspectRatio()
+    const cameraAspectChanged = nextCameraAspectRatio !== this.data.cameraAspectRatio
 
-    this.loadGuideSettings({
-      includeShootingTips: false
+    const guideSettings = this.loadGuideSettings()
+    this.setData({
+      cameraStyle: getCameraStyle(guideSettings.cameraAspectRatio)
     })
 
     if (guideModeChanged && this.hasTemplateLoaded) {
       this.refreshCurrentGuide(nextGuideMode)
+      return
+    }
+
+    if (cameraAspectChanged && this.hasTemplateLoaded) {
+      this.refreshCurrentGuide()
     }
   },
 
@@ -393,13 +505,27 @@ Page({
     const requestId = (this.templateRequestId || 0) + 1
     this.templateRequestId = requestId
 
-    cacheTemplatePrimaryGuide(template, guideMode).then(async (cachedTemplate) => {
+    this.setData({
+      guideLoadFailed: false
+    })
+
+    resolveTemplateForCamera(template).then((resolvedTemplate) => (
+      cacheTemplatePrimaryGuide(resolvedTemplate, guideMode)
+    )).then(async (cachedTemplate) => {
       if (this.templateRequestId !== requestId) {
         return
       }
 
       const guideModeState = getGuideModeState(cachedTemplate, guideMode)
       const currentTemplate = applyGuideMode(cachedTemplate, this.data.guideVisible, guideModeState.guideMode)
+
+      this.setData({
+        currentTemplate,
+        guideDisplayImage: currentTemplate.guideImage,
+        guideLoadFailed: false,
+        ...guideModeState
+      })
+
       const guideImageInfo = await getImageInfo(currentTemplate.guideImage)
 
       if (this.templateRequestId !== requestId) {
@@ -411,8 +537,8 @@ Page({
         currentIsSelfie: isSelfiePose(cachedTemplate),
         guideLoadFailed: false,
         currentTemplate,
-        shootingGuide: getSimpleShootingGuide(cachedTemplate),
-        ...getGuideLayoutState(guideImageInfo, 0, 0, 1),
+        guideDisplayImage: currentTemplate.guideImage,
+        ...getGuideLayoutState(guideImageInfo, 0, 0, 1, this.data.guideRotateAngle, this.data.cameraAspectRatio),
         ...guideModeState
       }, () => {
         this.hasTemplateLoaded = true
@@ -441,19 +567,33 @@ Page({
       return
     }
 
-    cacheTemplatePrimaryGuide(currentTemplate, nextGuideMode).then(async (cachedTemplate) => {
+    resolveTemplateForCamera(currentTemplate).then((resolvedTemplate) => (
+      cacheTemplatePrimaryGuide(resolvedTemplate, nextGuideMode)
+    )).then(async (cachedTemplate) => {
       const guideModeState = getGuideModeState(cachedTemplate, nextGuideMode)
       const nextTemplate = applyGuideMode(cachedTemplate, true, guideModeState.guideMode)
+
+      this.setData({
+        guideVisible: true,
+        currentTemplate: nextTemplate,
+        guideDisplayImage: nextTemplate.guideImage,
+        guideLoadFailed: false,
+        ...guideModeState
+      })
+
       const guideImageInfo = await getImageInfo(nextTemplate.guideImage)
 
       this.setData({
         guideVisible: true,
         currentTemplate: nextTemplate,
+        guideDisplayImage: nextTemplate.guideImage,
         ...getGuideLayoutState(
           guideImageInfo,
           this.data.guideOffsetX,
           this.data.guideOffsetY,
-          this.data.guideScale
+          this.data.guideScale,
+          this.data.guideRotateAngle,
+          this.data.cameraAspectRatio
         ),
         ...guideModeState
       }, () => {
@@ -469,8 +609,9 @@ Page({
     this.setData({
       guideVisible: false,
       currentTemplate: hideTemplateGuide(currentTemplate),
+      guideDisplayImage: '',
       ...guideModeState,
-      guideToggleTitle: '引导关'
+      guideToggleTitle: '引导'
     })
   },
 
@@ -479,19 +620,32 @@ Page({
       ? withHomeLocalTemplateAssets(poseTemplates[this.data.currentIndex])
       : poseTemplates[this.data.currentIndex]
 
-    cacheTemplatePrimaryGuide(currentTemplate, guideMode).then(async (cachedTemplate) => {
+    resolveTemplateForCamera(currentTemplate).then((resolvedTemplate) => (
+      cacheTemplatePrimaryGuide(resolvedTemplate, guideMode)
+    )).then(async (cachedTemplate) => {
       const guideModeState = getGuideModeState(cachedTemplate, guideMode)
       const nextTemplate = applyGuideMode(cachedTemplate, this.data.guideVisible, guideModeState.guideMode)
+
+      this.setData({
+        guideLoadFailed: false,
+        currentTemplate: nextTemplate,
+        guideDisplayImage: nextTemplate.guideImage,
+        ...guideModeState
+      })
+
       const guideImageInfo = await getImageInfo(nextTemplate.guideImage)
 
       this.setData({
         guideLoadFailed: false,
         currentTemplate: nextTemplate,
+        guideDisplayImage: nextTemplate.guideImage,
         ...getGuideLayoutState(
           guideImageInfo,
           this.data.guideOffsetX,
           this.data.guideOffsetY,
-          this.data.guideScale
+          this.data.guideScale,
+          this.data.guideRotateAngle,
+          this.data.cameraAspectRatio
         ),
         ...guideModeState
       }, () => {
@@ -508,6 +662,7 @@ Page({
     if (fallbackGuideImage && fallbackGuideImage !== currentGuideImage) {
       this.setData({
         guideLoadFailed: false,
+        guideDisplayImage: fallbackGuideImage,
         currentTemplate: {
           ...currentTemplate,
           guideImage: fallbackGuideImage
@@ -603,7 +758,7 @@ Page({
       )
 
       this.setData({
-        ...getGuideTransformState(guideOffsetX, guideOffsetY, guideScale, this.data.guideBoxRect)
+        ...getGuideTransformState(guideOffsetX, guideOffsetY, guideScale, this.data.guideBoxRect, this.data.guideRotateAngle)
       })
       return
     }
@@ -630,7 +785,7 @@ Page({
     )
 
     this.setData({
-      ...getGuideTransformState(guideOffsetX, guideOffsetY, this.data.guideScale, this.data.guideBoxRect)
+      ...getGuideTransformState(guideOffsetX, guideOffsetY, this.data.guideScale, this.data.guideBoxRect, this.data.guideRotateAngle)
     })
   },
 
@@ -664,7 +819,8 @@ Page({
         this.data.guideOffsetX,
         this.data.guideOffsetY,
         guideScale,
-        this.data.guideBoxRect
+        this.data.guideBoxRect,
+        this.data.guideRotateAngle
       )
     })
   },
@@ -712,6 +868,45 @@ Page({
     wx.setStorageSync(GUIDE_CONFIRM_STORAGE_KEY, keepGuideForConfirm)
     this.setData({
       keepGuideForConfirm
+    })
+  },
+
+  toggleGuideRotate() {
+    const guideRotateAngle = getNextGuideRotateAngle(this.data.guideRotateAngle)
+
+    wx.setStorageSync(GUIDE_ROTATE_STORAGE_KEY, guideRotateAngle)
+    this.setData({
+      ...getGuideTransformState(
+        this.data.guideOffsetX,
+        this.data.guideOffsetY,
+        this.data.guideScale,
+        this.data.guideBoxRect,
+        guideRotateAngle
+      )
+    })
+  },
+
+  async ensureGuideDisplayImage() {
+    return this.data.currentTemplate.guideImage || ''
+  },
+
+  async toggleCameraAspectRatio() {
+    const cameraAspectRatio = getNextCameraAspectRatio(this.data.cameraAspectRatio)
+    const guideImageInfo = await getImageInfo(this.data.currentTemplate.guideImage)
+
+    wx.setStorageSync(CAMERA_ASPECT_STORAGE_KEY, cameraAspectRatio)
+    this.setData({
+      cameraAspectRatio,
+      cameraAspectText: getCameraAspectText(cameraAspectRatio),
+      cameraStyle: getCameraStyle(cameraAspectRatio),
+      ...getGuideLayoutState(
+        guideImageInfo,
+        this.data.guideOffsetX,
+        this.data.guideOffsetY,
+        this.data.guideScale,
+        this.data.guideRotateAngle,
+        cameraAspectRatio
+      )
     })
   },
 
@@ -788,7 +983,7 @@ Page({
 
     this.setData({
       countdownSeconds,
-      countdownText: countdownSeconds > 0 ? `倒计时 ${countdownSeconds}s` : '倒计时 关'
+      countdownText: countdownSeconds > 0 ? `倒计时 ${countdownSeconds}s` : '倒计时'
     })
   },
 
@@ -834,29 +1029,28 @@ Page({
     this.countdownTimer = setTimeout(tick, 1000)
   },
 
-  loadGuideSettings(options = {}) {
-    const includeShootingTips = options.includeShootingTips !== false
+  loadGuideSettings() {
     const keepGuideForConfirm = Boolean(wx.getStorageSync(GUIDE_CONFIRM_STORAGE_KEY))
     const guideMode = getStoredGuideMode()
+    const guideRotateAngle = normalizeGuideRotateAngle(wx.getStorageSync(GUIDE_ROTATE_STORAGE_KEY))
+    const cameraAspectRatio = getStoredCameraAspectRatio()
     const guideSettings = {
       keepGuideForConfirm,
-      guideMode
-    }
-
-    if (includeShootingTips) {
-      guideSettings.shootingTipsEnabled = getStoredShootingTipsDefaultEnabled()
+      guideMode,
+      guideRotateAngle,
+      cameraAspectRatio,
+      cameraAspectText: getCameraAspectText(cameraAspectRatio),
+      guideBoxStyle: getGuideBoxStyle(
+        this.data.guideOffsetX,
+        this.data.guideOffsetY,
+        this.data.guideScale,
+        this.data.guideBoxRect,
+        guideRotateAngle
+      )
     }
 
     this.setData(guideSettings)
     return guideSettings
-  },
-
-  toggleShootingTips() {
-    const shootingTipsEnabled = !this.data.shootingTipsEnabled
-
-    this.setData({
-      shootingTipsEnabled
-    })
   },
 
   showGuideUsageTipOnce() {
@@ -1019,6 +1213,9 @@ Page({
     const previewGuideOffsetX = measuredGuideRect ? 0 : this.data.guideOffsetX
     const previewGuideOffsetY = measuredGuideRect ? 0 : this.data.guideOffsetY
     const previewGuideScale = measuredGuideRect ? 1 : this.data.guideScale
+    const previewGuideImage = shouldConfirmWithGuide
+      ? await this.ensureGuideDisplayImage()
+      : ''
 
     this.cameraContext.takePhoto({
       quality: 'high',
@@ -1033,19 +1230,21 @@ Page({
         }
         app.globalData.previewGuide = shouldConfirmWithGuide
           ? {
-              image: this.data.currentTemplate.guideImage,
+              image: previewGuideImage || this.data.currentTemplate.guideImage,
               style: getPreviewGuideStyle(
                 previewGuideOffsetX,
                 previewGuideOffsetY,
                 previewGuideScale,
                 this.data.guideMode,
-                previewGuideRect
+                previewGuideRect,
+                this.data.guideRotateAngle
               ),
               offsetX: previewGuideOffsetX,
               offsetY: previewGuideOffsetY,
               scale: previewGuideScale,
               rect: previewGuideRect,
               guideMode: this.data.guideMode,
+              guideRotateAngle: this.data.guideRotateAngle,
               needsConfirm: true
             }
           : null
