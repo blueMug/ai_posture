@@ -1,5 +1,5 @@
 const { poseTemplates, findPoseIndex } = require('../../utils/poses')
-const { queueCachePoseCategories, queueImagePreload } = require('../../utils/imageCache')
+const { cacheImage, queueCachePoseCategories, queueImagePreload } = require('../../utils/imageCache')
 const { cdnAssetUrl, homeLocalAssetUrl, HOME_LOCAL_ASSET_FOLDERS } = require('../../utils/assets')
 const { ensurePrivacyNotice } = require('../../utils/privacy')
 const {
@@ -98,6 +98,29 @@ Page({
       withShareTicket: true,
       menus: ['shareAppMessage']
     })
+
+    this.cacheTopicShareImage(topic)
+  },
+
+  cacheTopicShareImage(topic) {
+    if (!topic || !topic.id || !topic.shareImage) {
+      return
+    }
+
+    cacheImage(topic.shareImage).then((cachedShareImage) => {
+      if (
+        !cachedShareImage ||
+        cachedShareImage === topic.shareImage ||
+        !this.data.topic ||
+        this.data.topic.id !== topic.id
+      ) {
+        return
+      }
+
+      this.setData({
+        'topic.cachedShareImage': cachedShareImage
+      })
+    }).catch(() => {})
   },
 
   cacheTopicImages(topic) {
@@ -236,7 +259,7 @@ Page({
     return {
       title: topic.shareTitle || `${topic.title || '场景拍照'}，照着姿势拍`,
       path: `/pages/scene-topic/index?topicId=${topic.id || ''}`,
-      imageUrl: topic.shareImage || topic.coverImage || ''
+      imageUrl: topic.cachedShareImage || topic.coverImage || topic.shareImage || ''
     }
   }
 })
