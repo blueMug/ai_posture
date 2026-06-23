@@ -15,6 +15,7 @@ const {
   isPoseMatchedSearch,
   normalizeSearchText
 } = require('../../utils/poseSearch')
+const { buildGalleryShare } = require('../../utils/shareCopy')
 
 const GALLERY_TARGET_CATEGORY_KEY = 'galleryTargetCategoryId'
 const DEFAULT_PAGE_TOP_PX = 52
@@ -194,6 +195,11 @@ Page({
     })
     this.setPoseCategories(poseCategories, {
       hasSearchResult: true
+    })
+
+    wx.showShareMenu({
+      withShareTicket: true,
+      menus: ['shareAppMessage']
     })
   },
 
@@ -418,5 +424,9 @@ Page({
     }, () => {
       this.refreshPoseCategories()
     })
+  },
+
+  onShareAppMessage() {
+    return buildGalleryShare()
   }
 })

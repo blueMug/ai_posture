@@ -37,6 +37,19 @@
       <view class="image-note-text">{{detailGuide.imageText}}</view>
     </view>
 
+    <view wx:if="{{shareTask.visible}}" class="photographer-card">
+      <view class="photographer-copy">
+        <view class="photographer-kicker">{{shareTask.kicker}}</view>
+        <view class="photographer-title">{{shareTask.title}}</view>
+        <view class="photographer-desc">{{shareTask.desc}}</view>
+      </view>
+      <button
+        class="photographer-share-btn"
+        open-type="share"
+        data-share-type="photographer"
+      >{{shareTask.buttonText}}</button>
+    </view>
+
     <view wx:if="{{detailGuide && detailGuide.hasActionPoints}}" class="action-card">
       <view class="section-title">动作要点</view>
       <view class="action-list">
@@ -109,7 +122,7 @@
   ></image>
 
   <view class="bottom-panel safe-area-bottom">
-    <button class="share-btn" open-type="share">分享同款</button>
+    <button class="share-btn" open-type="share" data-share-type="pose">分享同款</button>
     <button class="favorite-btn {{isFavorite ? 'active' : ''}}" bindtap="toggleFavorite">
       {{isFavorite ? '已收藏' : '收藏'}}
     </button>

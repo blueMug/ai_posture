@@ -80,6 +80,6 @@
   <view wx:if="{{topic}}" class="share-card">
     <view class="share-title">适合发给一起拍照的人</view>
     <view class="share-desc">{{topic.shareTitle}}</view>
-    <button class="share-btn" open-type="share">分享这个场景</button>
+    <button class="share-btn" open-type="share">分享拍照方案</button>
   </view>
 </view>

@@ -1,6 +1,10 @@
 const app = getApp()
 const { cacheImage } = require('../../utils/imageCache')
 const { ensurePrivacyNotice } = require('../../utils/privacy')
+const {
+  buildPoseShare,
+  buildResultShareCard
+} = require('../../utils/shareCopy')
 
 const GUIDE_MODE_YELLOW_PHOTO = 'yellow-photo'
 const GUIDE_ROTATE_STEP = 90
@@ -199,6 +203,11 @@ Page({
       shareCard
     })
 
+    wx.showShareMenu({
+      withShareTicket: true,
+      menus: ['shareAppMessage']
+    })
+
     this.cachePoseShareImage(previewPose)
 
     if (previewGuide.needsConfirm && previewGuide.image) {
@@ -259,36 +268,7 @@ Page({
   },
 
   buildShareCard(previewPose = {}, previewShareSource = {}) {
-    const poseName = previewPose.name || ''
-    const sceneTitle = previewShareSource.sceneTitle || ''
-    const planTitle = previewShareSource.title || poseName
-    const topicId = previewShareSource.topicId || ''
-
-    if (topicId) {
-      return {
-        visible: true,
-        kicker: sceneTitle ? `${sceneTitle}拍法` : '场景拍法',
-        title: planTitle ? `我刚照着「${planTitle}」拍了一张` : '我刚照着这个场景拍法拍了一张',
-        desc: previewShareSource.reason || '不知道怎么拍时，直接选场景照着拍。',
-        buttonText: '分享这个拍法',
-        path: `/pages/scene-topic/index?topicId=${topicId}`
-      }
-    }
-
-    if (previewPose.id) {
-      return {
-        visible: true,
-        kicker: '姿势模板',
-        title: poseName ? `我刚照着「${poseName}」拍了一张` : '我刚照着这个姿势拍了一张',
-        desc: '朋友不知道怎么摆姿势时，可以直接照着这个模板拍。',
-        buttonText: '分享这个姿势',
-        path: `/pages/pose-detail/index?poseId=${previewPose.id}`
-      }
-    }
-
-    return {
-      visible: false
-    }
+    return buildResultShareCard(previewPose, previewShareSource)
   },
 
   retake() {
@@ -459,13 +439,18 @@ Page({
     }
 
     return {
-      title: poseName
-        ? `照着这个姿势拍｜${poseName}`
-        : '照着这个姿势拍｜拍照姿势模板',
+      ...buildPoseShare({
+        id: poseId,
+        name: poseName,
+        shareImage: this.data.cachedPoseShareImage || this.data.poseShareImage || this.data.photoPath || ''
+      }, {
+        poseId,
+        role: 'result',
+        fallbackImage: this.data.photoPath
+      }),
       path: poseId
         ? `/pages/pose-detail/index?poseId=${poseId}`
         : '/pages/home/index',
-      imageUrl: this.data.cachedPoseShareImage || this.data.poseShareImage || this.data.photoPath || ''
     }
   }
 })

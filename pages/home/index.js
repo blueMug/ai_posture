@@ -21,6 +21,7 @@ const {
   normalizeSearchText
 } = require('../../utils/poseSearch')
 const { sceneTopics } = require('../../utils/sceneTopics')
+const { buildHomeShare } = require('../../utils/shareCopy')
 
 const GALLERY_TARGET_CATEGORY_KEY = 'galleryTargetCategoryId'
 const RECOMMEND_LIMIT_PER_CATEGORY = 4
@@ -745,6 +746,11 @@ Page({
       poseCategories: [],
       hasSearchResult: true
     })
+
+    wx.showShareMenu({
+      withShareTicket: true,
+      menus: ['shareAppMessage']
+    })
   },
 
   onShow() {
@@ -1070,5 +1076,9 @@ Page({
     wx.switchTab({
       url: '/pages/pose-gallery/index'
     })
+  },
+
+  onShareAppMessage() {
+    return buildHomeShare()
   }
 })

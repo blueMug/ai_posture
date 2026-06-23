@@ -7,7 +7,7 @@ const sceneTopics = [
     shortTitle: '咖啡店',
     painPoint: '坐下后手不知道放哪，拍出来像游客照。',
     promise: '用杯子、窗边和门口动作，快速拍出生活感。',
-    shareTitle: '咖啡店不知道怎么拍？照着这 3 个姿势就行',
+    shareTitle: '咖啡店拍照作业：照着这 3 个姿势，别再只拍大头照',
     categoryId: 'props-action',
     coverPoseId: 'pair-custom84-r01-g01',
     morePoseIds: [
@@ -57,7 +57,7 @@ const sceneTopics = [
     shortTitle: '海边',
     painPoint: '海边景很大，但人一站进去就不知道怎么摆。',
     promise: '先用背影和回眸建立人景关系，再拍全身动作。',
-    shareTitle: '海边不会摆姿势？这 3 个旅行拍法很稳',
+    shareTitle: '海边想拍出片？把这 3 个姿势发给一起拍照的人',
     categoryId: 'travel-back',
     coverPoseId: 'pair-custom17-r01-g01',
     morePoseIds: [
@@ -110,7 +110,7 @@ const sceneTopics = [
     shortTitle: '街边',
     painPoint: '路口人多背景乱，站着拍很容易像随手照。',
     promise: '用行走、道具和通勤动作，把杂乱街景变成街拍感。',
-    shareTitle: '街边路口怎么拍？这 3 个动作不尴尬',
+    shareTitle: '街边路口不尴尬拍法，拍照搭子照着这 3 个动作拍',
     categoryId: 'street-commute',
     coverPoseId: 'pair-custom49-r01-g01',
     morePoseIds: [
@@ -160,7 +160,7 @@ const sceneTopics = [
     shortTitle: '草地',
     painPoint: '草地场景容易只会站着笑，画面缺少动作。',
     promise: '用坐姿、草帽和野餐动作，把草地拍出松弛感。',
-    shareTitle: '公园草地拍照姿势，照着这 3 个动作更自然',
+    shareTitle: '公园草地拍照姿势，照着这 3 个动作更自然显松弛',
     categoryId: 'sitting-life',
     coverPoseId: 'pair-custom47-r01-g01',
     morePoseIds: [
@@ -213,7 +213,7 @@ const sceneTopics = [
     shortTitle: '景点打卡',
     painPoint: '到了景点只会站着比耶，背景好看但人很僵。',
     promise: '用走路、回眸和展开身体的动作，让人和景都好看。',
-    shareTitle: '到了景点不知道怎么拍？这 3 个姿势直接照着拍',
+    shareTitle: '到了景点不知道怎么拍？先把这 3 个姿势发给搭子',
     categoryId: 'travel-back',
     coverPoseId: 'pair-custom104-r01-g01',
     morePoseIds: [
@@ -270,7 +270,7 @@ const sceneTopics = [
     shortTitle: '城市建筑',
     painPoint: '楼梯、天台和建筑很好看，但人站进去容易像证件照。',
     promise: '用扶手、倚栏和靠墙动作，把建筑线条拍出高级感。',
-    shareTitle: '城市建筑不知道怎么拍？这 3 个姿势更出片',
+    shareTitle: '城市建筑这样拍更出片，照着这 3 个姿势拍全身照',
     categoryId: 'art-city',
     coverPoseId: 'pair-custom101-r01-g01',
     morePoseIds: [

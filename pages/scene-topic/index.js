@@ -11,6 +11,7 @@ const {
   SCENE_TOPIC_DETAIL_KEY,
   getSceneTopic
 } = require('../../utils/sceneTopics')
+const { buildSceneShare } = require('../../utils/shareCopy')
 
 const DEFAULT_PAGE_TOP_PX = 52
 
@@ -289,12 +290,6 @@ Page({
   },
 
   onShareAppMessage() {
-    const topic = this.data.topic || {}
-
-    return {
-      title: topic.shareTitle || `${topic.title || '场景拍照'}，照着姿势拍`,
-      path: `/pages/scene-topic/index?topicId=${topic.id || ''}`,
-      imageUrl: topic.cachedShareImage || topic.shareImage || topic.coverImage || ''
-    }
+    return buildSceneShare(this.data.topic || {})
   }
 })

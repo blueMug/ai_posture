@@ -15,6 +15,11 @@ const {
   getCachedFavoritePoseAssets,
   unpinFavoritePoseAssets
 } = require('../../utils/favoriteAssetCache')
+const {
+  buildPhotographerTask,
+  buildPoseShare,
+  buildSceneShare
+} = require('../../utils/shareCopy')
 
 const getPose = (poseId) => getPoseById(poseId)
 const MAX_ACTION_POINTS = 3
@@ -210,6 +215,9 @@ Page({
     detailGuide: null,
     detailExpanded: false,
     sourceTopic: null,
+    shareTask: {
+      visible: false
+    },
     isFavorite: false
   },
 
@@ -245,6 +253,7 @@ Page({
       detailGuide,
       detailExpanded: false,
       sourceTopic,
+      shareTask: buildPhotographerTask(poseWithFavorite),
       isFavorite: poseWithFavorite.isFavorite
     })
 
@@ -271,7 +280,8 @@ Page({
 
     this.setData({
       pose: poseWithFavorite,
-      isFavorite: poseWithFavorite.isFavorite
+      isFavorite: poseWithFavorite.isFavorite,
+      shareTask: buildPhotographerTask(poseWithFavorite)
     })
 
     if (poseWithFavorite.isFavorite) {
@@ -552,25 +562,40 @@ Page({
     cacheImage(retryImage).catch(() => {})
   },
 
-  onShareAppMessage() {
+  onShareAppMessage(options = {}) {
     const pose = this.data.pose || {}
     const poseId = this.data.poseId
     const sourceTopic = this.data.sourceTopic
+    const shareType = options.target && options.target.dataset
+      ? options.target.dataset.shareType
+      : ''
+
+    if (shareType === 'photographer') {
+      return buildPoseShare(pose, {
+        poseId,
+        role: 'photographer',
+        path: `/pages/camera/index?poseId=${poseId}`
+      })
+    }
+
+    if (shareType === 'pose') {
+      return buildPoseShare(pose, {
+        poseId,
+        role: 'detail'
+      })
+    }
 
     if (sourceTopic && sourceTopic.id) {
-      return {
-        title: sourceTopic.shareTitle || `${sourceTopic.title}，照着姿势拍`,
-        path: `/pages/scene-topic/index?topicId=${sourceTopic.id}`,
-        imageUrl: pose.shareImage || pose.thumbnailImage || pose.detailImage || pose.guideImage || ''
-      }
+      return buildSceneShare({
+        ...sourceTopic,
+        shareImage: pose.shareImage || sourceTopic.shareImage,
+        coverImage: sourceTopic.coverImage || pose.thumbnailImage || pose.detailImage || pose.guideImage
+      })
     }
 
-    return {
-      title: pose.name
-        ? `照着这个姿势拍｜${pose.name}`
-        : '照着这个姿势拍｜拍照姿势模板',
-      path: `/pages/pose-detail/index?poseId=${poseId}`,
-      imageUrl: pose.shareImage || pose.thumbnailImage || pose.detailImage || pose.guideImage || ''
-    }
+    return buildPoseShare(pose, {
+      poseId,
+      role: 'detail'
+    })
   }
 })
