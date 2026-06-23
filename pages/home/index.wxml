@@ -18,10 +18,10 @@
   </view>
 
   <view wx:if="{{!searchKeyword && sceneTopics.length}}" class="topic-section">
-    <view class="topic-hero-card">
+    <view class="topic-section-head">
       <view class="topic-kicker">场景出片专题</view>
       <view class="topic-title">到了现场，不知道怎么拍？</view>
-      <view class="topic-subtitle">先选具体场景，再照着 3 个拍法拍。</view>
+      <view class="topic-subtitle">下面每张卡片都是一个具体场景，点进去看 3 个拍法。</view>
     </view>
 
     <view class="topic-grid">
@@ -58,6 +58,8 @@
         </view>
       </view>
     </view>
+
+    <view class="topic-update-tip">更多场景持续更新中</view>
   </view>
 
   <view wx:if="{{!hasSearchResult}}" class="empty-state">
@@ -128,11 +130,48 @@
   </view>
 
   <view wx:if="{{!searchKeyword && hasSearchResult}}" class="more-head">
-    <view class="section-title">更多拍照灵感</view>
-    <view class="section-subtitle">按场景挑一张，进入相机照着轮廓拍。</view>
+    <view class="more-kicker">按类型继续挑</view>
+    <view class="more-desc">专题之外，也可以按姿势类型继续找。</view>
+  </view>
+
+  <view wx:if="{{!searchKeyword && typeEntries.length}}" class="type-entry-grid">
+    <view
+      wx:for="{{typeEntries}}"
+      wx:key="id"
+      wx:for-item="entry"
+      class="type-entry-card"
+      data-category-id="{{entry.id}}"
+      bindtap="openCategory"
+    >
+      <view class="type-entry-copy">
+        <view class="type-entry-name">{{entry.name}}</view>
+        <view class="type-entry-desc">{{entry.subtitle}}</view>
+      </view>
+      <view class="type-entry-image-wrap">
+        <image
+          wx:if="{{!retryingPoseImages[entry.id]}}"
+          class="type-entry-image"
+          src="{{entry.coverImage}}"
+          mode="aspectFit"
+          data-pose-id="{{entry.id}}"
+          bindload="onPoseImageLoad"
+          binderror="onPoseImageError"
+        ></image>
+        <view
+          wx:if="{{!loadedPoseImages[entry.id] && !failedPoseImages[entry.id] && !retryingPoseImages[entry.id]}}"
+          class="home-image-loading compact"
+        >
+          <view class="home-loading-spinner"></view>
+        </view>
+        <view wx:if="{{failedPoseImages[entry.id]}}" class="mini-image-error type-entry-image-error">
+          图片加载失败
+        </view>
+      </view>
+    </view>
   </view>
 
   <view
+    wx:if="{{searchKeyword}}"
     wx:for="{{poseCategories}}"
     wx:key="id"
     wx:for-item="category"

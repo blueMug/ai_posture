@@ -1,7 +1,7 @@
 <view class="page" style="{{pageTopStyle}}">
-  <view class="top-bar">
+  <view class="top-bar" style="{{topBarStyle}}">
     <view class="placeholder"></view>
-    <view class="title">姿势分类</view>
+    <view class="title">姿势大全</view>
     <view class="placeholder"></view>
   </view>
 
@@ -88,17 +88,10 @@
           class="pose-photo"
           src="{{pose.galleryDisplayImage}}"
           mode="aspectFill"
+          lazy-load="{{true}}"
           data-pose-id="{{pose.id}}"
-          bindload="onPoseImageLoad"
           binderror="onPoseImageError"
         ></image>
-        <view
-          wx:if="{{loadingPoseImages[pose.id] && !failedPoseImages[pose.id]}}"
-          class="image-loading"
-        >
-          <view class="loading-spinner"></view>
-          <view class="loading-text">图片加载中</view>
-        </view>
         <view
           wx:if="{{pose.isFavorite}}"
           class="favorite-chip active"

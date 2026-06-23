@@ -1,17 +1,19 @@
 const app = getApp()
 const { poseTemplates, findPoseIndex } = require('../../utils/poses')
 const { cacheImageFields } = require('../../utils/imageCache')
-const { cdnAssetUrl, homeLocalAssetUrl } = require('../../utils/assets')
+const { cdnAssetUrl, homeLocalAssetUrl, JSDELIVR_ASSET_BASE } = require('../../utils/assets')
 const { isPoseFavorite, recordPoseUsage } = require('../../utils/userData')
 const { ensurePrivacyNotice, hasAcceptedPrivacyNotice } = require('../../utils/privacy')
 const { cacheFavoritePoseAssets } = require('../../utils/favoriteAssetCache')
+const { SCENE_TOPIC_DETAIL_KEY } = require('../../utils/sceneTopics')
+const { getGuideImageSize } = require('../../utils/guideImageSizes')
 
 const GUIDE_CONFIRM_STORAGE_KEY = 'keepGuideForConfirm'
 const GUIDE_MODE_STORAGE_KEY = 'cameraGuideMode'
 const GUIDE_ROTATE_STORAGE_KEY = 'cameraGuideRotate90'
 const CAMERA_ASPECT_STORAGE_KEY = 'cameraAspectRatio'
 const GALLERY_TARGET_CATEGORY_KEY = 'galleryTargetCategoryId'
-const CACHE_TEMPLATE_SUPPORT_IMAGE_FIELDS = ['thumbnailImage', 'modelImage']
+const CACHE_TEMPLATE_SUPPORT_IMAGE_FIELDS = ['thumbnailImage']
 const POSE_GALLERY_ROUTE = 'pages/pose-gallery/index'
 const POSE_GALLERY_URL = `/${POSE_GALLERY_ROUTE}`
 const CAMERA_MIN_ZOOM = 1
@@ -45,6 +47,7 @@ const GUIDE_ROTATE_FULL_DEGREES = 360
 
 let cameraGuideTipShownInSession = false
 
+const isRemoteImage = (src = '') => /^https?:\/\//.test(src)
 const getImageInfo = (src) => new Promise((resolve) => {
   if (!src) {
     resolve(null)
@@ -66,7 +69,7 @@ const hideTemplateGuide = (template) => ({
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max)
 const isModelPose = (template) => Boolean(template && template.modelImage)
-const canUseModelPhotoGuide = (template) => Boolean(isModelPose(template) && template.modelImage)
+const canUseModelPhotoGuide = (template) => Boolean(isModelPose(template) && (template.thumbnailImage || template.modelImage))
 const isSelfiePose = (template) => {
   if (!template) {
     return false
@@ -80,11 +83,14 @@ const isSelfiePose = (template) => {
   ].some((text) => String(text || '').includes('自拍'))
 }
 const getDefaultDevicePosition = (template) => (isSelfiePose(template) ? 'front' : 'back')
-const getStoredGuideMode = () => (
-  wx.getStorageSync(GUIDE_MODE_STORAGE_KEY) === GUIDE_MODE_PHOTO
-    ? GUIDE_MODE_PHOTO
-    : GUIDE_MODE_OUTLINE
-)
+const normalizeStoredGuideMode = (guideMode) => {
+  if (guideMode === GUIDE_MODE_PHOTO || guideMode === 'yellow-photo') {
+    return GUIDE_MODE_PHOTO
+  }
+
+  return GUIDE_MODE_OUTLINE
+}
+const getStoredGuideMode = () => normalizeStoredGuideMode(wx.getStorageSync(GUIDE_MODE_STORAGE_KEY))
 const normalizeCameraAspectRatio = (aspectRatio) => (
   CAMERA_ASPECT_OPTIONS.includes(aspectRatio)
     ? aspectRatio
@@ -98,15 +104,91 @@ const getNextCameraAspectRatio = (aspectRatio) => (
 )
 const getCameraAspectText = (aspectRatio) => `比例 ${normalizeCameraAspectRatio(aspectRatio)}`
 const getCameraHeightRatio = (aspectRatio) => CAMERA_ASPECT_HEIGHT_RATIOS[normalizeCameraAspectRatio(aspectRatio)]
-const normalizeGuideMode = (template, guideMode) => (
-  guideMode === GUIDE_MODE_PHOTO && canUseModelPhotoGuide(template)
-    ? GUIDE_MODE_PHOTO
-    : GUIDE_MODE_OUTLINE
+const isGuidePhotoMode = (guideMode) => normalizeStoredGuideMode(guideMode) === GUIDE_MODE_PHOTO
+const isGuideOutlineMode = (guideMode) => !isGuidePhotoMode(guideMode)
+const normalizeGuideMode = (template, guideMode) => {
+  const normalizedMode = normalizeStoredGuideMode(guideMode)
+
+  return normalizedMode === GUIDE_MODE_PHOTO && !canUseModelPhotoGuide(template)
+    ? GUIDE_MODE_OUTLINE
+    : normalizedMode
+}
+const getNextGuideToggleState = (template, guideVisible, guideMode) => {
+  const currentMode = normalizeGuideMode(template, guideMode)
+
+  if (!guideVisible) {
+    return {
+      visible: true,
+      mode: GUIDE_MODE_OUTLINE
+    }
+  }
+
+  if (currentMode === GUIDE_MODE_OUTLINE && canUseModelPhotoGuide(template)) {
+    return {
+      visible: true,
+      mode: GUIDE_MODE_PHOTO
+    }
+  }
+
+  return {
+    visible: false,
+    mode: currentMode
+  }
+}
+const getLocalStaticAssetPath = (src = '') => {
+  if (src.startsWith('/static/')) {
+    return src
+  }
+
+  const cdnStaticPrefix = `${JSDELIVR_ASSET_BASE}/static/`
+
+  return src.startsWith(cdnStaticPrefix)
+    ? `/static/${src.slice(cdnStaticPrefix.length)}`
+    : ''
+}
+const toGalleryThumbnailImage = (src = '') => {
+  const localStaticPath = getLocalStaticAssetPath(src) || src
+  const galleryPath = localStaticPath
+    .replace('/static/pose_pairs/', '/static/gallery_thumbs/')
+    .replace('/static/pose_thumbs/', '/static/gallery_thumbs/')
+    .replace('/static/recommend_thumbs/', '/static/gallery_thumbs/')
+
+  if (/_demo\.jpg$/.test(galleryPath)) {
+    return galleryPath.replace(/_demo\.jpg$/, '_gallery_thumb.jpg')
+  }
+
+  if (/_thumb\.jpg$/.test(galleryPath)) {
+    return galleryPath.replace(/_thumb\.jpg$/, '_gallery_thumb.jpg')
+  }
+
+  return galleryPath
+}
+const getGalleryPhotoImage = (template = {}) => {
+  const galleryImage = toGalleryThumbnailImage(template.modelImage || template.detailImage || template.thumbnailImage || '')
+
+  return galleryImage.startsWith('/static/gallery_thumbs/')
+    ? cdnAssetUrl(galleryImage)
+    : ''
+}
+const getGuidePhotoImage = (template = {}) => (
+  getGalleryPhotoImage(template) ||
+  homeLocalAssetUrl(template.thumbnailImage || template.modelImage) ||
+  template.thumbnailImage ||
+  template.modelImage ||
+  ''
 )
+const getCameraGuideImage = (src = '') => {
+  const localStaticPath = getLocalStaticAssetPath(src)
+
+  return localStaticPath || src
+}
 const getActiveGuideImage = (template, guideMode) => (
-  normalizeGuideMode(template, guideMode) === GUIDE_MODE_PHOTO
-    ? template.modelImage
-    : template.guideImage
+  isGuidePhotoMode(normalizeGuideMode(template, guideMode))
+    ? getGuidePhotoImage(template)
+    : getCameraGuideImage(template.guideImage)
+)
+const getGuideLayoutImageInfo = (src, imageInfo = null) => (
+  imageInfo || getGuideImageSize(src) || null
 )
 const normalizeGuideRotateAngle = (angle) => {
   if (angle === true) {
@@ -136,14 +218,16 @@ const getTouchDistance = (touches) => {
 }
 const getGuideModeState = (template, guideMode) => {
   const nextGuideMode = normalizeGuideMode(template, guideMode)
+  const isPhotoMode = isGuidePhotoMode(nextGuideMode)
 
   return {
     guideMode: nextGuideMode,
-    guideModeText: nextGuideMode === GUIDE_MODE_PHOTO ? '半透明照片' : '轮廓',
-    guideToggleTitle: nextGuideMode === GUIDE_MODE_PHOTO ? '显示半透明照片' : '显示轮廓',
-    guideImageClass: nextGuideMode === GUIDE_MODE_PHOTO ? 'photo-guide-image' : 'outline-guide-image',
+    guideModeText: isPhotoMode ? '照片' : '轮廓',
+    guideToggleTitle: isPhotoMode ? '照片' : '轮廓',
+    guideImageClass: isPhotoMode ? 'photo-guide-image' : 'outline-guide-image',
+    guideIsOutline: isGuideOutlineMode(nextGuideMode),
     showModelToggle: Boolean(isModelPose(template) && template.thumbnailImage),
-    modelToggleImage: isModelPose(template) ? template.thumbnailImage : ''
+    modelToggleImage: isModelPose(template) ? getGuidePhotoImage(template) : ''
   }
 }
 const applyGuideMode = (template, guideVisible, guideMode) => {
@@ -256,6 +340,22 @@ const getPoseStageStyle = (aspectRatio = getStoredCameraAspectRatio()) => {
 
   return `left: ${stageLeft}px; top: ${stageTop}px; width: ${stageWidth}px; height: ${stageHeight}px`
 }
+const getPreviewShareSource = (poseId) => {
+  const detail = wx.getStorageSync(SCENE_TOPIC_DETAIL_KEY)
+
+  if (!detail || detail.poseId !== poseId) {
+    return null
+  }
+
+  return {
+    poseId,
+    topicId: detail.topicId || '',
+    sceneTitle: detail.sceneTitle || '',
+    title: detail.title || '',
+    badge: detail.badge || '',
+    reason: detail.reason || ''
+  }
+}
 const getGuideTransformState = (offsetX, offsetY, scale, guideBoxRect = null, guideRotateAngle = 0) => {
   const normalizedAngle = normalizeGuideRotateAngle(guideRotateAngle)
 
@@ -345,7 +445,7 @@ const getPreviewGuideStyle = (offsetX, offsetY, guideScale, guideMode, rect = ge
     `top: ${rect.top}px`,
     `width: ${rect.width}px`,
     `height: ${rect.height}px`,
-    `opacity: ${guideMode === GUIDE_MODE_PHOTO ? 0.42 : 0.92}`,
+    `opacity: ${isGuidePhotoMode(guideMode) ? 0.42 : 0.92}`,
     'transform-origin: center center',
     `transform: ${getGuideTransformStyle(offsetX, offsetY, guideScale, guideRotateAngle)}`
   ].join('; ')
@@ -359,6 +459,7 @@ const withHomeLocalTemplateAssets = (template) => ({
   ...template,
   guideImage: homeLocalAssetUrl(template.guideImage),
   thumbnailImage: homeLocalAssetUrl(template.thumbnailImage),
+  shareImage: homeLocalAssetUrl(template.shareImage),
   modelImage: template.modelImage,
   detailImage: template.detailImage
 })
@@ -369,27 +470,82 @@ const cacheTemplatePrimaryGuide = (template, guideMode) => (
   })
 )
 const cacheTemplateSupportImages = (template) => {
-  cacheImageFields(template, CACHE_TEMPLATE_SUPPORT_IMAGE_FIELDS).catch(() => {})
+  const guidePhotoImage = getGuidePhotoImage(template)
+
+  if (!isRemoteImage(guidePhotoImage)) {
+    return
+  }
+
+  cacheImageFields({
+    ...template,
+    thumbnailImage: guidePhotoImage
+  }, CACHE_TEMPLATE_SUPPORT_IMAGE_FIELDS).catch(() => {})
 }
 const resolveTemplateForCamera = (template) => (
   isPoseFavorite(template.id)
     ? cacheFavoritePoseAssets(template)
     : Promise.resolve(template)
 )
-const getGuideFallbackImage = (guideImage) => {
+const getGuideFallbackImages = (guideImage) => {
   if (!guideImage) {
-    return ''
+    return []
   }
 
-  if (guideImage.startsWith('/static/')) {
-    return cdnAssetUrl(guideImage)
+  const candidates = []
+  const addCandidate = (src) => {
+    if (src && src !== guideImage && !candidates.includes(src)) {
+      candidates.push(src)
+    }
+  }
+  const localStaticPath = getLocalStaticAssetPath(guideImage)
+
+  if (localStaticPath) {
+    if (localStaticPath.includes('/static/gallery_thumbs/')) {
+      addCandidate(cdnAssetUrl(localStaticPath
+        .replace('/static/gallery_thumbs/', '/static/pose_thumbs/')
+        .replace(/_gallery_thumb\.jpg$/, '_thumb.jpg')))
+      addCandidate(cdnAssetUrl(localStaticPath
+        .replace('/static/gallery_thumbs/', '/static/pose_pairs/')
+        .replace(/_gallery_thumb\.jpg$/, '_demo.jpg')))
+    }
+
+    if (localStaticPath.includes('/static/pose_guides/')) {
+      addCandidate(localStaticPath.replace('/static/pose_guides/', '/static/pose_pairs/'))
+    }
+
+    if (localStaticPath.includes('/static/pose_pairs/')) {
+      addCandidate(localStaticPath.replace('/static/pose_pairs/', '/static/pose_guides/'))
+    }
+
+    addCandidate(cdnAssetUrl(localStaticPath))
+
+    if (localStaticPath.includes('/static/pose_guides/')) {
+      addCandidate(cdnAssetUrl(localStaticPath.replace('/static/pose_guides/', '/static/pose_pairs/')))
+    }
+
+    if (localStaticPath.includes('/static/pose_pairs/')) {
+      addCandidate(cdnAssetUrl(localStaticPath.replace('/static/pose_pairs/', '/static/pose_guides/')))
+    }
   }
 
   if (guideImage.includes('/static/pose_guides/')) {
-    return guideImage.replace('/static/pose_guides/', '/static/pose_pairs/')
+    addCandidate(guideImage.replace('/static/pose_guides/', '/static/pose_pairs/'))
   }
 
-  return ''
+  if (guideImage.includes('/static/pose_pairs/')) {
+    addCandidate(guideImage.replace('/static/pose_pairs/', '/static/pose_guides/'))
+  }
+
+  if (guideImage.includes('/static/gallery_thumbs/')) {
+    addCandidate(guideImage
+      .replace('/static/gallery_thumbs/', '/static/pose_thumbs/')
+      .replace(/_gallery_thumb\.jpg$/, '_thumb.jpg'))
+    addCandidate(guideImage
+      .replace('/static/gallery_thumbs/', '/static/pose_pairs/')
+      .replace(/_gallery_thumb\.jpg$/, '_demo.jpg'))
+  }
+
+  return candidates
 }
 
 Page({
@@ -404,7 +560,7 @@ Page({
     cameraZoom: CAMERA_MIN_ZOOM,
     cameraMaxZoom: CAMERA_DEFAULT_MAX_ZOOM,
     cameraZoomText: '1.0x',
-    guideToggleTitle: '显示轮廓',
+    guideToggleTitle: '轮廓',
     guideLoadFailed: false,
     keepGuideForConfirm: false,
     settingsPanelOpen: false,
@@ -412,7 +568,12 @@ Page({
     guideMode: GUIDE_MODE_OUTLINE,
     guideModeText: '轮廓',
     guideImageClass: 'outline-guide-image',
+    guideIsOutline: true,
     guideDisplayImage: '',
+    guideImageRenderVisible: true,
+    guideImageLoading: false,
+    guideLoadRetryVisible: false,
+    guideLoadToken: 0,
     showModelToggle: false,
     modelToggleImage: '',
     guideOffsetX: 0,
@@ -467,20 +628,13 @@ Page({
   },
 
   onShow() {
-    const nextGuideMode = getStoredGuideMode()
-    const guideModeChanged = nextGuideMode !== this.data.guideMode
     const nextCameraAspectRatio = getStoredCameraAspectRatio()
     const cameraAspectChanged = nextCameraAspectRatio !== this.data.cameraAspectRatio
 
-    const guideSettings = this.loadGuideSettings()
+    const guideSettings = this.loadGuideSettings({ includeGuideMode: !this.hasTemplateLoaded })
     this.setData({
       cameraStyle: getCameraStyle(guideSettings.cameraAspectRatio)
     })
-
-    if (guideModeChanged && this.hasTemplateLoaded) {
-      this.refreshCurrentGuide(nextGuideMode)
-      return
-    }
 
     if (cameraAspectChanged && this.hasTemplateLoaded) {
       this.refreshCurrentGuide()
@@ -489,12 +643,85 @@ Page({
 
   onUnload() {
     this.clearCountdownTimer()
+    this.stopGuideLoadingTimer()
     this.clearGuideUsageTipTimer()
   },
 
   onHide() {
     this.clearCountdownTimer()
+    this.stopGuideLoadingTimer()
     this.clearGuideUsageTipTimer()
+  },
+
+  stopGuideLoadingTimer() {
+    if (this.guideLoadingTimer) {
+      clearTimeout(this.guideLoadingTimer)
+      this.guideLoadingTimer = null
+    }
+  },
+
+  nextGuideLoadToken() {
+    this.guideLoadTokenCounter = (this.guideLoadTokenCounter || 0) + 1
+    return this.guideLoadTokenCounter
+  },
+
+  getGuideLoadEventData(event) {
+    const dataset = event && event.currentTarget && event.currentTarget.dataset
+      ? event.currentTarget.dataset
+      : {}
+
+    return {
+      src: dataset.src || ''
+    }
+  },
+
+  isCurrentGuideLoadEvent(event) {
+    const { src } = this.getGuideLoadEventData(event)
+    const currentGuideImage = this.data.guideDisplayImage || (this.data.currentTemplate && this.data.currentTemplate.guideImage) || ''
+
+    return !(src && currentGuideImage && src !== currentGuideImage)
+  },
+
+  startGuideLoading(guideImage, guideMode = this.data.guideMode, forceVisible = false) {
+    this.stopGuideLoadingTimer()
+
+    if (!guideImage || (!forceVisible && !this.data.guideVisible)) {
+      this.setData({
+        guideImageLoading: false,
+        guideLoadRetryVisible: false,
+        guideLoadToken: this.nextGuideLoadToken(),
+        guideImageRenderVisible: false
+      })
+      return
+    }
+
+    const guideLoadToken = this.nextGuideLoadToken()
+
+    this.setData({
+      guideImageLoading: true,
+      guideLoadRetryVisible: false,
+      guideLoadFailed: false,
+      guideImageRenderVisible: true,
+      guideLoadToken
+    })
+  },
+
+  finishGuideLoading(guideLoadToken = this.data.guideLoadToken) {
+    if (this.data.guideLoadToken !== guideLoadToken) {
+      return
+    }
+
+    this.stopGuideLoadingTimer()
+
+    if (!this.data.guideImageLoading && !this.data.guideLoadFailed) {
+      return
+    }
+
+    this.setData({
+      guideImageLoading: false,
+      guideLoadRetryVisible: false,
+      guideLoadFailed: false
+    })
   },
 
   setTemplate(index, guideMode = this.data.guideMode) {
@@ -523,8 +750,18 @@ Page({
         currentTemplate,
         guideDisplayImage: currentTemplate.guideImage,
         guideLoadFailed: false,
+        ...getGuideLayoutState(
+          getGuideLayoutImageInfo(currentTemplate.guideImage),
+          0,
+          0,
+          1,
+          this.data.guideRotateAngle,
+          this.data.cameraAspectRatio
+        ),
         ...guideModeState
       })
+      this.guideFallbackTriedImages = {}
+      this.startGuideLoading(currentTemplate.guideImage, guideModeState.guideMode)
 
       const guideImageInfo = await getImageInfo(currentTemplate.guideImage)
 
@@ -532,13 +769,24 @@ Page({
         return
       }
 
+      const latestTemplate = this.data.currentTemplate && this.data.currentTemplate.id === currentTemplate.id
+        ? this.data.currentTemplate
+        : currentTemplate
+
       this.setData({
         currentIndex: nextIndex,
         currentIsSelfie: isSelfiePose(cachedTemplate),
         guideLoadFailed: false,
-        currentTemplate,
-        guideDisplayImage: currentTemplate.guideImage,
-        ...getGuideLayoutState(guideImageInfo, 0, 0, 1, this.data.guideRotateAngle, this.data.cameraAspectRatio),
+        currentTemplate: latestTemplate,
+        guideDisplayImage: latestTemplate.guideImage,
+        ...getGuideLayoutState(
+          getGuideLayoutImageInfo(latestTemplate.guideImage, guideImageInfo),
+          0,
+          0,
+          1,
+          this.data.guideRotateAngle,
+          this.data.cameraAspectRatio
+        ),
         ...guideModeState
       }, () => {
         this.hasTemplateLoaded = true
@@ -551,16 +799,13 @@ Page({
     const currentTemplate = this.data.homeLocalAssets
       ? withHomeLocalTemplateAssets(poseTemplates[this.data.currentIndex])
       : poseTemplates[this.data.currentIndex]
-    const canUsePhoto = canUseModelPhotoGuide(currentTemplate)
-    const nextVisible = !this.data.guideVisible ||
-      (this.data.guideMode === GUIDE_MODE_OUTLINE && canUsePhoto)
-    const nextGuideMode = !this.data.guideVisible
-      ? GUIDE_MODE_OUTLINE
-      : this.data.guideMode === GUIDE_MODE_OUTLINE && canUsePhoto
-        ? GUIDE_MODE_PHOTO
-        : GUIDE_MODE_OUTLINE
-
-    wx.setStorageSync(GUIDE_MODE_STORAGE_KEY, nextGuideMode)
+    const nextGuideState = getNextGuideToggleState(
+      currentTemplate,
+      this.data.guideVisible,
+      this.data.guideMode
+    )
+    const nextVisible = nextGuideState.visible
+    const nextGuideMode = nextGuideState.mode
 
     if (!nextVisible) {
       this.clearGuide(nextGuideMode)
@@ -578,17 +823,30 @@ Page({
         currentTemplate: nextTemplate,
         guideDisplayImage: nextTemplate.guideImage,
         guideLoadFailed: false,
+        ...getGuideLayoutState(
+          getGuideLayoutImageInfo(nextTemplate.guideImage),
+          this.data.guideOffsetX,
+          this.data.guideOffsetY,
+          this.data.guideScale,
+          this.data.guideRotateAngle,
+          this.data.cameraAspectRatio
+        ),
         ...guideModeState
       })
+      this.guideFallbackTriedImages = {}
+      this.startGuideLoading(nextTemplate.guideImage, guideModeState.guideMode, true)
 
       const guideImageInfo = await getImageInfo(nextTemplate.guideImage)
+      const latestTemplate = this.data.currentTemplate && this.data.currentTemplate.id === nextTemplate.id
+        ? this.data.currentTemplate
+        : nextTemplate
 
       this.setData({
         guideVisible: true,
-        currentTemplate: nextTemplate,
-        guideDisplayImage: nextTemplate.guideImage,
+        currentTemplate: latestTemplate,
+        guideDisplayImage: latestTemplate.guideImage,
         ...getGuideLayoutState(
-          guideImageInfo,
+          getGuideLayoutImageInfo(latestTemplate.guideImage, guideImageInfo),
           this.data.guideOffsetX,
           this.data.guideOffsetY,
           this.data.guideScale,
@@ -606,12 +864,17 @@ Page({
     const currentTemplate = this.data.currentTemplate
     const guideModeState = getGuideModeState(currentTemplate, guideMode)
 
+    this.stopGuideLoadingTimer()
     this.setData({
       guideVisible: false,
       currentTemplate: hideTemplateGuide(currentTemplate),
       guideDisplayImage: '',
+      guideImageRenderVisible: false,
+      guideImageLoading: false,
+      guideLoadRetryVisible: false,
+      guideLoadToken: this.nextGuideLoadToken(),
       ...guideModeState,
-      guideToggleTitle: '引导'
+      guideToggleTitle: guideModeState.guideModeText
     })
   },
 
@@ -630,17 +893,30 @@ Page({
         guideLoadFailed: false,
         currentTemplate: nextTemplate,
         guideDisplayImage: nextTemplate.guideImage,
+        ...getGuideLayoutState(
+          getGuideLayoutImageInfo(nextTemplate.guideImage),
+          this.data.guideOffsetX,
+          this.data.guideOffsetY,
+          this.data.guideScale,
+          this.data.guideRotateAngle,
+          this.data.cameraAspectRatio
+        ),
         ...guideModeState
       })
+      this.guideFallbackTriedImages = {}
+      this.startGuideLoading(nextTemplate.guideImage, guideModeState.guideMode)
 
       const guideImageInfo = await getImageInfo(nextTemplate.guideImage)
+      const latestTemplate = this.data.currentTemplate && this.data.currentTemplate.id === nextTemplate.id
+        ? this.data.currentTemplate
+        : nextTemplate
 
       this.setData({
         guideLoadFailed: false,
-        currentTemplate: nextTemplate,
-        guideDisplayImage: nextTemplate.guideImage,
+        currentTemplate: latestTemplate,
+        guideDisplayImage: latestTemplate.guideImage,
         ...getGuideLayoutState(
-          guideImageInfo,
+          getGuideLayoutImageInfo(latestTemplate.guideImage, guideImageInfo),
           this.data.guideOffsetX,
           this.data.guideOffsetY,
           this.data.guideScale,
@@ -654,10 +930,27 @@ Page({
     })
   },
 
-  onGuideImageError() {
+  onGuideImageLoad(event) {
+    if (!this.isCurrentGuideLoadEvent(event)) {
+      return
+    }
+
+    this.finishGuideLoading()
+  },
+
+  onGuideImageError(event) {
+    if (!this.isCurrentGuideLoadEvent(event)) {
+      return
+    }
+
     const currentTemplate = this.data.currentTemplate || {}
     const currentGuideImage = currentTemplate.guideImage || ''
-    const fallbackGuideImage = getGuideFallbackImage(currentGuideImage)
+    const triedImages = this.guideFallbackTriedImages || {}
+    triedImages[currentGuideImage] = true
+    this.guideFallbackTriedImages = triedImages
+
+    const fallbackGuideImage = getGuideFallbackImages(currentGuideImage)
+      .find((guideImage) => !triedImages[guideImage])
 
     if (fallbackGuideImage && fallbackGuideImage !== currentGuideImage) {
       this.setData({
@@ -668,16 +961,16 @@ Page({
           guideImage: fallbackGuideImage
         }
       })
+      this.startGuideLoading(fallbackGuideImage, this.data.guideMode, true)
       return
     }
 
+    this.stopGuideLoadingTimer()
     this.setData({
-      guideLoadFailed: true
-    })
-
-    wx.showToast({
-      title: '轮廓图加载失败',
-      icon: 'none'
+      guideImageLoading: false,
+      guideLoadRetryVisible: false,
+      guideLoadFailed: false,
+      guideImageRenderVisible: false
     })
   },
 
@@ -850,6 +1143,8 @@ Page({
     })
   },
 
+  noop() {},
+
   decreaseGuideScale() {
     this.setGuideScale(this.data.guideScale - GUIDE_SCALE_STEP)
   },
@@ -892,7 +1187,8 @@ Page({
 
   async toggleCameraAspectRatio() {
     const cameraAspectRatio = getNextCameraAspectRatio(this.data.cameraAspectRatio)
-    const guideImageInfo = await getImageInfo(this.data.currentTemplate.guideImage)
+    const currentGuideImage = this.data.currentTemplate.guideImage
+    const guideImageInfo = await getImageInfo(currentGuideImage)
 
     wx.setStorageSync(CAMERA_ASPECT_STORAGE_KEY, cameraAspectRatio)
     this.setData({
@@ -900,7 +1196,7 @@ Page({
       cameraAspectText: getCameraAspectText(cameraAspectRatio),
       cameraStyle: getCameraStyle(cameraAspectRatio),
       ...getGuideLayoutState(
-        guideImageInfo,
+        getGuideLayoutImageInfo(currentGuideImage, guideImageInfo),
         this.data.guideOffsetX,
         this.data.guideOffsetY,
         this.data.guideScale,
@@ -1029,14 +1325,13 @@ Page({
     this.countdownTimer = setTimeout(tick, 1000)
   },
 
-  loadGuideSettings() {
+  loadGuideSettings(options = {}) {
+    const { includeGuideMode = true } = options
     const keepGuideForConfirm = Boolean(wx.getStorageSync(GUIDE_CONFIRM_STORAGE_KEY))
-    const guideMode = getStoredGuideMode()
     const guideRotateAngle = normalizeGuideRotateAngle(wx.getStorageSync(GUIDE_ROTATE_STORAGE_KEY))
     const cameraAspectRatio = getStoredCameraAspectRatio()
     const guideSettings = {
       keepGuideForConfirm,
-      guideMode,
       guideRotateAngle,
       cameraAspectRatio,
       cameraAspectText: getCameraAspectText(cameraAspectRatio),
@@ -1047,6 +1342,10 @@ Page({
         this.data.guideBoxRect,
         guideRotateAngle
       )
+    }
+
+    if (includeGuideMode) {
+      guideSettings.guideMode = getStoredGuideMode()
     }
 
     this.setData(guideSettings)
@@ -1226,8 +1525,10 @@ Page({
         app.globalData.previewPose = {
           id: poseId,
           name: this.data.currentTemplate.name,
+          shareImage: this.data.currentTemplate.shareImage || '',
           thumbnailImage: this.data.currentTemplate.thumbnailImage || this.data.currentTemplate.modelImage || this.data.currentTemplate.guideImage || ''
         }
+        app.globalData.previewShareSource = getPreviewShareSource(poseId)
         app.globalData.previewGuide = shouldConfirmWithGuide
           ? {
               image: previewGuideImage || this.data.currentTemplate.guideImage,
@@ -1289,6 +1590,7 @@ Page({
         app.globalData.photoPath = ''
         app.globalData.previewGuide = null
         app.globalData.previewPose = null
+        app.globalData.previewShareSource = null
 
         const sessionPhotoPaths = [
           ...this.data.sessionPhotoPaths,

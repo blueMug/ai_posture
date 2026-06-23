@@ -1,12 +1,13 @@
 {
   "pages": [
     "pages/home/index",
-    "pages/scene-topic/index",
     "pages/pose-gallery/index",
     "pages/profile/index",
     "pages/privacy/index",
     "pages/feedback/index",
     "pages/pose-detail/index",
+    "pages/scene-topic/index",
+    "pages/scene-topic-more/index",
     "pages/camera/index",
     "pages/preview/index"
   ],
@@ -27,7 +28,7 @@
       },
       {
         "pagePath": "pages/pose-gallery/index",
-        "text": "拍照场景"
+        "text": "姿势大全"
       },
       {
         "pagePath": "pages/profile/index",

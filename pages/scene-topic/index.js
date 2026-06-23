@@ -1,5 +1,5 @@
 const { poseTemplates, findPoseIndex } = require('../../utils/poses')
-const { cacheImageFields } = require('../../utils/imageCache')
+const { queueCachePoseCategories, queueImagePreload } = require('../../utils/imageCache')
 const { cdnAssetUrl, homeLocalAssetUrl, HOME_LOCAL_ASSET_FOLDERS } = require('../../utils/assets')
 const { ensurePrivacyNotice } = require('../../utils/privacy')
 const {
@@ -25,6 +25,10 @@ const isHomeLocalPose = (pose = {}) => HOME_LOCAL_ASSET_FOLDERS.has(getPoseFolde
 const getDisplayImage = (pose = {}) => (
   homeLocalAssetUrl(pose.thumbnailImage) ||
   cdnAssetUrl(pose.detailImage || pose.modelImage || pose.thumbnailImage || pose.guideImage)
+)
+
+const getShareImage = (pose = {}) => (
+  cdnAssetUrl(pose.shareImage || pose.thumbnailImage || pose.detailImage || pose.modelImage || pose.guideImage)
 )
 
 const isRealPhotoPose = (pose) => Boolean(pose && pose.modelImage && pose.detailImage)
@@ -67,7 +71,9 @@ const buildTopicView = (topicId) => {
   return {
     ...topic,
     coverImage: coverPose ? getDisplayImage(coverPose) : '',
-    plans
+    shareImage: coverPose ? getShareImage(coverPose) : '',
+    plans,
+    moreCount: (topic.morePoseIds || []).length
   }
 }
 
@@ -99,7 +105,7 @@ Page({
       return
     }
 
-    Promise.all(topic.plans.map((plan) => cacheImageFields(plan, ['thumbnailImage']))).then((cachedPlans) => {
+    queueCachePoseCategories([{ poses: topic.plans }], ['thumbnailImage'], { priority: true }).then((cachedCategories) => {
       if (!this.data.topic || this.data.topic.id !== topic.id) {
         return
       }
@@ -107,10 +113,17 @@ Page({
       this.setData({
         topic: {
           ...this.data.topic,
-          plans: cachedPlans
+          plans: (cachedCategories[0] && cachedCategories[0].poses) || topic.plans
         }
       })
     })
+
+    const guideUrls = topic.plans
+      .map((plan) => poseTemplateMap.get(plan.poseId))
+      .map((pose) => pose && homeLocalAssetUrl(pose.guideImage))
+
+    queueImagePreload(guideUrls, { priority: true })
+
   },
 
   backToHome() {
@@ -145,14 +158,18 @@ Page({
 
   openPoseDetail(event) {
     const { poseId, planIndex } = event.currentTarget.dataset
-    const plan = this.data.topic && this.data.topic.plans[Number(planIndex)]
+    const plan = Number.isInteger(Number(planIndex))
+      ? this.data.topic && this.data.topic.plans[Number(planIndex)]
+      : null
     const pose = poseTemplateMap.get(poseId)
 
-    if (!poseId || !plan) {
+    if (!poseId) {
       return
     }
 
-    this.setTopicPlanDetail(plan)
+    if (plan) {
+      this.setTopicPlanDetail(plan)
+    }
 
     if (!isRealPhotoPose(pose)) {
       this.openCamera(event)
@@ -201,13 +218,25 @@ Page({
     })
   },
 
+  openMorePoses() {
+    const topic = this.data.topic
+
+    if (!topic || !topic.id) {
+      return
+    }
+
+    wx.navigateTo({
+      url: `/pages/scene-topic-more/index?topicId=${topic.id}`
+    })
+  },
+
   onShareAppMessage() {
     const topic = this.data.topic || {}
 
     return {
       title: topic.shareTitle || `${topic.title || '场景拍照'}，照着姿势拍`,
       path: `/pages/scene-topic/index?topicId=${topic.id || ''}`,
-      imageUrl: topic.coverImage || ''
+      imageUrl: topic.shareImage || topic.coverImage || ''
     }
   }
 })

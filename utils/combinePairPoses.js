@@ -1,16 +1,7 @@
 const combinePairIds = [
-  'custom1_r01_g01',
-  'custom2_r01_g01',
-  'custom3_r01_g01',
   'custom4_r01_g01',
   'custom5_r01_g01',
-  'custom6_r01_g01',
-  'custom7_r01_g01',
-  'custom8_r01_g01',
-  'custom9_r01_g01',
-  'custom10_r01_g01',
   'custom11_r01_g01',
-  'custom12_r01_g01',
   'custom13_r01_g01',
   'custom14_r01_g01',
   'custom15_r01_g01',
@@ -19,23 +10,13 @@ const combinePairIds = [
   'custom18_r01_g01',
   'custom19_r01_g01',
   'custom20_r01_g01',
-  'custom21_r01_g01',
-  'custom22_r01_g01',
-  'custom23_r01_g01',
   'custom24_r01_g01',
-  'custom25_r01_g01',
   'custom26_r01_g01',
-  'custom27_r01_g01',
-  'custom28_r01_g01',
   'custom29_r01_g01',
-  'custom30_r01_g01',
   'custom31_r01_g01',
-  'custom32_r01_g01',
   'custom33_r01_g01',
   'custom34_r01_g01',
   'custom35_r01_g01',
-  'custom36_r01_g01',
-  'custom37_r01_g01',
   'custom38_r01_g01',
   'custom39_r01_g01',
   'custom40_r01_g01',
@@ -223,6 +204,7 @@ const poseMetadataOverrides = {
     tip: '推荐湖畔日落、长裙背影、旅行氛围照',
     description: '背对镜头站在湖心栈桥上，身体微侧、头部轻柔回眸；双手在身后握着宽檐草帽，适合拍自然舒展的湖畔日落背影照。',
     badge: '全身',
+    guideImage: '/static/pose_guides/custom13/custom13_r01_g01_contour.png',
     gradient: 'linear-gradient(150deg, #f2c7a4 0%, #4e5363 100%)'
   },
   custom14_r01_g01: {
@@ -1343,7 +1325,7 @@ const getPoseSearchKeywords = (pairId) => [
 
 const combinePairPoses = combinePairIds.map((pairId, index) => {
   const folder = pairId.split('_')[0]
-  const poseNumber = index + 1
+  const poseNumber = Number(folder.replace('custom', '')) || index + 1
 
   return {
     id: `pair-${pairId.replace(/_/g, '-')}`,
@@ -1357,6 +1339,7 @@ const combinePairPoses = combinePairIds.map((pairId, index) => {
     gradient: 'linear-gradient(150deg, #f7f1e8 0%, #6f665f 100%)',
     guideImage: `/static/pose_pairs/${folder}/${pairId}_contour.png`,
     thumbnailImage: `/static/pose_thumbs/${folder}/${pairId}_thumb.jpg`,
+    shareImage: `/static/share_images/${folder}/${pairId}_share.jpg`,
     modelImage: `/static/pose_pairs/${folder}/${pairId}_demo.jpg`,
     detailImage: `/static/pose_pairs/${folder}/${pairId}_demo.jpg`,
     thumbnailMode: 'aspectFill',

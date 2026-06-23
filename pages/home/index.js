@@ -29,37 +29,43 @@ const DEFAULT_PAGE_TOP_PX = 52
 const DAY_MS = 24 * 60 * 60 * 1000
 const DAILY_RECOMMEND_CONFIGS = [
   {
-    title: '今天拍穿搭',
+    title: '穿搭显比例',
     subtitle: '想拍全身照，先从这 4 个显比例姿势开始。',
     categoryId: 'outfit-standing'
   },
   {
-    title: '今天试试不露脸',
+    title: '不露脸也出片',
     subtitle: '不用看镜头，背影和回眸也能很出片。',
     categoryId: 'back-view'
   },
   {
-    title: '今天拍咖啡馆',
-    subtitle: '手不知道放哪，就用杯子、相机和书本互动。',
-    categoryId: 'props-action'
+    title: '咖啡馆拍法',
+    subtitle: '只推荐带咖啡杯、窗边或店外街拍的动作。',
+    categoryId: 'props-action',
+    poseIds: [
+      'pair-custom84-r01-g01',
+      'pair-custom40-r01-g01',
+      'pair-custom76-r01-g01',
+      'pair-custom78-r01-g01'
+    ]
   },
   {
-    title: '今天自拍不尴尬',
+    title: '自拍不尴尬',
     subtitle: '近景自拍、表情管理和酷一点的姿势都在这里。',
     categoryId: 'selfie'
   },
   {
-    title: '今天出门街拍',
+    title: '出门街拍',
     subtitle: '通勤路上、街角、机车和运动风都能照着拍。',
     categoryId: 'street-commute'
   },
   {
-    title: '今天旅行打卡',
+    title: '旅行打卡',
     subtitle: '到景点不用临场想姿势，选一个直接拍。',
     categoryId: 'travel-back'
   },
   {
-    title: '今天坐着也好拍',
+    title: '坐着也好拍',
     subtitle: '坐姿、蹲姿、野餐和松弛生活照都适合。',
     categoryId: 'sitting-life'
   }
@@ -78,21 +84,20 @@ const SCENE_ADVISOR_CONFIGS = [
       'pair-custom78-r01-g01',
       'pair-custom88-r01-g01',
       'pair-custom75-r01-g01',
-      'pair-custom22-r01-g01',
       'pair-custom51-r01-g01',
       'pair-custom40-r01-g01',
-      'pair-custom7-r01-g01'
+      'pair-custom79-r01-g01'
     ],
     plans: [
       {
-        poseId: 'pair-custom22-r01-g01',
-        title: '咖啡馆端杯撩发',
+        poseId: 'pair-custom84-r01-g01',
+        title: '咖啡馆捧杯近景',
         badge: '生活感',
-        reason: '图里本身有端杯和撩发动作，适合咖啡馆半身照。',
+        reason: '图里是捧杯近景，适合咖啡馆桌边、窗边和书店角落。',
         composition: '半身入镜，保留杯子和上半身动作。',
         camera: '手机放在胸口到眼睛之间，竖拍半身。',
-        poseCue: '一手端咖啡在胸前，另一手把发丝别到耳后。',
-        avoid: '不要让杯子挡住下巴和嘴部。'
+        poseCue: '双手捧杯靠近胸前，脸微微侧向镜头。',
+        avoid: '不要让杯子完全挡住下巴和嘴部。'
       },
       {
         poseId: 'pair-custom40-r01-g01',
@@ -105,14 +110,14 @@ const SCENE_ADVISOR_CONFIGS = [
         avoid: '不要裁掉脚，台阶动作会看不出来。'
       },
       {
-        poseId: 'pair-custom7-r01-g01',
-        title: '咖啡街拍行走',
-        badge: '抓拍感',
-        reason: '图里是拿咖啡行走姿态，适合咖啡店外街拍。',
-        composition: '全身入镜，前方留一点行走方向。',
-        camera: '手机稍微放低，连拍抓自然步伐。',
-        poseCue: '一手握咖啡杯，另一手自然随步伐摆动。',
-        avoid: '不要站定硬摆，保留走路动作更贴图。'
+        poseId: 'pair-custom76-r01-g01',
+        title: '窗边侧身相机',
+        badge: '文艺窗边',
+        reason: '图里是窗边侧身和相机道具，适合咖啡馆靠窗位置。',
+        composition: '半身或七分身入镜，保留窗边光线和手部道具。',
+        camera: '手机平视，人物侧身比正面对镜头更松弛。',
+        poseCue: '身体微侧，一手扶相机或道具，头部轻轻转向镜头。',
+        avoid: '不要让窗户高光把脸压暗。'
       }
     ]
   },
@@ -177,12 +182,10 @@ const SCENE_ADVISOR_CONFIGS = [
       'pair-custom91-r01-g01',
       'pair-custom49-r01-g01',
       'pair-custom46-r01-g01',
-      'pair-custom7-r01-g01',
-      'pair-custom9-r01-g01',
-      'pair-custom32-r01-g01',
       'pair-custom50-r01-g01',
       'pair-custom60-r01-g01',
-      'pair-custom64-r01-g01'
+      'pair-custom64-r01-g01',
+      'pair-custom68-r01-g01'
     ],
     plans: [
       {
@@ -206,14 +209,14 @@ const SCENE_ADVISOR_CONFIGS = [
         avoid: '不要站定硬摆，保留行走感更像街拍。'
       },
       {
-        poseId: 'pair-custom32-r01-g01',
-        title: '相机爱心街头',
+        poseId: 'pair-custom50-r01-g01',
+        title: '街边蹲姿互动',
         badge: '道具互动',
-        reason: '图里有相机和爱心手势，适合涂鸦墙或街头背景。',
-        composition: '全身正面入镜，保留相机和手势。',
-        camera: '手机平视，背景可以占一部分画面。',
-        poseCue: '一手在胸前比爱心，另一手举相机靠近眼前。',
-        avoid: '不要让相机遮住整个脸部表情。'
+        reason: '蹲姿能避开路口杂乱背景，让街边照片更有动作。',
+        composition: '全身或七分身入镜，保留腿部姿态和手部动作。',
+        camera: '手机略低，保持人物重心稳定。',
+        poseCue: '一腿屈膝下蹲，手自然搭在膝盖或道具上。',
+        avoid: '不要从小腿中间裁切。'
       }
     ]
   },
@@ -229,40 +232,40 @@ const SCENE_ADVISOR_CONFIGS = [
       'pair-custom101-r01-g01',
       'pair-custom94-r01-g01',
       'pair-custom91-r01-g01',
-      'pair-custom30-r01-g01',
-      'pair-custom36-r01-g01',
-      'pair-custom25-r01-g01'
+      'pair-custom97-r01-g01',
+      'pair-custom99-r01-g01',
+      'pair-custom45-r01-g01'
     ],
     plans: [
       {
-        poseId: 'pair-custom30-r01-g01',
-        title: '珍珠折扇知性',
-        badge: '优雅全身',
-        reason: '图里是正面折扇道具，适合室内或精致穿搭。',
-        composition: '全身入镜，保留折扇和交叉站姿。',
+        poseId: 'pair-custom92-r01-g01',
+        title: '天台倚栏穿搭',
+        badge: '都市全身',
+        reason: '图里有栏杆和城市背景，适合拍穿搭比例和外套轮廓。',
+        composition: '半身或七分身入镜，保留栏杆和身体线条。',
         camera: '手机平视或略低，镜头保持垂直。',
-        poseCue: '双腿微交叉，右手执半开折扇，左手自然搭腰。',
-        avoid: '不要裁掉脚部交叉线条。'
+        poseCue: '身体微侧靠近栏杆，一只手自然搭在栏杆上。',
+        avoid: '不要让栏杆横线压在脖子位置。'
       },
       {
-        poseId: 'pair-custom36-r01-g01',
-        title: '紫衫交扣许愿',
-        badge: '温柔正面',
-        reason: '图里是正面交扣手势，适合温柔风或花景穿搭。',
-        composition: '全身正面入镜，保留胸前手势。',
-        camera: '手机平视，人物居中更稳。',
-        poseCue: '一脚尖微微外展，双手举至胸前十指轻轻交扣。',
-        avoid: '不要把手势放太低，否则看不出动作重点。'
+        poseId: 'pair-custom101-r01-g01',
+        title: '楼梯扶手全身',
+        badge: '建筑线条',
+        reason: '楼梯线条能拉出比例，适合通勤、外套和城市穿搭。',
+        composition: '全身入镜，顺着楼梯线条构图。',
+        camera: '手机略低，保持墙线和楼梯线条端正。',
+        poseCue: '一手扶栏杆，身体微微前倾，腿部自然错开。',
+        avoid: '不要斜拍到建筑线条歪掉。'
       },
       {
-        poseId: 'pair-custom25-r01-g01',
-        title: '绿裙草帽比耶',
-        badge: '活力正面',
-        reason: '图里是连衣裙、草帽和比耶手势，适合明亮旅行穿搭。',
-        composition: '全身正面入镜，保留草帽和手势。',
-        camera: '手机平视或略低，头顶和脚底都留一点空间。',
-        poseCue: '身体正对镜头，一脚微微前伸，右手在脸颊旁比 V。',
-        avoid: '不要裁掉手里的草帽。'
+        poseId: 'pair-custom94-r01-g01',
+        title: '展馆白墙穿搭',
+        badge: '干净背景',
+        reason: '白墙和室内空间能突出衣服轮廓，适合干净穿搭照。',
+        composition: '全身或七分身入镜，背景保持简洁。',
+        camera: '手机平视，人物略偏一侧更有留白。',
+        poseCue: '身体微侧，一手自然垂下，另一手轻放腰侧或包上。',
+        avoid: '不要让背景元素穿过头部。'
       }
     ]
   },
@@ -280,8 +283,8 @@ const SCENE_ADVISOR_CONFIGS = [
       'pair-custom86-r01-g01',
       'pair-custom87-r01-g01',
       'pair-custom18-r01-g01',
-      'pair-custom23-r01-g01',
-      'pair-custom28-r01-g01'
+      'pair-custom24-r01-g01',
+      'pair-custom34-r01-g01'
     ],
     plans: [
       {
@@ -295,24 +298,24 @@ const SCENE_ADVISOR_CONFIGS = [
         avoid: '不要把手肘裁得太紧。'
       },
       {
-        poseId: 'pair-custom23-r01-g01',
-        title: '夕阳胸上自拍',
-        badge: '逆光自拍',
-        reason: '图里是胸上自拍和夕阳逆光，适合近景自然笑容。',
-        composition: '胸上紧凑构图，保留肩膀和脸部光线。',
-        camera: '手机略高于眼睛，避免脸部变形。',
-        poseCue: '头部微偏，肩膀微抬，长发自然垂落肩头。',
-        avoid: '不要让强逆光把脸完全压暗。'
+        poseId: 'pair-custom75-r01-g01',
+        title: '镜前半身自拍',
+        badge: '稳定自拍',
+        reason: '镜前半身更容易控制手机位置，适合头像和日常分享。',
+        composition: '半身入镜，手机不要遮住全部脸。',
+        camera: '手机略低于眼睛，镜子保持干净。',
+        poseCue: '身体微侧，一手拿手机，另一手自然整理头发或衣领。',
+        avoid: '背景杂物先移出画面。'
       },
       {
-        poseId: 'pair-custom28-r01-g01',
-        title: '惊讶捂嘴自拍',
-        badge: '元气表情',
-        reason: '图里是捂嘴表情动作，适合甜美、有反应感的自拍。',
-        composition: '胸上紧凑构图，保留手和脸部表情。',
-        camera: '手机略高，镜头不要贴太近。',
-        poseCue: '一只手五指张开贴近脸颊，眼睛圆睁，嘴唇微启。',
-        avoid: '手不要完全挡住嘴和脸。'
+        poseId: 'pair-custom77-r01-g01',
+        title: '暖光情绪自拍',
+        badge: '氛围近景',
+        reason: '暖光和半身动作适合夜晚、房间和清吧自拍。',
+        composition: '胸上或半身入镜，保留肩颈线条。',
+        camera: '手机略高，脸部靠近柔和光线。',
+        poseCue: '头部轻轻偏向一侧，手自然靠近脸颊或发尾。',
+        avoid: '不要让手机阴影挡住眼睛。'
       }
     ]
   }
@@ -333,23 +336,31 @@ const SCENE_ADVISOR_POSE_OWNER_MAP = SCENE_ADVISOR_CONFIGS.reduce((map, scene) =
 }, new Map())
 const RECOMMEND_CATEGORY_CONFIGS = [
   {
-    sourceId: 'outfit-standing'
+    sourceId: 'outfit-standing',
+    name: '穿搭全身',
+    subtitle: '显高显比例'
   },
   {
-    sourceId: 'portrait-half'
+    sourceId: 'portrait-half',
+    name: '半身人像',
+    subtitle: '表情和手部更自然'
   },
   {
-    sourceId: 'back-view'
+    sourceId: 'back-view',
+    name: '不露脸背影',
+    subtitle: '不看镜头也出片'
   },
   {
-    sourceId: 'selfie'
+    sourceId: 'selfie',
+    name: '自拍近景',
+    subtitle: '近景表情不尴尬'
   }
 ]
 
-const withCdnCardAssets = (pose) => ({
+const withHomeCardAssets = (pose) => ({
   ...pose,
-  thumbnailImage: cdnAssetUrl(pose.detailImage || pose.modelImage || pose.thumbnailImage || pose.guideImage),
-  guideImage: cdnAssetUrl(pose.guideImage)
+  thumbnailImage: getHomeDisplayImage(pose),
+  guideImage: homeLocalAssetUrl(pose.guideImage)
 })
 const getPoseFolderFromId = (poseId = '') => {
   const match = String(poseId).match(/custom(\d+)/)
@@ -377,7 +388,7 @@ const getHomeDisplayImage = (pose) => {
     return localThumbnailImage
   }
 
-  return cdnAssetUrl(pose.detailImage || pose.modelImage || pose.thumbnailImage || pose.guideImage)
+  return ''
 }
 const buildSceneTopicCards = () => (
   sceneTopics
@@ -503,7 +514,8 @@ const buildRecommendCategories = (keyword = '') => {
         query,
         usedPoseIds
       })
-        .map(withCdnCardAssets)
+        .map(withHomeCardAssets)
+        .filter((pose) => pose.thumbnailImage)
 
       poses.forEach((pose) => {
         usedPoseIds.add(pose.id)
@@ -517,18 +529,37 @@ const buildRecommendCategories = (keyword = '') => {
     .filter((category) => category.poses.length > 0)
 }
 
+const buildTypeEntries = () => (
+  RECOMMEND_CATEGORY_CONFIGS
+    .map((config) => {
+      const sourceCategory = poseCategoryMap.get(config.sourceId) || {}
+      const coverPose = (sourceCategory.poses || [])
+        .find((pose) => pose.detailImage || pose.modelImage || pose.thumbnailImage || pose.guideImage)
+
+      return {
+        id: config.sourceId,
+        name: config.name || sourceCategory.name || '',
+        subtitle: config.subtitle || sourceCategory.subtitle || '',
+        coverImage: getHomeDisplayImage(coverPose),
+        totalPoseCount: sourceCategory.poses ? sourceCategory.poses.length : 0
+      }
+    })
+    .filter((entry) => entry.totalPoseCount > 0 && entry.coverImage)
+)
+
 const buildSearchResultCategories = (keyword = '') => {
   const query = normalizeSearchText(keyword)
 
   if (!query) {
-    return buildRecommendCategories()
+    return []
   }
 
   return poseCategories
     .map((category) => {
       const matchedPoses = category.poses
         .filter((pose) => isPoseMatchedSearch(pose, category, query))
-        .map(withCdnCardAssets)
+        .map(withHomeCardAssets)
+        .filter((pose) => pose.thumbnailImage)
 
       return {
         ...category,
@@ -559,12 +590,18 @@ const getDailyRecommendConfig = () => {
 
 const buildDailyRecommend = () => {
   const config = getDailyRecommendConfig()
-  const poses = getRichCategoryPoses(config.categoryId, {
-    limit: Number.MAX_SAFE_INTEGER
-  })
-    .filter(isHomeLocalPose)
-    .slice(0, RECOMMEND_LIMIT_PER_CATEGORY)
-    .map(withHomeLocalAssets)
+  const poses = config.poseIds
+    ? config.poseIds
+      .map((poseId) => poseTemplateMap.get(poseId))
+      .filter(Boolean)
+      .slice(0, RECOMMEND_LIMIT_PER_CATEGORY)
+      .map(withHomeLocalAssets)
+    : getRichCategoryPoses(config.categoryId, {
+      limit: Number.MAX_SAFE_INTEGER
+    })
+      .filter(isHomeLocalPose)
+      .slice(0, RECOMMEND_LIMIT_PER_CATEGORY)
+      .map(withHomeLocalAssets)
 
   return {
     ...config,
@@ -667,7 +704,7 @@ const getDetailPreloadUrl = (pose) => {
     return ''
   }
 
-  return cdnAssetUrl(pose.detailImage || pose.modelImage || pose.thumbnailImage || pose.guideImage)
+  return getHomeDisplayImage(pose)
 }
 
 const getGuidePreloadUrl = (pose) => {
@@ -675,7 +712,7 @@ const getGuidePreloadUrl = (pose) => {
     return ''
   }
 
-  return homeLocalAssetUrl(pose.guideImage || pose.modelImage || pose.thumbnailImage)
+  return getHomeDisplayImage(pose)
 }
 
 Page({
@@ -686,6 +723,7 @@ Page({
       poses: []
     },
     sceneTopics: [],
+    typeEntries: [],
     poseCategories: [],
     favoritePoseIds: [],
     hasSearchResult: true,
@@ -699,17 +737,21 @@ Page({
     this.setData({
       pageTopStyle: getPageTopStyle(),
       favoritePoseIds: getFavoritePoseIds(),
-      sceneTopics: buildSceneTopicCards()
+      sceneTopics: buildSceneTopicCards(),
+      typeEntries: buildTypeEntries()
     })
     this.refreshDailyRecommend()
-    this.setPoseCategories(buildRecommendCategories(), {
+    this.setData({
+      poseCategories: [],
       hasSearchResult: true
     })
   },
 
   onShow() {
     this.refreshDailyRecommend()
-    this.refreshPoseCategories()
+    if (this.data.searchKeyword) {
+      this.refreshPoseCategories()
+    }
   },
 
   onUnload() {
@@ -846,6 +888,16 @@ Page({
 
   onSearchInput(event) {
     const searchKeyword = event.detail.value
+
+    if (!normalizeSearchText(searchKeyword)) {
+      this.setData({
+        poseCategories: [],
+        searchKeyword,
+        hasSearchResult: true
+      })
+      return
+    }
+
     const nextCategories = filterPoseCategories(searchKeyword)
 
     this.setPoseCategories(nextCategories, {
@@ -855,7 +907,8 @@ Page({
   },
 
   clearSearch() {
-    this.setPoseCategories(buildRecommendCategories(), {
+    this.setData({
+      poseCategories: [],
       searchKeyword: '',
       favoritePoseIds: getFavoritePoseIds(),
       hasSearchResult: true

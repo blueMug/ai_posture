@@ -10,6 +10,12 @@
     bindinitdone="onCameraInitDone"
     binderror="onCameraError"
   >
+    <cover-view
+      wx:if="{{settingsPanelOpen}}"
+      class="settings-dismiss-cover"
+      catchtap="closeSettingsPanel"
+    ></cover-view>
+
     <cover-view class="pose-stage" style="{{poseStageStyle}}" bindtap="closeSettingsPanel">
       <cover-view
         wx:if="{{currentTemplate.guideImage}}"
@@ -23,36 +29,26 @@
       >
         <cover-view class="pose-guide-layer">
           <cover-image
-            wx:if="{{guideMode == 'outline'}}"
-            class="pose-guide-image pose-guide-shadow"
-            src="{{guideDisplayImage || currentTemplate.guideImage}}"
-          ></cover-image>
-          <cover-image
-            wx:if="{{guideMode == 'outline'}}"
-            class="pose-guide-image pose-guide-boost"
-            src="{{guideDisplayImage || currentTemplate.guideImage}}"
-          ></cover-image>
-          <cover-image
+            wx:if="{{guideImageRenderVisible}}"
             class="pose-guide-image pose-guide-main {{guideImageClass}}"
+            data-src="{{guideDisplayImage || currentTemplate.guideImage}}"
             src="{{guideDisplayImage || currentTemplate.guideImage}}"
+            bindload="onGuideImageLoad"
             binderror="onGuideImageError"
           ></cover-image>
         </cover-view>
-      </cover-view>
-      <cover-view wx:if="{{guideLoadFailed}}" class="guide-error-tip">
-        轮廓加载失败，请检查图片域名
       </cover-view>
       <cover-view wx:if="{{countdownActive}}" class="countdown-mask">
         <cover-view class="countdown-number">{{countdownRemaining}}</cover-view>
       </cover-view>
     </cover-view>
 
-    <cover-view class="camera-settings">
+    <cover-view class="camera-settings" catchtap="noop">
       <cover-view
         class="settings-trigger {{settingsPanelOpen ? 'active' : ''}}"
         catchtap="toggleSettingsPanel"
       >⚙</cover-view>
-      <cover-view wx:if="{{settingsPanelOpen}}" class="settings-panel">
+      <cover-view wx:if="{{settingsPanelOpen}}" class="settings-panel" catchtap="noop">
         <cover-view class="settings-title">拍摄设置</cover-view>
         <cover-view class="settings-item">
           <cover-view class="settings-label">轮廓大小</cover-view>
@@ -66,7 +62,7 @@
           <cover-view
             class="settings-chip {{guideVisible ? 'active' : ''}}"
             catchtap="toggleGuide"
-          >引导 {{guideVisible ? guideModeText : ''}}</cover-view>
+          >{{guideVisible ? guideModeText : '轮廓'}}</cover-view>
           <cover-view
             class="settings-chip {{keepGuideForConfirm ? 'active' : ''}}"
             catchtap="toggleKeepGuideForConfirm"
@@ -104,6 +100,12 @@
     <view class="privacy-title">使用相机前需要确认权限说明</view>
     <view class="privacy-desc">我们会先说明相机、相册、本地收藏和使用记录的用途。</view>
   </view>
+
+  <view
+    wx:if="{{privacyAccepted && settingsPanelOpen}}"
+    class="settings-dismiss-page"
+    bindtap="closeSettingsPanel"
+  ></view>
 
   <view wx:if="{{privacyAccepted}}" class="bottom-panel safe-area-bottom" bindtap="closeSettingsPanel">
     <view class="shoot-row">

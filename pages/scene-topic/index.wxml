@@ -69,6 +69,14 @@
     </view>
   </view>
 
+  <view wx:if="{{topic && topic.moreCount}}" class="more-card" bindtap="openMorePoses">
+    <view class="more-copy">
+      <view class="more-title">更多{{topic.shortTitle}}姿势</view>
+      <view class="more-desc">查看 {{topic.moreCount}} 张同场景照片</view>
+    </view>
+    <view class="more-action">进入列表</view>
+  </view>
+
   <view wx:if="{{topic}}" class="share-card">
     <view class="share-title">适合发给一起拍照的人</view>
     <view class="share-desc">{{topic.shareTitle}}</view>

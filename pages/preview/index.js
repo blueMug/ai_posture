@@ -1,7 +1,7 @@
 const app = getApp()
 const { ensurePrivacyNotice } = require('../../utils/privacy')
 
-const GUIDE_MODE_PHOTO = 'photo'
+const GUIDE_MODE_YELLOW_PHOTO = 'yellow-photo'
 const MAX_COMPOSE_CANVAS_SIZE = 1600
 const GUIDE_ROTATE_STEP = 90
 const GUIDE_ROTATE_FULL_DEGREES = 360
@@ -19,6 +19,7 @@ const normalizeGuideRotateAngle = (angle) => {
 
   return ((Math.round(numericAngle / GUIDE_ROTATE_STEP) * GUIDE_ROTATE_STEP) % GUIDE_ROTATE_FULL_DEGREES + GUIDE_ROTATE_FULL_DEGREES) % GUIDE_ROTATE_FULL_DEGREES
 }
+const isGuidePhotoMode = (guideMode) => guideMode === GUIDE_MODE_YELLOW_PHOTO || guideMode === 'photo'
 
 const getAspectFitRect = (sourceWidth, sourceHeight, targetWidth, targetHeight) => {
   const sourceRatio = sourceWidth / sourceHeight
@@ -119,7 +120,7 @@ const getGuideDisplayStyle = ({ guideMode, guideRotateAngle = 0, ...options }) =
     `top: ${rect.top}px`,
     `width: ${rect.width}px`,
     `height: ${rect.height}px`,
-    `opacity: ${guideMode === GUIDE_MODE_PHOTO ? 0.42 : 0.92}`,
+    `opacity: ${isGuidePhotoMode(guideMode) ? 0.42 : 0.92}`,
     'transform-origin: center center',
     `transform: rotate(${normalizeGuideRotateAngle(guideRotateAngle)}deg)`
   ].join('; ')
@@ -170,6 +171,9 @@ Page({
     poseId: '',
     poseName: '',
     poseShareImage: '',
+    shareCard: {
+      visible: false
+    },
     canvasWidth: 1,
     canvasHeight: 1
   },
@@ -186,6 +190,8 @@ Page({
 
     const previewGuide = app.globalData.previewGuide || {}
     const previewPose = app.globalData.previewPose || {}
+    const previewShareSource = app.globalData.previewShareSource || {}
+    const shareCard = this.buildShareCard(previewPose, previewShareSource)
 
     this.setData({
       photoPath,
@@ -203,7 +209,8 @@ Page({
       guideRotateAngle: normalizeGuideRotateAngle(previewGuide.guideRotateAngle || previewGuide.guideRotated),
       poseId: previewPose.id || '',
       poseName: previewPose.name || '',
-      poseShareImage: previewPose.thumbnailImage || ''
+      poseShareImage: previewPose.shareImage || previewPose.thumbnailImage || '',
+      shareCard
     })
 
     if (previewGuide.needsConfirm && previewGuide.image) {
@@ -241,10 +248,44 @@ Page({
     }
   },
 
+  buildShareCard(previewPose = {}, previewShareSource = {}) {
+    const poseName = previewPose.name || ''
+    const sceneTitle = previewShareSource.sceneTitle || ''
+    const planTitle = previewShareSource.title || poseName
+    const topicId = previewShareSource.topicId || ''
+
+    if (topicId) {
+      return {
+        visible: true,
+        kicker: sceneTitle ? `${sceneTitle}拍法` : '场景拍法',
+        title: planTitle ? `我刚照着「${planTitle}」拍了一张` : '我刚照着这个场景拍法拍了一张',
+        desc: previewShareSource.reason || '不知道怎么拍时，直接选场景照着拍。',
+        buttonText: '分享这个拍法',
+        path: `/pages/scene-topic/index?topicId=${topicId}`
+      }
+    }
+
+    if (previewPose.id) {
+      return {
+        visible: true,
+        kicker: '姿势模板',
+        title: poseName ? `我刚照着「${poseName}」拍了一张` : '我刚照着这个姿势拍了一张',
+        desc: '朋友不知道怎么摆姿势时，可以直接照着这个模板拍。',
+        buttonText: '分享这个姿势',
+        path: `/pages/pose-detail/index?poseId=${previewPose.id}`
+      }
+    }
+
+    return {
+      visible: false
+    }
+  },
+
   retake() {
     app.globalData.photoPath = ''
     app.globalData.previewGuide = null
     app.globalData.previewPose = null
+    app.globalData.previewShareSource = null
     wx.navigateBack()
   },
 
@@ -263,6 +304,7 @@ Page({
     app.globalData.photoPath = ''
     app.globalData.previewGuide = null
     app.globalData.previewPose = null
+    app.globalData.previewShareSource = null
 
     wx.navigateBack({
       fail: () => {
@@ -384,7 +426,7 @@ Page({
         width: canvasWidth,
         height: canvasHeight
       })
-      ctx.setGlobalAlpha(this.data.guideMode === GUIDE_MODE_PHOTO ? 0.42 : 0.92)
+      ctx.setGlobalAlpha(isGuidePhotoMode(this.data.guideMode) ? 0.42 : 0.92)
       this.drawGuideImageToCanvas(ctx, guideInfo.path, guideRect)
       ctx.setGlobalAlpha(1)
       ctx.draw(false, () => {
@@ -468,8 +510,10 @@ Page({
       return
     }
 
+    const outputPhotoPath = await this.composeGuidePhoto()
+
     wx.showShareImageMenu({
-      path: this.data.photoPath,
+      path: outputPhotoPath,
       success: () => {
         wx.showToast({
           title: '已分享',
@@ -488,6 +532,15 @@ Page({
   onShareAppMessage() {
     const poseId = this.data.poseId
     const poseName = this.data.poseName
+    const shareCard = this.data.shareCard || {}
+
+    if (shareCard.visible && shareCard.path) {
+      return {
+        title: shareCard.title || '不知道怎么拍？选场景照着拍',
+        path: shareCard.path,
+        imageUrl: this.data.poseShareImage || ''
+      }
+    }
 
     return {
       title: poseName

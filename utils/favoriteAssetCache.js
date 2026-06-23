@@ -8,6 +8,7 @@ const {
 const FAVORITE_ASSET_FIELDS = [
   'guideImage',
   'thumbnailImage',
+  'shareImage',
   'modelImage',
   'detailImage'
 ]

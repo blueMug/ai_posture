@@ -97,6 +97,7 @@
 }
 
 .plan-section,
+.more-card,
 .share-card {
   margin-top: 32rpx;
 }
@@ -264,4 +265,45 @@
 
 .share-btn::after {
   border: 0;
+}
+
+.more-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 26rpx;
+  border-radius: 34rpx;
+  box-sizing: border-box;
+  background: rgba(255, 233, 92, 0.12);
+  border: 1rpx solid rgba(255, 233, 92, 0.32);
+}
+
+.more-copy {
+  flex: 1;
+  min-width: 0;
+  padding-right: 18rpx;
+  box-sizing: border-box;
+}
+
+.more-title {
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: 900;
+}
+
+.more-desc {
+  margin-top: 8rpx;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 23rpx;
+  line-height: 1.42;
+}
+
+.more-action {
+  flex: 0 0 auto;
+  padding: 16rpx 22rpx;
+  border-radius: 999rpx;
+  color: #111111;
+  font-size: 24rpx;
+  font-weight: 900;
+  background: #ffe95c;
 }

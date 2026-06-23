@@ -10,6 +10,7 @@ App({
   globalData: {
     photoPath: '',
     previewGuide: null,
-    previewPose: null
+    previewPose: null,
+    previewShareSource: null
   }
 })
