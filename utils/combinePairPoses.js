@@ -88,33 +88,6 @@ const combinePairIds = [
 ]
 
 const poseMetadataOverrides = {
-  custom1_r01_g01: {
-    categoryId: 'portrait-half',
-    categoryName: '半身写真',
-    name: '温柔侧身半身',
-    tip: '推荐日常写真、半身照、侧身显瘦',
-    description: '身体微微转向左侧，头部自然回正，视线轻看镜头斜上方；一手垂放、一手轻搭腰间，适合拍随性温柔的半身侧身照。',
-    badge: '半身',
-    gradient: 'linear-gradient(150deg, #f7f1ec 0%, #8a7468 100%)'
-  },
-  custom2_r01_g01: {
-    categoryId: 'portrait-half',
-    categoryName: '半身写真',
-    name: '侧光撩发半身',
-    tip: '推荐日常写真、互动感半身、温柔光影照',
-    description: '正面偏侧站立，头部微微向右倾，一手轻抚耳侧发丝，另一手自然垂放；直视镜头配合浅笑，适合拍自然亲和的侧光半身照。',
-    badge: '半身',
-    gradient: 'linear-gradient(150deg, #f5efe8 0%, #816d60 100%)'
-  },
-  custom3_r01_g01: {
-    categoryId: 'portrait-half',
-    categoryName: '半身写真',
-    name: '一字肩托腮',
-    tip: '推荐知性半身、锁骨肩线、故事感写真',
-    description: '半身正面姿态，一手轻托下巴作思考状，另一手自然环抱身前；头部微倾、眼神低垂，适合拍温柔沉静的知性氛围照。',
-    badge: '半身',
-    gradient: 'linear-gradient(150deg, #f5f3ef 0%, #7f7a73 100%)'
-  },
   custom4_r01_g01: {
     categoryId: 'street-dynamic',
     categoryName: '街拍动态',
@@ -134,51 +107,6 @@ const poseMetadataOverrides = {
     badge: '半身',
     gradient: 'linear-gradient(150deg, #f7f0e7 0%, #8b7664 100%)'
   },
-  custom6_r01_g01: {
-    categoryId: 'outfit-standing',
-    categoryName: '全身穿搭',
-    name: '回眸显腿长',
-    tip: '推荐全身穿搭、逆光街拍、显比例站姿',
-    description: '全身微侧站立，一脚前伸点地拉长腿部线条，一手叉腰、一手自然下垂；头部回眸看向镜头，适合拍自信温柔的高腰穿搭照。',
-    badge: '全身',
-    gradient: 'linear-gradient(150deg, #f6eadc 0%, #8a6d55 100%)'
-  },
-  custom7_r01_g01: {
-    categoryId: 'street-dynamic',
-    categoryName: '街拍动态',
-    name: '咖啡街拍行走',
-    tip: '推荐都市街拍、行走抓拍、休闲通勤穿搭',
-    description: '全身自然行走姿态，一手握咖啡杯垂于身侧，另一手随步伐轻摆；低眸再抬眸看向镜头，适合拍随性自在的都市街拍感。',
-    badge: '全身',
-    gradient: 'linear-gradient(150deg, #eef0ed 0%, #5f6760 100%)'
-  },
-  custom8_r01_g01: {
-    categoryId: 'outfit-standing',
-    categoryName: '全身穿搭',
-    name: '户外自然站姿',
-    tip: '推荐户外人像、日常全身照、亲和站姿',
-    description: '全身自然站立，重心均匀、身形挺拔舒展，一手自然垂放身侧；面向镜头温和微笑，适合作为亲切自信的户外日常站姿参考。',
-    badge: '全身',
-    gradient: 'linear-gradient(150deg, #f2eadf 0%, #6f655a 100%)'
-  },
-  custom9_r01_g01: {
-    categoryId: 'outfit-standing',
-    categoryName: '全身穿搭',
-    name: '西装咖啡街拍',
-    tip: '推荐都市街拍、通勤全身照、咖啡随拍',
-    description: '身体微侧，重心落于后腿，前腿微屈放松；左手插在阔腿裤口袋，右手自然垂放轻握咖啡，适合拍干练利落又闲适从容的都市全身照。',
-    badge: '全身',
-    gradient: 'linear-gradient(150deg, #eee7dc 0%, #7b6d60 100%)'
-  },
-  custom10_r01_g01: {
-    categoryId: 'travel-back',
-    categoryName: '旅行背影',
-    name: '山顶背影跃动',
-    tip: '推荐创意背影、旅行全身照、活力动态照',
-    description: '背影站立于山顶，重心落于左腿，右腿向后踢起；右臂高举、左臂向侧方舒展，适合拍青春自由、开放有表现力的旅行背影照。',
-    badge: '全身',
-    gradient: 'linear-gradient(150deg, #f2ddbf 0%, #66725b 100%)'
-  },
   custom11_r01_g01: {
     categoryId: 'travel-back',
     categoryName: '旅行背影',
@@ -187,15 +115,6 @@ const poseMetadataOverrides = {
     description: '背影微侧站立，头部轻柔回眸望向镜头方向；右手抬起轻触耳侧发丝，左手自然垂放，适合拍不经意抓拍感的温柔户外人像。',
     badge: '全身',
     gradient: 'linear-gradient(150deg, #efe4d4 0%, #6f725d 100%)'
-  },
-  custom12_r01_g01: {
-    categoryId: 'travel-back',
-    categoryName: '旅行背影',
-    name: '短发逆光回眸',
-    tip: '推荐都市街拍、逆光背影、松弛感全身照',
-    description: '背对镜头站在暖调街道中，身体微侧、头部回眸微笑；右手轻触衣领，左手自然垂放，适合拍松弛优雅的都市逆光背影照。',
-    badge: '全身',
-    gradient: 'linear-gradient(150deg, #f1dfc4 0%, #806f5e 100%)'
   },
   custom13_r01_g01: {
     categoryId: 'travel-back',
@@ -270,33 +189,6 @@ const poseMetadataOverrides = {
     badge: '半身',
     gradient: 'linear-gradient(150deg, #f1ddd4 0%, #7a6d66 100%)'
   },
-  custom21_r01_g01: {
-    categoryId: 'portrait-half',
-    categoryName: '半身写真',
-    name: '午后窗边撩发',
-    tip: '推荐半身自拍、午后窗光、明亮笑意照',
-    description: '半身自拍构图，身体微侧、头部自然倾斜；一手轻触耳侧发丝，面向镜头露出明亮放松的笑意，适合拍午后窗边自然光下的生动抓拍感。',
-    badge: '半身',
-    gradient: 'linear-gradient(150deg, #f4dfd4 0%, #806f66 100%)'
-  },
-  custom22_r01_g01: {
-    categoryId: 'portrait-half',
-    categoryName: '半身写真',
-    name: '咖啡馆端杯撩发',
-    tip: '推荐咖啡馆写真、端杯道具、生活感半身照',
-    description: '半身构图中身体微侧面向镜头，左手端着咖啡置于胸前，右手将发丝别到耳后；柔和直视配合温暖微笑，适合拍随性有生活气息的咖啡馆人像。',
-    badge: '半身',
-    gradient: 'linear-gradient(150deg, #d7e2ec 0%, #8b6f58 100%)'
-  },
-  custom23_r01_g01: {
-    categoryId: 'portrait-half',
-    categoryName: '半身写真',
-    name: '夕阳胸上自拍',
-    tip: '推荐胸上自拍、夕阳逆光、自然笑容照',
-    description: '紧凑胸上自拍构图，画面不出现手部或手机，仅通过肩膀微抬暗示自拍；头部微偏、长发垂落肩头，适合拍夕阳逆光下自然真诚的半身自拍感。',
-    badge: '半身',
-    gradient: 'linear-gradient(150deg, #f2c49b 0%, #7e6659 100%)'
-  },
   custom24_r01_g01: {
     categoryId: 'portrait-half',
     categoryName: '半身写真',
@@ -305,16 +197,6 @@ const poseMetadataOverrides = {
     description: '紧凑胸上自拍构图，持机手和手机不入镜；另一只手指尖轻触下颌线，头部向手侧微倾，适合拍午后百叶窗光影下自信明亮的自然自拍感。',
     badge: '半身',
     gradient: 'linear-gradient(150deg, #ead7c5 0%, #715f58 100%)'
-  },
-  custom25_r01_g01: {
-    categoryId: 'outfit-standing',
-    categoryName: '全身穿搭',
-    name: '绿裙草帽比耶',
-    tip: '推荐连衣裙全身照、正面笑容、活力旅行照',
-    description: '身体正对镜头，一脚微微前伸并让重心落在一侧髋部；右手在脸颊旁比出小V手势，左手提着草编遮阳帽，适合拍活泼明亮的正面全身照。',
-    badge: '全身',
-    guideImage: '/static/pose_guides/custom25/custom25_r01_g01_contour.png',
-    gradient: 'linear-gradient(150deg, #c7d8b7 0%, #607858 100%)'
   },
   custom26_r01_g01: {
     categoryId: 'travel-back',
@@ -326,26 +208,6 @@ const poseMetadataOverrides = {
     guideImage: '/static/pose_guides/custom26/custom26_r01_g01_contour.png',
     gradient: 'linear-gradient(150deg, #e8dcc9 0%, #52654b 100%)'
   },
-  custom27_r01_g01: {
-    categoryId: 'outfit-standing',
-    categoryName: '全身穿搭',
-    name: '海滨墨镜托特包',
-    tip: '推荐夏日海滨、正面活力、配饰全身照',
-    description: '身体正对镜头，一只膝盖微弯、脚轻快抬起；左手调整头顶墨镜，右手勾着彩色托特包肩带，适合拍明亮爽朗的夏日海滨全身照。',
-    badge: '全身',
-    guideImage: '/static/pose_guides/custom27/custom27_r01_g01_contour.png',
-    gradient: 'linear-gradient(150deg, #d8ecf2 0%, #315d8a 100%)'
-  },
-  custom28_r01_g01: {
-    categoryId: 'portrait-half',
-    categoryName: '半身写真',
-    name: '惊讶捂嘴自拍',
-    tip: '推荐胸上自拍、夸张表情、元气手势照',
-    description: '紧凑胸上自拍构图，持机手和手机不入镜；另一只手五指张开贴近脸颊，配合圆睁双眼和微启嘴唇，适合拍甜美元气的惊讶抓拍自拍感。',
-    badge: '半身',
-    guideImage: '/static/pose_guides/custom28/custom28_r01_g01_contour.png',
-    gradient: 'linear-gradient(150deg, #f4cbd9 0%, #7e6578 100%)'
-  },
   custom29_r01_g01: {
     categoryId: 'travel-back',
     categoryName: '旅行背影',
@@ -356,16 +218,6 @@ const poseMetadataOverrides = {
     guideImage: '/static/pose_guides/custom29/custom29_r01_g01_contour.png',
     gradient: 'linear-gradient(150deg, #e9ad74 0%, #5c6d73 100%)'
   },
-  custom30_r01_g01: {
-    categoryId: 'outfit-standing',
-    categoryName: '全身穿搭',
-    name: '珍珠折扇知性',
-    tip: '推荐室内正面、折扇道具、优雅知性照',
-    description: '身体正对镜头，双腿微交叉站立；右手执半开折扇轻置下颌附近，左手自然搭在腰间，适合拍沉静自信、带配饰层次的优雅正面照。',
-    badge: '全身',
-    guideImage: '/static/pose_guides/custom30/custom30_r01_g01_contour.png',
-    gradient: 'linear-gradient(150deg, #efd2ce 0%, #81706c 100%)'
-  },
   custom31_r01_g01: {
     categoryId: 'travel-back',
     categoryName: '旅行背影',
@@ -375,16 +227,6 @@ const poseMetadataOverrides = {
     badge: '全身',
     guideImage: '/static/pose_guides/custom31/custom31_r01_g01_contour.png',
     gradient: 'linear-gradient(150deg, #c8d1d4 0%, #5d5f5b 100%)'
-  },
-  custom32_r01_g01: {
-    categoryId: 'outfit-standing',
-    categoryName: '全身穿搭',
-    name: '相机爱心街头',
-    tip: '推荐涂鸦墙街拍、相机道具、创意正面照',
-    description: '身体正对镜头自然站立，一手在胸前比出爱心手势，另一手举复古胶片相机凑到眼前；配合眨眼和明亮笑容，适合拍个性活力的街头全身照。',
-    badge: '全身',
-    guideImage: '/static/pose_guides/custom32/custom32_r01_g01_contour.png',
-    gradient: 'linear-gradient(150deg, #d7c7a8 0%, #5a5f71 100%)'
   },
   custom33_r01_g01: {
     categoryId: 'travel-back',
@@ -415,26 +257,6 @@ const poseMetadataOverrides = {
     badge: '全身',
     guideImage: '/static/pose_guides/custom35/custom35_r01_g01_contour.png',
     gradient: 'linear-gradient(150deg, #d8c5ef 0%, #8e6a4f 100%)'
-  },
-  custom36_r01_g01: {
-    categoryId: 'outfit-standing',
-    categoryName: '全身穿搭',
-    name: '紫衫交扣许愿',
-    tip: '推荐正面温柔照、交扣手势、浪漫花景',
-    description: '身体正对镜头，一脚尖微微外展、重心偏向一侧；双手举至胸前十指轻轻交扣，配合银色配饰和柔和笑容，适合拍温柔浪漫的正面全身照。',
-    badge: '全身',
-    guideImage: '/static/pose_guides/custom36/custom36_r01_g01_contour.png',
-    gradient: 'linear-gradient(150deg, #d8c4ef 0%, #c98f9d 100%)'
-  },
-  custom37_r01_g01: {
-    categoryId: 'outfit-standing',
-    categoryName: '全身穿搭',
-    name: '运动自拍点赞',
-    tip: '推荐运动活力、台阶站姿、自拍道具照',
-    description: '身体正对镜头，一脚踏上台阶形成不对称动感站姿；右手举手机自拍，左手在腰间竖起大拇指，适合拍青春自信的运动活力全身照。',
-    badge: '全身',
-    guideImage: '/static/pose_guides/custom37/custom37_r01_g01_contour.png',
-    gradient: 'linear-gradient(150deg, #f0f3f8 0%, #2d3038 100%)'
   },
   custom38_r01_g01: {
     categoryId: 'outfit-standing',
@@ -1119,18 +941,9 @@ const poseMetadataOverrides = {
 }
 
 const poseSearchKeywordOverrides = {
-  custom1_r01_g01: ['侧身照', '半身侧身', '显瘦', '温柔写真', '日常照', '腰间搭手', '自然看镜头', '不尴尬半身'],
-  custom2_r01_g01: ['撩头发', '摸头发', '侧光', '浅笑', '亲和', '温柔半身', '互动感', '自然笑'],
-  custom3_r01_g01: ['托腮', '托下巴', '锁骨', '肩线', '知性', '思考感', '安静', '一字肩', '抱臂'],
   custom4_r01_g01: ['野餐', '趴着拍', '趴姿', '草地', '双手托腮', '少女感', '慵懒', '法棍', '格纹垫'],
   custom5_r01_g01: ['撩头发', '抬眸', '毛衣照', '甜美', '侧身半身', '低头抬眼', '温柔笑', '自然半身'],
-  custom6_r01_g01: ['显高', '显腿长', '回头看', '叉腰', '高腰穿搭', '逆光', '全身站姿', '拉长比例'],
-  custom7_r01_g01: ['拿咖啡', '走路拍', '行走照', '抓拍', '街头', '通勤', '低头走路', '都市感'],
-  custom8_r01_g01: ['自然站立', '不会摆姿势', '日常站姿', '户外', '微笑', '亲和', '全身照', '简单站姿'],
-  custom9_r01_g01: ['西装', '通勤', '咖啡', '插兜', '阔腿裤', '干练', '都市街拍', '上班穿搭'],
-  custom10_r01_g01: ['背影', '不露脸', '跳跃', '山顶', '举手', '旅行照', '活力', '自由感', '踢腿'],
   custom11_r01_g01: ['背影', '不露脸', '回头', '回眸', '撩发', '长裙', '户外', '温柔抓拍'],
-  custom12_r01_g01: ['背影', '不露脸', '回眸', '逆光', '短发', '城市街道', '松弛感', '微笑'],
   custom13_r01_g01: ['湖边', '湖畔', '背影', '不露脸', '草帽', '长裙', '日落', '栈桥', '旅行氛围'],
   custom14_r01_g01: ['海边', '山海', '背影', '不露脸', '遮阳', '回头', '草坡', '黄金时刻', '旅行打卡'],
   custom15_r01_g01: ['古镇', '小巷', '背影', '不露脸', '提篮', '回眸', '清晨', '旅行街拍', '古风氛围'],
@@ -1139,23 +952,13 @@ const poseSearchKeywordOverrides = {
   custom18_r01_g01: ['自拍', '撩头发', '侧身自拍', '半身自拍', '三角构图', '自然自拍', '松弛', '不尴尬'],
   custom19_r01_g01: ['侧身', '远眺', '撩发', '看远处', '抓拍感', '不看镜头', '半身写真', '松弛'],
   custom20_r01_g01: ['窗边', '窗光', '自拍', '撩发', '浅笑', '室内', '自然光', '半身自拍'],
-  custom21_r01_g01: ['窗边', '午后', '自拍', '撩发', '笑容', '明亮', '自然光', '抓拍'],
-  custom22_r01_g01: ['咖啡馆', '端杯', '拿咖啡', '撩发', '生活感', '半身照', '温暖', '道具互动'],
-  custom23_r01_g01: ['自拍', '胸上自拍', '逆光', '夕阳', '自然笑', '近景', '头像', '半身自拍'],
   custom24_r01_g01: ['自拍', '触脸', '摸脸', '下颌线', '百叶窗', '光影', '近景', '头像', '自信'],
-  custom25_r01_g01: ['连衣裙', '草帽', '比耶', '剪刀手', '显高', '旅行', '正面照', '活力', '甜美'],
   custom26_r01_g01: ['溪流', '森林', '背影', '不露脸', '行走', '赤脚', '提裤脚', '自然旅行'],
-  custom27_r01_g01: ['海边', '墨镜', '托特包', '包包', '夏天', '抬脚', '正面照', '配饰', '度假'],
-  custom28_r01_g01: ['自拍', '捂嘴', '惊讶表情', '夸张表情', '元气', '可爱', '近景', '头像'],
   custom29_r01_g01: ['湖边', '码头', '坐姿', '背影', '不露脸', '整理辫子', '黄昏', '赤脚', '脚踩水'],
-  custom30_r01_g01: ['折扇', '扇子', '珍珠', '知性', '优雅', '室内', '交叉腿', '正面照', '轻奢'],
   custom31_r01_g01: ['庭园', '日式', '背影', '不露脸', '踮脚', '展臂', '平衡', '轻盈', '动态'],
-  custom32_r01_g01: ['相机', '爱心手势', '比心', '涂鸦墙', '街头', '眨眼', '创意', '活力'],
   custom33_r01_g01: ['登山', '徒步', '望远镜', '山脊', '背影', '不露脸', '探索感', '户外'],
   custom34_r01_g01: ['自拍', '墨镜', '机车', '酷飒', '街头', '嘟嘴', '近景', '头像', '酷一点'],
   custom35_r01_g01: ['野餐', '草甸', '背影', '不露脸', '坐姿', '野餐篮', '法棍', '草莓', '生活感'],
-  custom36_r01_g01: ['花景', '许愿', '交扣手', '温柔', '浪漫', '正面照', '全身照', '甜美'],
-  custom37_r01_g01: ['运动', '自拍', '点赞', '台阶', '活力', '手机自拍', '青春', '全身照'],
   custom38_r01_g01: ['草帽', '锁骨', '侧站', '自然站姿', '松弛', '全身穿搭', '显瘦', '温柔'],
   custom39_r01_g01: ['折扇', '扇子', '提裙', '轻奢', '优雅', '芭蕾脚', '室内写真', '复古'],
   custom40_r01_g01: ['咖啡', '台阶', '牛仔裤', '插兜', '休闲', '都市街拍', '通勤', '外带杯'],
@@ -1228,26 +1031,17 @@ const poseSearchKeywordOverrides = {
 
 const poseSceneKeywordOverrides = {
   custom4_r01_g01: ['水边', '湖边', '湖岸', '草地', '户外', '野餐场景', '生活场景', '露营', '露营地'],
-  custom7_r01_g01: ['路上', '街上', '街边', '街头', '咖啡店', '咖啡店外', '通勤路上', '城市街道', '店铺', '店门口', '商业街', '商场外'],
-  custom9_r01_g01: ['路上', '街上', '街边', '街头', '咖啡店', '咖啡店外', '通勤路上', '城市街道', '店铺', '店门口', '商业街', '商场外'],
-  custom10_r01_g01: ['山顶', '山上', '山路', '户外', '旅行景点', '开阔场景'],
   custom11_r01_g01: ['户外', '公园', '草地', '路边', '旅行景点', '自然场景'],
-  custom12_r01_g01: ['路上', '街上', '街边', '街头', '城市街道', '马路边', '逆光街道', '商业街', '店铺外'],
   custom13_r01_g01: ['水边', '湖边', '湖畔', '湖上', '河边', '桥上', '栈桥', '码头', '日落景点'],
   custom14_r01_g01: ['海边', '山边', '山海', '水边', '草坡', '户外景点', '旅行景点'],
   custom15_r01_g01: ['古镇', '小巷', '巷子', '路上', '街上', '街边', '旅行景点'],
   custom16_r01_g01: ['露台', '屋顶', '天台', '栏杆边', '城市夜景', '夜景场景'],
   custom17_r01_g01: ['海边', '水边', '沙滩', '海滩', '浅水边', '度假场景'],
   custom20_r01_g01: ['室内', '窗边', '窗前', '家里', '房间', '酒店', '民宿', '居家', '咖啡店窗边'],
-  custom21_r01_g01: ['室内', '窗边', '窗前', '家里', '房间', '酒店', '民宿', '居家', '咖啡店窗边'],
-  custom22_r01_g01: ['咖啡店', '咖啡馆', '店里', '室内', '窗边', '餐厅', '饭店', '甜品店', '奶茶店', '下午茶'],
   custom24_r01_g01: ['室内', '窗边', '窗前', '家里', '房间', '酒店', '民宿', '居家', '卧室'],
-  custom25_r01_g01: ['路上', '街边', '户外', '草地', '旅行景点', '公园'],
   custom26_r01_g01: ['水边', '溪边', '河边', '森林', '树林', '浅水', '自然景点', '旅行景点'],
-  custom27_r01_g01: ['海边', '水边', '沙滩', '海滨', '路边', '度假场景'],
   custom29_r01_g01: ['水边', '湖边', '湖畔', '河边', '码头', '桥边', '栈桥', '日落景点'],
   custom31_r01_g01: ['庭园', '园林', '公园', '石板路', '步道', '日式庭院', '旅行景点'],
-  custom32_r01_g01: ['路上', '街上', '街边', '街头', '墙边', '涂鸦墙', '城市街道', '商业街', '店铺外', '商场外'],
   custom33_r01_g01: ['山顶', '山上', '山路', '徒步路上', '户外', '旅行景点', '开阔场景'],
   custom35_r01_g01: ['草地', '户外', '公园', '田野', '野餐场景', '生活场景', '露营', '露营地'],
   custom40_r01_g01: ['咖啡店', '咖啡店外', '街边', '街上', '路上', '台阶', '城市街道', '店铺', '店门口', '商业街', '商场外'],

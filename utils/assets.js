@@ -93,7 +93,14 @@ const HOME_LOCAL_ASSET_FOLDERS = new Set([
   'custom105'
 ])
 const isRemoteUrl = (path) => /^https?:\/\//.test(path)
-const isPackedLocalAsset = (path) => LOCAL_PACKED_PREFIXES.some((prefix) => path.startsWith(prefix))
+const getPoseFolder = (path) => {
+  const match = path.match(/^\/static\/(?:pose_(?:pairs|guides|thumbs)|recommend_(?:guides|thumbs)|home_guides)\/([^/]+)\//)
+  return match ? match[1] : ''
+}
+const isPackedLocalAsset = (path) => (
+  LOCAL_PACKED_PREFIXES.some((prefix) => path.startsWith(prefix)) &&
+  HOME_LOCAL_ASSET_FOLDERS.has(getPoseFolder(path))
+)
 const isPoseContour = (path) => (
   (
     path.startsWith('/static/pose_pairs/') ||
@@ -108,10 +115,6 @@ const isPoseThumb = (path) => (
   (path.startsWith('/static/recommend_thumbs/') && /_thumb\.jpg$/.test(path)) ||
   (path.startsWith('/static/pose_pairs/') && /_demo\.jpg$/.test(path))
 )
-const getPoseFolder = (path) => {
-  const match = path.match(/^\/static\/(?:pose_(?:pairs|guides|thumbs)|recommend_(?:guides|thumbs)|home_guides)\/([^/]+)\//)
-  return match ? match[1] : ''
-}
 const normalizeAssetPath = (path) => {
   if (!path || !isRemoteUrl(path)) {
     return path

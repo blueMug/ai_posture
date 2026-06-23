@@ -259,7 +259,7 @@ Page({
     return {
       title: topic.shareTitle || `${topic.title || '场景拍照'}，照着姿势拍`,
       path: `/pages/scene-topic/index?topicId=${topic.id || ''}`,
-      imageUrl: topic.cachedShareImage || topic.coverImage || topic.shareImage || ''
+      imageUrl: topic.cachedShareImage || topic.shareImage || topic.coverImage || ''
     }
   }
 })
