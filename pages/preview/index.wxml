@@ -46,10 +46,4 @@
       <button class="save-btn" bindtap="savePhoto">保存到相簿</button>
     </view>
   </view>
-
-  <canvas
-    class="guide-composer"
-    canvas-id="guideComposer"
-    style="width: {{canvasWidth}}px; height: {{canvasHeight}}px;"
-  ></canvas>
 </view>

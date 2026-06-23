@@ -1555,6 +1555,11 @@ Page({
           guideMode: this.data.guideMode
         })
 
+        if (!shouldConfirmWithGuide) {
+          this.saveCapturedPhoto(res.tempImagePath)
+          return
+        }
+
         wx.navigateTo({
           url: '/pages/preview/index'
         })

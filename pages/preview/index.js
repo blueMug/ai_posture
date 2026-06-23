@@ -3,7 +3,6 @@ const { cacheImage } = require('../../utils/imageCache')
 const { ensurePrivacyNotice } = require('../../utils/privacy')
 
 const GUIDE_MODE_YELLOW_PHOTO = 'yellow-photo'
-const MAX_COMPOSE_CANVAS_SIZE = 1600
 const GUIDE_ROTATE_STEP = 90
 const GUIDE_ROTATE_FULL_DEGREES = 360
 
@@ -135,29 +134,9 @@ const getImageInfo = (src) => new Promise((resolve, reject) => {
   })
 })
 
-const getComposeCanvasSize = (width, height) => {
-  const sourceWidth = Number(width || 0)
-  const sourceHeight = Number(height || 0)
-
-  if (!sourceWidth || !sourceHeight) {
-    return {
-      width: 1,
-      height: 1
-    }
-  }
-
-  const scale = Math.min(1, MAX_COMPOSE_CANVAS_SIZE / Math.max(sourceWidth, sourceHeight))
-
-  return {
-    width: Math.round(sourceWidth * scale),
-    height: Math.round(sourceHeight * scale)
-  }
-}
-
 Page({
   data: {
     photoPath: '',
-    outputPhotoPath: '',
     guideImage: '',
     guideStyle: '',
     guideStyleReady: false,
@@ -175,9 +154,7 @@ Page({
     cachedPoseShareImage: '',
     shareCard: {
       visible: false
-    },
-    canvasWidth: 1,
-    canvasHeight: 1
+    }
   },
 
   onLoad() {
@@ -197,7 +174,6 @@ Page({
 
     this.setData({
       photoPath,
-      outputPhotoPath: '',
       guideImage: previewGuide.image || '',
       guideStyle: '',
       guideStyleReady: false,
@@ -322,8 +298,7 @@ Page({
       guideImage: '',
       guideStyle: '',
       confirmWithGuide: false,
-      guidePreviewVisible: false,
-      outputPhotoPath: ''
+      guidePreviewVisible: false
     })
   },
 
@@ -344,8 +319,7 @@ Page({
 
   toggleGuidePreview() {
     this.setData({
-      guidePreviewVisible: !this.data.guidePreviewVisible,
-      outputPhotoPath: ''
+      guidePreviewVisible: !this.data.guidePreviewVisible
     })
   },
 
@@ -355,132 +329,6 @@ Page({
       icon: 'none'
     })
   },
-
-  drawImageToCanvas(ctx, imagePath, rect) {
-    ctx.drawImage(
-      imagePath,
-      rect.left,
-      rect.top,
-      rect.width,
-      rect.height
-    )
-  },
-
-  drawGuideImageToCanvas(ctx, imagePath, rect) {
-    const guideRotateAngle = normalizeGuideRotateAngle(this.data.guideRotateAngle)
-
-    if (!guideRotateAngle) {
-      this.drawImageToCanvas(ctx, imagePath, rect)
-      return
-    }
-
-    const centerX = rect.left + rect.width / 2
-    const centerY = rect.top + rect.height / 2
-
-    ctx.save()
-    ctx.translate(centerX, centerY)
-    ctx.rotate(guideRotateAngle * Math.PI / 180)
-    ctx.drawImage(
-      imagePath,
-      -rect.width / 2,
-      -rect.height / 2,
-      rect.width,
-      rect.height
-    )
-    ctx.restore()
-  },
-
-  setDataAsync(data) {
-    return new Promise((resolve) => {
-      this.setData(data, resolve)
-    })
-  },
-
-  async composeGuidePhoto() {
-    if (
-      !this.data.confirmWithGuide ||
-      !this.data.guidePreviewVisible ||
-      !this.data.guideImage
-    ) {
-      return this.data.photoPath
-    }
-
-    if (this.data.outputPhotoPath) {
-      return this.data.outputPhotoPath
-    }
-
-    let photoInfo
-    let guideInfo
-
-    try {
-      [photoInfo, guideInfo] = await Promise.all([
-        getImageInfo(this.data.photoPath),
-        getImageInfo(this.data.guideImage)
-      ])
-    } catch (error) {
-      return this.data.photoPath
-    }
-
-    const canvasSize = getComposeCanvasSize(photoInfo.width, photoInfo.height)
-    const canvasWidth = canvasSize.width
-    const canvasHeight = canvasSize.height
-
-    if (!canvasWidth || !canvasHeight || !photoInfo.path || !guideInfo.path) {
-      return this.data.photoPath
-    }
-
-    const guideRect = getGuideDisplayRect({
-      guideRect: this.data.guideRect,
-      photoInfo,
-      targetWidth: canvasWidth,
-      targetHeight: canvasHeight,
-      offsetX: this.data.guideOffsetX,
-      offsetY: this.data.guideOffsetY,
-      scale: this.data.guideScale
-    })
-
-    await this.setDataAsync({
-      canvasWidth,
-      canvasHeight
-    })
-
-    return new Promise((resolve) => {
-      const ctx = wx.createCanvasContext('guideComposer', this)
-      ctx.clearRect(0, 0, canvasWidth, canvasHeight)
-      this.drawImageToCanvas(ctx, photoInfo.path, {
-        left: 0,
-        top: 0,
-        width: canvasWidth,
-        height: canvasHeight
-      })
-      ctx.setGlobalAlpha(isGuidePhotoMode(this.data.guideMode) ? 0.42 : 0.92)
-      this.drawGuideImageToCanvas(ctx, guideInfo.path, guideRect)
-      ctx.setGlobalAlpha(1)
-      ctx.draw(false, () => {
-        wx.canvasToTempFilePath({
-          canvasId: 'guideComposer',
-          width: canvasWidth,
-          height: canvasHeight,
-          destWidth: canvasWidth,
-          destHeight: canvasHeight,
-          success: (res) => {
-            this.setData({
-              outputPhotoPath: res.tempFilePath
-            })
-            resolve(res.tempFilePath)
-          },
-          fail: () => {
-            wx.showToast({
-              title: '合成轮廓失败',
-              icon: 'none'
-            })
-            resolve(this.data.photoPath)
-          }
-        }, this)
-      })
-    })
-  },
-
   async savePhoto() {
     const accepted = await ensurePrivacyNotice('保存照片到相册')
 
@@ -488,10 +336,8 @@ Page({
       return
     }
 
-    const outputPhotoPath = await this.composeGuidePhoto()
-
     wx.saveImageToPhotosAlbum({
-      filePath: outputPhotoPath,
+      filePath: this.data.photoPath,
       success: () => {
         wx.showToast({
           title: '已保存',
@@ -537,10 +383,8 @@ Page({
       return
     }
 
-    const outputPhotoPath = await this.composeGuidePhoto()
-
     wx.showShareImageMenu({
-      path: outputPhotoPath,
+      path: this.data.photoPath,
       success: () => {
         wx.showToast({
           title: '已分享',

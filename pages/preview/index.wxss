@@ -218,16 +218,6 @@
   border: 1rpx solid rgba(255, 255, 255, 0.36);
 }
 
-.guide-composer {
-  position: fixed;
-  left: 0;
-  top: 0;
-  z-index: 0;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-  pointer-events: none;
-}
 
 .save-btn::after,
 .share-photo-btn::after,
