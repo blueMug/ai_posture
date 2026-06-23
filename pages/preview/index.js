@@ -159,16 +159,23 @@ Page({
 
   onLoad() {
     const photoPath = app.globalData.photoPath
+    const previewPose = app.globalData.previewPose || {}
 
     if (!photoPath) {
-      wx.redirectTo({
-        url: '/pages/camera/index'
+      if (previewPose.id) {
+        wx.redirectTo({
+          url: `/pages/camera/index?poseId=${previewPose.id}`
+        })
+        return
+      }
+
+      wx.switchTab({
+        url: '/pages/pose-gallery/index'
       })
       return
     }
 
     const previewGuide = app.globalData.previewGuide || {}
-    const previewPose = app.globalData.previewPose || {}
     const previewShareSource = app.globalData.previewShareSource || {}
     const shareCard = this.buildShareCard(previewPose, previewShareSource)
 
@@ -303,6 +310,8 @@ Page({
   },
 
   returnToCamera() {
+    const poseParam = this.data.poseId ? `?poseId=${this.data.poseId}` : ''
+
     app.globalData.photoPath = ''
     app.globalData.previewGuide = null
     app.globalData.previewPose = null
@@ -310,10 +319,44 @@ Page({
 
     wx.navigateBack({
       fail: () => {
+        if (!this.data.poseId) {
+          wx.switchTab({
+            url: '/pages/pose-gallery/index'
+          })
+          return
+        }
+
         wx.redirectTo({
-          url: '/pages/camera/index'
+          url: `/pages/camera/index${poseParam}`
         })
       }
+    })
+  },
+
+  syncSavedPhotoToCamera(filePath) {
+    if (!filePath) {
+      return
+    }
+
+    const pages = getCurrentPages()
+    const cameraPage = pages
+      .slice()
+      .reverse()
+      .find((page) => page.route === 'pages/camera/index')
+
+    if (!cameraPage || typeof cameraPage.setData !== 'function') {
+      return
+    }
+
+    const sessionPhotoPaths = [
+      ...(cameraPage.data.sessionPhotoPaths || []),
+      filePath
+    ]
+
+    cameraPage.setData({
+      sessionPhotoPaths,
+      sessionPhotoCount: sessionPhotoPaths.length,
+      latestPhotoPath: filePath
     })
   },
 
@@ -329,6 +372,7 @@ Page({
       icon: 'none'
     })
   },
+
   async savePhoto() {
     const accepted = await ensurePrivacyNotice('保存照片到相册')
 
@@ -339,6 +383,7 @@ Page({
     wx.saveImageToPhotosAlbum({
       filePath: this.data.photoPath,
       success: () => {
+        this.syncSavedPhotoToCamera(this.data.photoPath)
         wx.showToast({
           title: '已保存',
           icon: 'success'

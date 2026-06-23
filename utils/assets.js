@@ -189,5 +189,6 @@ module.exports = {
   cdnAssetUrl,
   homeLocalAssetUrl,
   HOME_LOCAL_ASSET_FOLDERS,
+  normalizeAssetPath,
   JSDELIVR_ASSET_BASE
 }

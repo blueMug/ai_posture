@@ -1,7 +1,7 @@
 const app = getApp()
-const { poseTemplates, findPoseIndex } = require('../../utils/poses')
-const { cacheImageFields } = require('../../utils/imageCache')
-const { cdnAssetUrl, homeLocalAssetUrl, JSDELIVR_ASSET_BASE } = require('../../utils/assets')
+const { poseTemplates, findPoseIndex, getPoseById } = require('../../utils/poses')
+const { cacheImage, cacheImageFields } = require('../../utils/imageCache')
+const { assetUrl, cdnAssetUrl, homeLocalAssetUrl, normalizeAssetPath, JSDELIVR_ASSET_BASE } = require('../../utils/assets')
 const { isPoseFavorite, recordPoseUsage } = require('../../utils/userData')
 const { ensurePrivacyNotice, hasAcceptedPrivacyNotice } = require('../../utils/privacy')
 const { cacheFavoritePoseAssets } = require('../../utils/favoriteAssetCache')
@@ -48,6 +48,13 @@ const GUIDE_ROTATE_FULL_DEGREES = 360
 let cameraGuideTipShownInSession = false
 
 const isRemoteImage = (src = '') => /^https?:\/\//.test(src)
+const isPermissionDeniedError = (error = {}) => {
+  const message = String(error.errMsg || error.message || error || '').toLowerCase()
+  return message.includes('auth deny') ||
+    message.includes('permission') ||
+    message.includes('authorize') ||
+    message.includes('denied')
+}
 const getImageInfo = (src) => new Promise((resolve) => {
   if (!src) {
     resolve(null)
@@ -178,9 +185,15 @@ const getGuidePhotoImage = (template = {}) => (
   ''
 )
 const getCameraGuideImage = (src = '') => {
-  const localStaticPath = getLocalStaticAssetPath(src)
+  if (!src || isRemoteImage(src)) {
+    return src
+  }
 
-  return localStaticPath || src
+  if (src.startsWith('/static/')) {
+    return assetUrl(src)
+  }
+
+  return src
 }
 const getActiveGuideImage = (template, guideMode) => (
   isGuidePhotoMode(normalizeGuideMode(template, guideMode))
@@ -481,11 +494,13 @@ const cacheTemplateSupportImages = (template) => {
     thumbnailImage: guidePhotoImage
   }, CACHE_TEMPLATE_SUPPORT_IMAGE_FIELDS).catch(() => {})
 }
-const resolveTemplateForCamera = (template) => (
-  isPoseFavorite(template.id)
-    ? cacheFavoritePoseAssets(template)
-    : Promise.resolve(template)
-)
+const cacheFavoriteTemplateInBackground = (template) => {
+  if (!template || !isPoseFavorite(template.id)) {
+    return
+  }
+
+  cacheFavoritePoseAssets(template).catch(() => {})
+}
 const getGuideFallbackImages = (guideImage) => {
   if (!guideImage) {
     return []
@@ -493,8 +508,10 @@ const getGuideFallbackImages = (guideImage) => {
 
   const candidates = []
   const addCandidate = (src) => {
-    if (src && src !== guideImage && !candidates.includes(src)) {
-      candidates.push(src)
+    const candidate = assetUrl(src)
+
+    if (candidate && candidate !== guideImage && !candidates.includes(candidate)) {
+      candidates.push(candidate)
     }
   }
   const localStaticPath = getLocalStaticAssetPath(guideImage)
@@ -509,14 +526,6 @@ const getGuideFallbackImages = (guideImage) => {
         .replace(/_gallery_thumb\.jpg$/, '_demo.jpg')))
     }
 
-    if (localStaticPath.includes('/static/pose_guides/')) {
-      addCandidate(localStaticPath.replace('/static/pose_guides/', '/static/pose_pairs/'))
-    }
-
-    if (localStaticPath.includes('/static/pose_pairs/')) {
-      addCandidate(localStaticPath.replace('/static/pose_pairs/', '/static/pose_guides/'))
-    }
-
     addCandidate(cdnAssetUrl(localStaticPath))
 
     if (localStaticPath.includes('/static/pose_guides/')) {
@@ -528,21 +537,23 @@ const getGuideFallbackImages = (guideImage) => {
     }
   }
 
-  if (guideImage.includes('/static/pose_guides/')) {
-    addCandidate(guideImage.replace('/static/pose_guides/', '/static/pose_pairs/'))
+  const guideStaticPath = normalizeAssetPath(guideImage) || guideImage
+
+  if (guideStaticPath.includes('/static/pose_guides/')) {
+    addCandidate(cdnAssetUrl(guideStaticPath.replace('/static/pose_guides/', '/static/pose_pairs/')))
   }
 
-  if (guideImage.includes('/static/pose_pairs/')) {
-    addCandidate(guideImage.replace('/static/pose_pairs/', '/static/pose_guides/'))
+  if (guideStaticPath.includes('/static/pose_pairs/')) {
+    addCandidate(cdnAssetUrl(guideStaticPath.replace('/static/pose_pairs/', '/static/pose_guides/')))
   }
 
-  if (guideImage.includes('/static/gallery_thumbs/')) {
-    addCandidate(guideImage
+  if (guideStaticPath.includes('/static/gallery_thumbs/')) {
+    addCandidate(cdnAssetUrl(guideStaticPath
       .replace('/static/gallery_thumbs/', '/static/pose_thumbs/')
-      .replace(/_gallery_thumb\.jpg$/, '_thumb.jpg'))
-    addCandidate(guideImage
+      .replace(/_gallery_thumb\.jpg$/, '_thumb.jpg')))
+    addCandidate(cdnAssetUrl(guideStaticPath
       .replace('/static/gallery_thumbs/', '/static/pose_pairs/')
-      .replace(/_gallery_thumb\.jpg$/, '_demo.jpg'))
+      .replace(/_gallery_thumb\.jpg$/, '_demo.jpg')))
   }
 
   return candidates
@@ -594,11 +605,23 @@ Page({
     sessionPhotoPaths: [],
     sessionPhotoCount: 0,
     latestPhotoPath: '',
+    isCapturing: false,
     privacyAccepted: hasAcceptedPrivacyNotice()
   },
 
   async onLoad(options = {}) {
     const guideSettings = this.loadGuideSettings()
+    const selectedPose = getPoseById(options.poseId)
+
+    if (!selectedPose) {
+      wx.showToast({
+        title: '姿势不存在',
+        icon: 'none'
+      })
+      this.backToPoseGallery()
+      return
+    }
+
     const templateIndex = findPoseIndex(options.poseId)
     const template = poseTemplates[(templateIndex + poseTemplates.length) % poseTemplates.length]
     const homeLocalAssets = options.homeLocal === '1'
@@ -724,6 +747,37 @@ Page({
     })
   },
 
+  promoteCurrentGuideImage(guideImage, templateId, requestId = this.templateRequestId) {
+    if (!isRemoteImage(guideImage)) {
+      return
+    }
+
+    cacheImage(guideImage).then((cachedGuideImage) => {
+      const currentTemplate = this.data.currentTemplate || {}
+
+      if (
+        this.templateRequestId !== requestId ||
+        currentTemplate.id !== templateId ||
+        !cachedGuideImage ||
+        cachedGuideImage === guideImage
+      ) {
+        return
+      }
+
+      this.setData({
+        guideDisplayImage: cachedGuideImage,
+        currentTemplate: {
+          ...currentTemplate,
+          guideImage: cachedGuideImage
+        },
+        guideImageRenderVisible: true,
+        guideLoadFailed: false,
+        guideLoadRetryVisible: false
+      })
+      this.startGuideLoading(cachedGuideImage, this.data.guideMode, true)
+    }).catch(() => {})
+  },
+
   setTemplate(index, guideMode = this.data.guideMode) {
     const nextIndex = (index + poseTemplates.length) % poseTemplates.length
     const template = this.data.homeLocalAssets
@@ -736,9 +790,7 @@ Page({
       guideLoadFailed: false
     })
 
-    resolveTemplateForCamera(template).then((resolvedTemplate) => (
-      cacheTemplatePrimaryGuide(resolvedTemplate, guideMode)
-    )).then(async (cachedTemplate) => {
+    cacheTemplatePrimaryGuide(template, guideMode).then(async (cachedTemplate) => {
       if (this.templateRequestId !== requestId) {
         return
       }
@@ -762,6 +814,7 @@ Page({
       })
       this.guideFallbackTriedImages = {}
       this.startGuideLoading(currentTemplate.guideImage, guideModeState.guideMode)
+      this.promoteCurrentGuideImage(currentTemplate.guideImage, currentTemplate.id, requestId)
 
       const guideImageInfo = await getImageInfo(currentTemplate.guideImage)
 
@@ -790,6 +843,7 @@ Page({
         ...guideModeState
       }, () => {
         this.hasTemplateLoaded = true
+        cacheFavoriteTemplateInBackground(template)
         cacheTemplateSupportImages(template)
       })
     })
@@ -812,9 +866,7 @@ Page({
       return
     }
 
-    resolveTemplateForCamera(currentTemplate).then((resolvedTemplate) => (
-      cacheTemplatePrimaryGuide(resolvedTemplate, nextGuideMode)
-    )).then(async (cachedTemplate) => {
+    cacheTemplatePrimaryGuide(currentTemplate, nextGuideMode).then(async (cachedTemplate) => {
       const guideModeState = getGuideModeState(cachedTemplate, nextGuideMode)
       const nextTemplate = applyGuideMode(cachedTemplate, true, guideModeState.guideMode)
 
@@ -835,6 +887,7 @@ Page({
       })
       this.guideFallbackTriedImages = {}
       this.startGuideLoading(nextTemplate.guideImage, guideModeState.guideMode, true)
+      this.promoteCurrentGuideImage(nextTemplate.guideImage, nextTemplate.id)
 
       const guideImageInfo = await getImageInfo(nextTemplate.guideImage)
       const latestTemplate = this.data.currentTemplate && this.data.currentTemplate.id === nextTemplate.id
@@ -855,6 +908,7 @@ Page({
         ),
         ...guideModeState
       }, () => {
+        cacheFavoriteTemplateInBackground(currentTemplate)
         cacheTemplateSupportImages(currentTemplate)
       })
     })
@@ -883,9 +937,7 @@ Page({
       ? withHomeLocalTemplateAssets(poseTemplates[this.data.currentIndex])
       : poseTemplates[this.data.currentIndex]
 
-    resolveTemplateForCamera(currentTemplate).then((resolvedTemplate) => (
-      cacheTemplatePrimaryGuide(resolvedTemplate, guideMode)
-    )).then(async (cachedTemplate) => {
+    cacheTemplatePrimaryGuide(currentTemplate, guideMode).then(async (cachedTemplate) => {
       const guideModeState = getGuideModeState(cachedTemplate, guideMode)
       const nextTemplate = applyGuideMode(cachedTemplate, this.data.guideVisible, guideModeState.guideMode)
 
@@ -905,6 +957,7 @@ Page({
       })
       this.guideFallbackTriedImages = {}
       this.startGuideLoading(nextTemplate.guideImage, guideModeState.guideMode)
+      this.promoteCurrentGuideImage(nextTemplate.guideImage, nextTemplate.id)
 
       const guideImageInfo = await getImageInfo(nextTemplate.guideImage)
       const latestTemplate = this.data.currentTemplate && this.data.currentTemplate.id === nextTemplate.id
@@ -925,6 +978,7 @@ Page({
         ),
         ...guideModeState
       }, () => {
+        cacheFavoriteTemplateInBackground(currentTemplate)
         cacheTemplateSupportImages(currentTemplate)
       })
     })
@@ -962,16 +1016,34 @@ Page({
         }
       })
       this.startGuideLoading(fallbackGuideImage, this.data.guideMode, true)
+      this.promoteCurrentGuideImage(fallbackGuideImage, currentTemplate.id)
       return
     }
 
     this.stopGuideLoadingTimer()
     this.setData({
       guideImageLoading: false,
-      guideLoadRetryVisible: false,
-      guideLoadFailed: false,
+      guideLoadRetryVisible: true,
+      guideLoadFailed: true,
       guideImageRenderVisible: false
     })
+  },
+
+  retryGuideLoad() {
+    const currentTemplate = this.data.currentTemplate || {}
+    const guideImage = this.data.guideDisplayImage || currentTemplate.guideImage || ''
+
+    if (!guideImage) {
+      return
+    }
+
+    this.guideFallbackTriedImages = {}
+    this.setData({
+      guideLoadFailed: false,
+      guideLoadRetryVisible: false,
+      guideImageRenderVisible: true
+    })
+    this.startGuideLoading(guideImage, this.data.guideMode, true)
   },
 
   onGuideDragStart(event) {
@@ -1298,7 +1370,7 @@ Page({
   },
 
   startCountdownTakePhoto() {
-    if (this.data.countdownActive) {
+    if (this.data.countdownActive || this.data.isCapturing) {
       return
     }
 
@@ -1426,7 +1498,21 @@ Page({
     })
   },
 
+  finishCapturing() {
+    if (!this.data.isCapturing) {
+      return
+    }
+
+    this.setData({
+      isCapturing: false
+    })
+  },
+
   takePhoto() {
+    if (this.data.isCapturing) {
+      return
+    }
+
     if (this.data.countdownSeconds > 0) {
       this.startCountdownTakePhoto()
       return
@@ -1494,6 +1580,14 @@ Page({
   },
 
   async capturePhoto() {
+    if (this.data.isCapturing) {
+      return
+    }
+
+    this.setData({
+      isCapturing: true
+    })
+
     if (!this.cameraContext) {
       this.cameraContext = wx.createCameraContext()
     }
@@ -1561,10 +1655,14 @@ Page({
         }
 
         wx.navigateTo({
-          url: '/pages/preview/index'
+          url: '/pages/preview/index',
+          complete: () => {
+            this.finishCapturing()
+          }
         })
       },
       fail: () => {
+        this.finishCapturing()
         wx.showToast({
           title: '拍照失败',
           icon: 'none'
@@ -1575,12 +1673,14 @@ Page({
 
   async saveCapturedPhoto(filePath) {
     if (!filePath) {
+      this.finishCapturing()
       return
     }
 
     const accepted = await ensurePrivacyNotice('保存照片到相册')
 
     if (!accepted) {
+      this.finishCapturing()
       return
     }
 
@@ -1607,22 +1707,48 @@ Page({
           title: '已保存，继续拍',
           icon: 'success'
         })
+        this.finishCapturing()
       },
       fail: (error) => {
-        const message = error.errMsg && error.errMsg.includes('auth deny')
-          ? '请授权保存到相册'
-          : '保存失败'
+        this.finishCapturing()
+        this.handleSaveCapturedPhotoFail(filePath, error)
+      }
+    })
+  },
 
-        wx.showModal({
-          title: '提示',
-          content: message,
-          confirmText: '去设置',
-          success: (res) => {
-            if (res.confirm) {
-              wx.openSetting()
+  openPreviewForCapturedPhoto() {
+    wx.navigateTo({
+      url: '/pages/preview/index'
+    })
+  },
+
+  handleSaveCapturedPhotoFail(filePath, error) {
+    const permissionDenied = isPermissionDeniedError(error)
+
+    app.globalData.photoPath = filePath
+    app.globalData.previewGuide = null
+
+    wx.showModal({
+      title: '保存失败',
+      content: permissionDenied
+        ? '请授权保存到相册。照片已保留，可先到预览页重试保存。'
+        : '照片已保留，可到预览页重试保存。',
+      confirmText: permissionDenied ? '去设置' : '去预览',
+      cancelText: permissionDenied ? '先预览' : '取消',
+      showCancel: permissionDenied,
+      success: (res) => {
+        if (permissionDenied && res.confirm) {
+          wx.openSetting({
+            complete: () => {
+              this.openPreviewForCapturedPhoto()
             }
-          }
-        })
+          })
+          return
+        }
+
+        if (res.confirm || permissionDenied) {
+          this.openPreviewForCapturedPhoto()
+        }
       }
     })
   },
@@ -1652,9 +1778,24 @@ Page({
 
   onCameraError(event) {
     const message = event.detail && event.detail.errMsg ? event.detail.errMsg : '相机不可用'
-    wx.showToast({
-      title: message,
-      icon: 'none'
+
+    if (!isPermissionDeniedError(message)) {
+      wx.showToast({
+        title: message,
+        icon: 'none'
+      })
+      return
+    }
+
+    wx.showModal({
+      title: '需要相机权限',
+      content: '请在系统设置中允许使用相机，才能照着姿势拍照。',
+      confirmText: '去设置',
+      success: (res) => {
+        if (res.confirm) {
+          wx.openSetting()
+        }
+      }
     })
   }
 })

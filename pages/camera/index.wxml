@@ -36,6 +36,15 @@
             bindload="onGuideImageLoad"
             binderror="onGuideImageError"
           ></cover-image>
+          <cover-view
+            wx:if="{{guideImageLoading}}"
+            class="guide-load-status"
+          >轮廓加载中</cover-view>
+          <cover-view
+            wx:if="{{guideLoadRetryVisible}}"
+            class="guide-load-status guide-load-retry"
+            catchtap="retryGuideLoad"
+          >轮廓加载失败，点一下重试</cover-view>
         </cover-view>
       </cover-view>
       <cover-view wx:if="{{countdownActive}}" class="countdown-mask">

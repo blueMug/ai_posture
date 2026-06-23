@@ -103,9 +103,11 @@ const findPoseIndex = (poseId) => {
   const index = poseTemplates.findIndex((pose) => pose.id === poseId)
   return index >= 0 ? index : 0
 }
+const getPoseById = (poseId) => poseTemplates.find((pose) => pose.id === poseId) || null
 
 module.exports = {
   poseTemplates,
   poseCategories,
-  findPoseIndex
+  findPoseIndex,
+  getPoseById
 }

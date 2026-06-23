@@ -1,4 +1,4 @@
-const { poseTemplates, findPoseIndex } = require('../../utils/poses')
+const { getPoseById } = require('../../utils/poses')
 const { cacheImage, getCachedImagePath } = require('../../utils/imageCache')
 const { cdnAssetUrl } = require('../../utils/assets')
 const { ensurePrivacyNotice } = require('../../utils/privacy')
@@ -16,7 +16,7 @@ const {
   unpinFavoritePoseAssets
 } = require('../../utils/favoriteAssetCache')
 
-const getPose = (poseId) => poseTemplates[findPoseIndex(poseId)]
+const getPose = (poseId) => getPoseById(poseId)
 const MAX_ACTION_POINTS = 3
 const DETAIL_IMAGE_LOAD_TIMEOUT = 12000
 const getDisplayImageSource = (pose = {}) => (
@@ -215,6 +215,16 @@ Page({
 
   onLoad(options = {}) {
     const pose = getPose(options.poseId)
+
+    if (!pose) {
+      wx.showToast({
+        title: '姿势不存在',
+        icon: 'none'
+      })
+      this.backToHome()
+      return
+    }
+
     const favoritePoseIds = getFavoritePoseIds()
     const poseWithFavorite = withFavoriteState(pose, favoritePoseIds)
     const shootingGuide = getShootingGuide(pose)
@@ -252,6 +262,11 @@ Page({
 
   onShow() {
     const pose = getPose(this.data.poseId)
+
+    if (!pose) {
+      return
+    }
+
     const poseWithFavorite = withFavoriteState(pose, getFavoritePoseIds())
 
     this.setData({
