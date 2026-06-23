@@ -1,8 +1,25 @@
 const app = getApp()
+const { cacheImage } = require('../../utils/imageCache')
 const { ensurePrivacyNotice } = require('../../utils/privacy')
 
-const GUIDE_MODE_PHOTO = 'photo'
-const MAX_COMPOSE_CANVAS_SIZE = 1600
+const GUIDE_MODE_YELLOW_PHOTO = 'yellow-photo'
+const GUIDE_ROTATE_STEP = 90
+const GUIDE_ROTATE_FULL_DEGREES = 360
+
+const normalizeGuideRotateAngle = (angle) => {
+  if (angle === true) {
+    return GUIDE_ROTATE_STEP
+  }
+
+  const numericAngle = Number(angle || 0)
+
+  if (!Number.isFinite(numericAngle)) {
+    return 0
+  }
+
+  return ((Math.round(numericAngle / GUIDE_ROTATE_STEP) * GUIDE_ROTATE_STEP) % GUIDE_ROTATE_FULL_DEGREES + GUIDE_ROTATE_FULL_DEGREES) % GUIDE_ROTATE_FULL_DEGREES
+}
+const isGuidePhotoMode = (guideMode) => guideMode === GUIDE_MODE_YELLOW_PHOTO || guideMode === 'photo'
 
 const getAspectFitRect = (sourceWidth, sourceHeight, targetWidth, targetHeight) => {
   const sourceRatio = sourceWidth / sourceHeight
@@ -95,7 +112,7 @@ const getGuideDisplayRect = ({
   }
 }
 
-const getGuideDisplayStyle = ({ guideMode, ...options }) => {
+const getGuideDisplayStyle = ({ guideMode, guideRotateAngle = 0, ...options }) => {
   const rect = getGuideDisplayRect(options)
 
   return [
@@ -103,7 +120,9 @@ const getGuideDisplayStyle = ({ guideMode, ...options }) => {
     `top: ${rect.top}px`,
     `width: ${rect.width}px`,
     `height: ${rect.height}px`,
-    `opacity: ${guideMode === GUIDE_MODE_PHOTO ? 0.42 : 0.92}`
+    `opacity: ${isGuidePhotoMode(guideMode) ? 0.42 : 0.92}`,
+    'transform-origin: center center',
+    `transform: rotate(${normalizeGuideRotateAngle(guideRotateAngle)}deg)`
   ].join('; ')
 }
 
@@ -115,29 +134,9 @@ const getImageInfo = (src) => new Promise((resolve, reject) => {
   })
 })
 
-const getComposeCanvasSize = (width, height) => {
-  const sourceWidth = Number(width || 0)
-  const sourceHeight = Number(height || 0)
-
-  if (!sourceWidth || !sourceHeight) {
-    return {
-      width: 1,
-      height: 1
-    }
-  }
-
-  const scale = Math.min(1, MAX_COMPOSE_CANVAS_SIZE / Math.max(sourceWidth, sourceHeight))
-
-  return {
-    width: Math.round(sourceWidth * scale),
-    height: Math.round(sourceHeight * scale)
-  }
-}
-
 Page({
   data: {
     photoPath: '',
-    outputPhotoPath: '',
     guideImage: '',
     guideStyle: '',
     guideStyleReady: false,
@@ -148,29 +147,40 @@ Page({
     guideScale: 1,
     guideRect: null,
     guideMode: 'outline',
+    guideRotateAngle: 0,
     poseId: '',
     poseName: '',
     poseShareImage: '',
-    canvasWidth: 1,
-    canvasHeight: 1
+    cachedPoseShareImage: '',
+    shareCard: {
+      visible: false
+    }
   },
 
   onLoad() {
     const photoPath = app.globalData.photoPath
+    const previewPose = app.globalData.previewPose || {}
 
     if (!photoPath) {
-      wx.redirectTo({
-        url: '/pages/camera/index'
+      if (previewPose.id) {
+        wx.redirectTo({
+          url: `/pages/camera/index?poseId=${previewPose.id}`
+        })
+        return
+      }
+
+      wx.switchTab({
+        url: '/pages/pose-gallery/index'
       })
       return
     }
 
     const previewGuide = app.globalData.previewGuide || {}
-    const previewPose = app.globalData.previewPose || {}
+    const previewShareSource = app.globalData.previewShareSource || {}
+    const shareCard = this.buildShareCard(previewPose, previewShareSource)
 
     this.setData({
       photoPath,
-      outputPhotoPath: '',
       guideImage: previewGuide.image || '',
       guideStyle: '',
       guideStyleReady: false,
@@ -181,14 +191,41 @@ Page({
       guideScale: Number(previewGuide.scale || 1),
       guideRect: previewGuide.rect || null,
       guideMode: previewGuide.guideMode || 'outline',
+      guideRotateAngle: normalizeGuideRotateAngle(previewGuide.guideRotateAngle || previewGuide.guideRotated),
       poseId: previewPose.id || '',
       poseName: previewPose.name || '',
-      poseShareImage: previewPose.thumbnailImage || ''
+      poseShareImage: previewPose.shareImage || previewPose.thumbnailImage || '',
+      cachedPoseShareImage: '',
+      shareCard
     })
+
+    this.cachePoseShareImage(previewPose)
 
     if (previewGuide.needsConfirm && previewGuide.image) {
       this.updateGuidePreviewStyle(photoPath, previewGuide)
     }
+  },
+
+  cachePoseShareImage(previewPose = {}) {
+    const shareImage = previewPose.shareImage || previewPose.thumbnailImage || ''
+
+    if (!shareImage) {
+      return
+    }
+
+    cacheImage(shareImage).then((cachedShareImage) => {
+      if (
+        !cachedShareImage ||
+        cachedShareImage === shareImage ||
+        this.data.poseId !== (previewPose.id || '')
+      ) {
+        return
+      }
+
+      this.setData({
+        cachedPoseShareImage: cachedShareImage
+      })
+    }).catch(() => {})
   },
 
   async updateGuidePreviewStyle(photoPath, previewGuide) {
@@ -209,7 +246,8 @@ Page({
           offsetX: Number(previewGuide.offsetX || 0),
           offsetY: Number(previewGuide.offsetY || 0),
           scale: Number(previewGuide.scale || 1),
-          guideMode: previewGuide.guideMode || 'outline'
+          guideMode: previewGuide.guideMode || 'outline',
+          guideRotateAngle: normalizeGuideRotateAngle(previewGuide.guideRotateAngle || previewGuide.guideRotated)
         }),
         guideStyleReady: true
       })
@@ -220,10 +258,44 @@ Page({
     }
   },
 
+  buildShareCard(previewPose = {}, previewShareSource = {}) {
+    const poseName = previewPose.name || ''
+    const sceneTitle = previewShareSource.sceneTitle || ''
+    const planTitle = previewShareSource.title || poseName
+    const topicId = previewShareSource.topicId || ''
+
+    if (topicId) {
+      return {
+        visible: true,
+        kicker: sceneTitle ? `${sceneTitle}拍法` : '场景拍法',
+        title: planTitle ? `我刚照着「${planTitle}」拍了一张` : '我刚照着这个场景拍法拍了一张',
+        desc: previewShareSource.reason || '不知道怎么拍时，直接选场景照着拍。',
+        buttonText: '分享这个拍法',
+        path: `/pages/scene-topic/index?topicId=${topicId}`
+      }
+    }
+
+    if (previewPose.id) {
+      return {
+        visible: true,
+        kicker: '姿势模板',
+        title: poseName ? `我刚照着「${poseName}」拍了一张` : '我刚照着这个姿势拍了一张',
+        desc: '朋友不知道怎么摆姿势时，可以直接照着这个模板拍。',
+        buttonText: '分享这个姿势',
+        path: `/pages/pose-detail/index?poseId=${previewPose.id}`
+      }
+    }
+
+    return {
+      visible: false
+    }
+  },
+
   retake() {
     app.globalData.photoPath = ''
     app.globalData.previewGuide = null
     app.globalData.previewPose = null
+    app.globalData.previewShareSource = null
     wx.navigateBack()
   },
 
@@ -233,29 +305,64 @@ Page({
       guideImage: '',
       guideStyle: '',
       confirmWithGuide: false,
-      guidePreviewVisible: false,
-      outputPhotoPath: ''
+      guidePreviewVisible: false
     })
   },
 
   returnToCamera() {
+    const poseParam = this.data.poseId ? `?poseId=${this.data.poseId}` : ''
+
     app.globalData.photoPath = ''
     app.globalData.previewGuide = null
     app.globalData.previewPose = null
+    app.globalData.previewShareSource = null
 
     wx.navigateBack({
       fail: () => {
+        if (!this.data.poseId) {
+          wx.switchTab({
+            url: '/pages/pose-gallery/index'
+          })
+          return
+        }
+
         wx.redirectTo({
-          url: '/pages/camera/index'
+          url: `/pages/camera/index${poseParam}`
         })
       }
     })
   },
 
+  syncSavedPhotoToCamera(filePath) {
+    if (!filePath) {
+      return
+    }
+
+    const pages = getCurrentPages()
+    const cameraPage = pages
+      .slice()
+      .reverse()
+      .find((page) => page.route === 'pages/camera/index')
+
+    if (!cameraPage || typeof cameraPage.setData !== 'function') {
+      return
+    }
+
+    const sessionPhotoPaths = [
+      ...(cameraPage.data.sessionPhotoPaths || []),
+      filePath
+    ]
+
+    cameraPage.setData({
+      sessionPhotoPaths,
+      sessionPhotoCount: sessionPhotoPaths.length,
+      latestPhotoPath: filePath
+    })
+  },
+
   toggleGuidePreview() {
     this.setData({
-      guidePreviewVisible: !this.data.guidePreviewVisible,
-      outputPhotoPath: ''
+      guidePreviewVisible: !this.data.guidePreviewVisible
     })
   },
 
@@ -266,107 +373,6 @@ Page({
     })
   },
 
-  drawImageToCanvas(ctx, imagePath, rect) {
-    ctx.drawImage(
-      imagePath,
-      rect.left,
-      rect.top,
-      rect.width,
-      rect.height
-    )
-  },
-
-  setDataAsync(data) {
-    return new Promise((resolve) => {
-      this.setData(data, resolve)
-    })
-  },
-
-  async composeGuidePhoto() {
-    if (
-      !this.data.confirmWithGuide ||
-      !this.data.guidePreviewVisible ||
-      !this.data.guideImage
-    ) {
-      return this.data.photoPath
-    }
-
-    if (this.data.outputPhotoPath) {
-      return this.data.outputPhotoPath
-    }
-
-    let photoInfo
-    let guideInfo
-
-    try {
-      [photoInfo, guideInfo] = await Promise.all([
-        getImageInfo(this.data.photoPath),
-        getImageInfo(this.data.guideImage)
-      ])
-    } catch (error) {
-      return this.data.photoPath
-    }
-
-    const canvasSize = getComposeCanvasSize(photoInfo.width, photoInfo.height)
-    const canvasWidth = canvasSize.width
-    const canvasHeight = canvasSize.height
-
-    if (!canvasWidth || !canvasHeight || !photoInfo.path || !guideInfo.path) {
-      return this.data.photoPath
-    }
-
-    const guideRect = getGuideDisplayRect({
-      guideRect: this.data.guideRect,
-      photoInfo,
-      targetWidth: canvasWidth,
-      targetHeight: canvasHeight,
-      offsetX: this.data.guideOffsetX,
-      offsetY: this.data.guideOffsetY,
-      scale: this.data.guideScale
-    })
-
-    await this.setDataAsync({
-      canvasWidth,
-      canvasHeight
-    })
-
-    return new Promise((resolve) => {
-      const ctx = wx.createCanvasContext('guideComposer', this)
-      ctx.clearRect(0, 0, canvasWidth, canvasHeight)
-      this.drawImageToCanvas(ctx, photoInfo.path, {
-        left: 0,
-        top: 0,
-        width: canvasWidth,
-        height: canvasHeight
-      })
-      ctx.setGlobalAlpha(this.data.guideMode === GUIDE_MODE_PHOTO ? 0.42 : 0.92)
-      this.drawImageToCanvas(ctx, guideInfo.path, guideRect)
-      ctx.setGlobalAlpha(1)
-      ctx.draw(false, () => {
-        wx.canvasToTempFilePath({
-          canvasId: 'guideComposer',
-          width: canvasWidth,
-          height: canvasHeight,
-          destWidth: canvasWidth,
-          destHeight: canvasHeight,
-          success: (res) => {
-            this.setData({
-              outputPhotoPath: res.tempFilePath
-            })
-            resolve(res.tempFilePath)
-          },
-          fail: () => {
-            wx.showToast({
-              title: '合成轮廓失败',
-              icon: 'none'
-            })
-            resolve(this.data.photoPath)
-          }
-        }, this)
-      })
-    })
-  },
-
   async savePhoto() {
     const accepted = await ensurePrivacyNotice('保存照片到相册')
 
@@ -374,11 +380,10 @@ Page({
       return
     }
 
-    const outputPhotoPath = await this.composeGuidePhoto()
-
     wx.saveImageToPhotosAlbum({
-      filePath: outputPhotoPath,
+      filePath: this.data.photoPath,
       success: () => {
+        this.syncSavedPhotoToCamera(this.data.photoPath)
         wx.showToast({
           title: '已保存',
           icon: 'success'
@@ -443,6 +448,15 @@ Page({
   onShareAppMessage() {
     const poseId = this.data.poseId
     const poseName = this.data.poseName
+    const shareCard = this.data.shareCard || {}
+
+    if (shareCard.visible && shareCard.path) {
+      return {
+        title: shareCard.title || '不知道怎么拍？选场景照着拍',
+        path: shareCard.path,
+        imageUrl: this.data.cachedPoseShareImage || this.data.poseShareImage || this.data.photoPath || ''
+      }
+    }
 
     return {
       title: poseName
@@ -451,7 +465,7 @@ Page({
       path: poseId
         ? `/pages/pose-detail/index?poseId=${poseId}`
         : '/pages/home/index',
-      imageUrl: this.data.poseShareImage || ''
+      imageUrl: this.data.cachedPoseShareImage || this.data.poseShareImage || this.data.photoPath || ''
     }
   }
 })

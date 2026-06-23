@@ -1,5 +1,6 @@
 const {
   cacheImageFields,
+  getCachedImageFields,
   pinCachedImages,
   unpinCachedImages
 } = require('./imageCache')
@@ -7,6 +8,7 @@ const {
 const FAVORITE_ASSET_FIELDS = [
   'guideImage',
   'thumbnailImage',
+  'shareImage',
   'modelImage',
   'detailImage'
 ]
@@ -26,6 +28,14 @@ const cacheFavoritePoseAssets = async (pose) => {
   return cacheImageFields(pose, FAVORITE_ASSET_FIELDS)
 }
 
+const getCachedFavoritePoseAssets = async (pose) => {
+  if (!pose) {
+    return pose
+  }
+
+  return getCachedImageFields(pose, FAVORITE_ASSET_FIELDS)
+}
+
 const unpinFavoritePoseAssets = (pose) => {
   if (!pose) {
     return []
@@ -37,5 +47,6 @@ const unpinFavoritePoseAssets = (pose) => {
 module.exports = {
   cacheFavoritePoseAssets,
   FAVORITE_ASSET_FIELDS,
+  getCachedFavoritePoseAssets,
   unpinFavoritePoseAssets
 }

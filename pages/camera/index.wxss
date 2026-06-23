@@ -7,11 +7,6 @@
 
 .camera {
   width: 100vw;
-  height: 133.333vw;
-  max-height: calc(100vh - 330rpx);
-}
-
-.camera {
   display: block;
 }
 
@@ -41,11 +36,27 @@
 
 .pose-stage {
   position: absolute;
-  left: 7vw;
-  right: 7vw;
-  top: 8%;
-  bottom: 4%;
   z-index: 5;
+}
+
+.settings-dismiss-cover {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 13;
+  background: rgba(0, 0, 0, 0);
+}
+
+.settings-dismiss-page {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 21;
+  background: rgba(0, 0, 0, 0);
 }
 
 .pose-guide-layer {
@@ -61,7 +72,7 @@
   position: absolute;
   left: 28rpx;
   top: 120rpx;
-  z-index: 14;
+  z-index: 24;
 }
 
 .settings-trigger {
@@ -84,6 +95,8 @@
 }
 
 .settings-panel {
+  position: relative;
+  z-index: 2;
   width: 360rpx;
   margin-top: 14rpx;
   padding: 22rpx;
@@ -165,46 +178,6 @@
   border-color: #ffe95c;
 }
 
-.camera-shooting-guide {
-  position: absolute;
-  left: 50%;
-  bottom: 22rpx;
-  z-index: 13;
-  transform: translateX(-50%);
-  width: 660rpx;
-  padding: 20rpx 24rpx;
-  border-radius: 28rpx;
-  box-sizing: border-box;
-  overflow: visible;
-  background: rgba(0, 0, 0, 0.66);
-  border: 2rpx solid rgba(255, 233, 92, 0.44);
-  box-shadow: 0 18rpx 48rpx rgba(0, 0, 0, 0.3);
-}
-
-.camera-guide-item {
-  display: block;
-  margin-top: 16rpx;
-}
-
-.camera-guide-item:first-child {
-  margin-top: 0;
-}
-
-.camera-guide-label {
-  color: rgba(255, 233, 92, 0.92);
-  font-size: 20rpx;
-  font-weight: 800;
-  line-height: 1.2;
-}
-
-.camera-guide-text {
-  margin-top: 6rpx;
-  color: rgba(255, 255, 255, 0.84);
-  font-size: 22rpx;
-  line-height: 1.45;
-  white-space: normal;
-}
-
 .guide-usage-tip {
   position: absolute;
   left: 50%;
@@ -225,6 +198,11 @@
   color: #ffe95c;
   font-size: 26rpx;
   font-weight: 900;
+  line-height: 1.35;
+  white-space: normal;
+  word-break: break-all;
+  overflow-wrap: break-word;
+  text-overflow: clip;
 }
 
 .guide-usage-desc {
@@ -232,6 +210,21 @@
   color: rgba(255, 255, 255, 0.88);
   font-size: 22rpx;
   font-weight: 700;
+  line-height: 1.45;
+  white-space: normal;
+  word-break: break-all;
+  overflow-wrap: break-word;
+  text-overflow: clip;
+}
+
+.guide-usage-desc-line {
+  display: block;
+  width: 100%;
+  min-height: 32rpx;
+  line-height: 1.45;
+  overflow: visible;
+  white-space: normal;
+  text-overflow: clip;
 }
 
 .pose-guide-image {
@@ -246,16 +239,26 @@
   z-index: 3;
 }
 
-.pose-guide-boost {
-  z-index: 2;
-  opacity: 0.88;
+.guide-load-status {
+  position: absolute;
+  left: 50%;
+  bottom: 16rpx;
+  z-index: 8;
+  transform: translateX(-50%);
+  padding: 10rpx 18rpx;
+  border-radius: 999rpx;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 22rpx;
+  font-weight: 800;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.52);
+  border: 1rpx solid rgba(255, 255, 255, 0.34);
 }
 
-.pose-guide-shadow {
-  z-index: 1;
-  opacity: 0.72;
-  filter: brightness(0);
-  transform: translate3d(6rpx, 6rpx, 0);
+.guide-load-retry {
+  color: #111111;
+  background: #ffe95c;
+  border-color: #ffe95c;
 }
 
 .outline-guide-image {
@@ -263,7 +266,7 @@
 }
 
 .photo-guide-image {
-  opacity: 0.42;
+  opacity: 0.46;
 }
 
 .pose-guide-box {
@@ -273,20 +276,6 @@
   z-index: 6;
   width: 100%;
   height: 88%;
-}
-
-.guide-error-tip {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  z-index: 8;
-  transform: translate(-50%, -50%);
-  padding: 14rpx 24rpx;
-  border-radius: 999rpx;
-  color: rgba(255, 255, 255, 0.92);
-  font-size: 24rpx;
-  background: rgba(0, 0, 0, 0.72);
-  border: 1rpx solid rgba(255, 255, 255, 0.48);
 }
 
 .bottom-panel {

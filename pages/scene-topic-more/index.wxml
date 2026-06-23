@@ -1,0 +1,37 @@
+<view class="page" style="{{pageTopStyle}}">
+  <view class="top-bar">
+    <view class="back-btn" bindtap="backToTopic">返回</view>
+    <view class="title">{{topic.title || '更多姿势'}}</view>
+    <view class="placeholder"></view>
+  </view>
+
+  <view wx:if="{{topic && topic.poses.length}}" class="pose-grid">
+    <view
+      wx:for="{{topic.poses}}"
+      wx:key="id"
+      wx:for-item="pose"
+      class="pose-card"
+      data-pose-id="{{pose.id}}"
+      bindtap="openPoseDetail"
+    >
+      <view class="pose-preview" style="background: {{pose.gradient}};">
+        <image
+          class="pose-image"
+          src="{{pose.thumbnailImage}}"
+          mode="{{pose.thumbnailMode}}"
+          data-pose-id="{{pose.id}}"
+          binderror="onPoseImageError"
+        ></image>
+        <view wx:if="{{failedPoseImages[pose.id]}}" class="image-error">
+          图片加载失败
+        </view>
+      </view>
+      <view class="pose-name">{{pose.name}}</view>
+      <view class="pose-tip">{{pose.tip}}</view>
+    </view>
+  </view>
+
+  <view wx:if="{{topic && !topic.poses.length}}" class="empty-state">
+    暂时没有更多姿势
+  </view>
+</view>

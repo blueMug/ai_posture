@@ -32,7 +32,19 @@
         "type": "folder"
       },
       {
+        "value": "static/gallery_thumbs",
+        "type": "folder"
+      },
+      {
+        "value": "static/share_images",
+        "type": "folder"
+      },
+      {
         "value": "static/recommend_guides",
+        "type": "folder"
+      },
+      {
+        "value": "static/home_guides",
         "type": "folder"
       },
       {

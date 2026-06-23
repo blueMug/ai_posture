@@ -21,6 +21,12 @@
   </view>
 
   <view wx:if="{{confirmWithGuide}}" class="bottom-panel safe-area-bottom">
+    <view wx:if="{{shareCard.visible}}" class="share-card">
+      <view class="share-copy">
+        <view class="share-title">{{shareCard.title}}</view>
+      </view>
+      <button class="share-pose-btn" open-type="share">{{shareCard.buttonText}}</button>
+    </view>
     <view class="confirm-actions">
       <button class="discard-btn" bindtap="retake">放弃</button>
       <button class="share-photo-btn" bindtap="sharePhoto">分享</button>
@@ -29,15 +35,15 @@
   </view>
 
   <view wx:else class="bottom-panel safe-area-bottom">
+    <view wx:if="{{shareCard.visible}}" class="share-card">
+      <view class="share-copy">
+        <view class="share-title">{{shareCard.title}}</view>
+      </view>
+      <button class="share-pose-btn" open-type="share">{{shareCard.buttonText}}</button>
+    </view>
     <view class="photo-actions">
       <button class="share-photo-btn" bindtap="sharePhoto">分享照片</button>
       <button class="save-btn" bindtap="savePhoto">保存到相簿</button>
     </view>
   </view>
-
-  <canvas
-    class="guide-composer"
-    canvas-id="guideComposer"
-    style="width: {{canvasWidth}}px; height: {{canvasHeight}}px;"
-  ></canvas>
 </view>

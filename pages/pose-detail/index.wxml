@@ -25,7 +25,11 @@
         <view class="loading-spinner"></view>
         <view class="loading-text">图片加载中</view>
       </view>
-      <view class="tap-tip">点图拍照</view>
+      <view
+        wx:if="{{imageLoadFailed}}"
+        class="image-error"
+        catchtap="retryDetailImage"
+      >图片加载失败，点击重试</view>
     </view>
 
     <view wx:if="{{detailGuide && detailGuide.hasImageText}}" class="image-note">
@@ -60,7 +64,30 @@
           class="guide-item"
         >
           <view class="guide-label">{{item.label}}</view>
-          <view class="guide-text">{{item.text}}</view>
+          <view class="guide-content">
+            <block wx:if="{{item.sections && item.sections.length}}">
+              <view
+                wx:for="{{item.sections}}"
+                wx:key="id"
+                wx:for-item="section"
+                class="guide-section {{section.tone}}"
+              >
+                <view class="guide-section-title">{{section.title}}</view>
+                <view class="guide-section-lines">
+                  <view
+                    wx:for="{{section.lines}}"
+                    wx:key="*this"
+                    wx:for-item="line"
+                    class="guide-section-line"
+                  >
+                    <view wx:if="{{section.lines.length > 1}}" class="guide-section-dot"></view>
+                    <view class="guide-section-text">{{line}}</view>
+                  </view>
+                </view>
+              </view>
+            </block>
+            <view wx:else class="guide-text">{{item.text}}</view>
+          </view>
         </view>
       </view>
     </view>
@@ -71,6 +98,13 @@
     wx:if="{{preloadedGuideImage}}"
     class="preload-guide-image"
     src="{{preloadedGuideImage}}"
+    mode="scaleToFill"
+  ></image>
+  <image
+    wx:for="{{preloadedCameraImages}}"
+    wx:key="*this"
+    class="preload-guide-image"
+    src="{{item}}"
     mode="scaleToFill"
   ></image>
 

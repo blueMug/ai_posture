@@ -1,5 +1,5 @@
-<view class="page">
-  <view class="top-bar">
+<view class="page" style="{{pageTopStyle}}">
+  <view class="top-bar" style="{{topBarStyle}}">
     <view class="placeholder"></view>
     <view class="title">个人中心</view>
     <view class="placeholder"></view>
@@ -96,18 +96,6 @@
       color="#ffe95c"
       checked="{{keepGuideForConfirm}}"
       bindchange="onGuideConfirmChange"
-    />
-  </view>
-
-  <view class="setting-card">
-    <view class="setting-copy">
-      <view class="setting-title">默认显示拍摄提示</view>
-      <view class="setting-desc">开启后，进入拍照页会默认显示动作和构图提示；拍照页内仍可临时关闭。</view>
-    </view>
-    <switch
-      color="#ffe95c"
-      checked="{{shootingTipsDefaultEnabled}}"
-      bindchange="onShootingTipsDefaultChange"
     />
   </view>
 

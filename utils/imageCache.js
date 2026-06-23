@@ -184,6 +184,50 @@ const cacheImage = async (url) => {
   return pendingTasks[url]
 }
 
+const getCachedImagePath = async (url) => {
+  if (!isRemoteUrl(url)) {
+    return url || ''
+  }
+
+  const cache = readCache()
+  const cached = cache[url]
+
+  if (!cached || !cached.filePath) {
+    return ''
+  }
+
+  const fileInfo = await getSavedFileInfo(cached.filePath)
+
+  if (!fileInfo) {
+    delete cache[url]
+    writeCache(cache)
+    return ''
+  }
+
+  cached.lastAccessAt = Date.now()
+  cached.size = Number(fileInfo.size || cached.size || 0)
+  cache[url] = cached
+  writeCache(cache)
+
+  return cached.filePath
+}
+
+const getCachedImageFields = async (item, fields) => {
+  const cachedItem = { ...item }
+
+  await Promise.all(fields.map(async (field) => {
+    if (cachedItem[field]) {
+      const cachedPath = await getCachedImagePath(cachedItem[field])
+
+      if (cachedPath) {
+        cachedItem[field] = cachedPath
+      }
+    }
+  }))
+
+  return cachedItem
+}
+
 const cacheImageFields = async (item, fields) => {
   const cachedItem = { ...item }
 
@@ -223,6 +267,8 @@ module.exports = {
   cacheImage,
   cacheImageFields,
   cachePoseCategories,
+  getCachedImageFields,
+  getCachedImagePath,
   queueImagePreload,
   pinCachedImages,
   unpinCachedImages

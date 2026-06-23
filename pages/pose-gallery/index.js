@@ -1,5 +1,6 @@
 const { poseCategories } = require('../../utils/poses')
 const { adSlots } = require('../../utils/adConfig')
+const { cdnAssetUrl, JSDELIVR_ASSET_BASE } = require('../../utils/assets')
 const { ensurePrivacyNotice } = require('../../utils/privacy')
 const {
   getFavoritePoseIds,
@@ -17,16 +18,91 @@ const {
 
 const GALLERY_TARGET_CATEGORY_KEY = 'galleryTargetCategoryId'
 const DEFAULT_PAGE_TOP_PX = 52
+const DEFAULT_TOP_BAR_HEIGHT_PX = 32
 
-const getGalleryDisplayImage = (pose, retryToken = '') => {
-  const imageUrl = pose.modelImage || pose.detailImage || pose.thumbnailImage || ''
-
-  if (!retryToken || !/^https?:\/\//.test(imageUrl)) {
-    return imageUrl
+const toLocalAssetPath = (assetPath = '') => {
+  if (!assetPath) {
+    return ''
   }
 
-  const separator = imageUrl.includes('?') ? '&' : '?'
-  return `${imageUrl}${separator}_retry=${retryToken}`
+  return String(assetPath).startsWith(`${JSDELIVR_ASSET_BASE}/`)
+    ? `/${String(assetPath).slice(JSDELIVR_ASSET_BASE.length + 1)}`
+    : assetPath
+}
+
+const toGalleryThumbnailImage = (assetPath = '') => {
+  const galleryPath = toLocalAssetPath(assetPath)
+    .replace('/static/pose_pairs/', '/static/gallery_thumbs/')
+    .replace('/static/pose_thumbs/', '/static/gallery_thumbs/')
+    .replace('/static/recommend_thumbs/', '/static/gallery_thumbs/')
+
+  if (/_demo\.jpg$/.test(galleryPath)) {
+    return galleryPath.replace(/_demo\.jpg$/, '_gallery_thumb.jpg')
+  }
+
+  if (/_thumb\.jpg$/.test(galleryPath)) {
+    return galleryPath.replace(/_thumb\.jpg$/, '_gallery_thumb.jpg')
+  }
+
+  return galleryPath
+}
+
+const toFallbackThumbnailImage = (assetPath = '') => {
+  const thumbPath = toLocalAssetPath(assetPath)
+    .replace('/static/pose_pairs/', '/static/pose_thumbs/')
+    .replace('/static/gallery_thumbs/', '/static/pose_thumbs/')
+    .replace('/static/recommend_thumbs/', '/static/pose_thumbs/')
+
+  if (/_demo\.jpg$/.test(thumbPath)) {
+    return thumbPath.replace(/_demo\.jpg$/, '_thumb.jpg')
+  }
+
+  if (/_gallery_thumb\.jpg$/.test(thumbPath)) {
+    return thumbPath.replace(/_gallery_thumb\.jpg$/, '_thumb.jpg')
+  }
+
+  return thumbPath
+}
+
+const withRetryToken = (url, retryToken = '') => {
+  if (!retryToken || !/^https?:\/\//.test(url)) {
+    return url
+  }
+
+  const separator = url.includes('?') ? '&' : '?'
+  return `${url}${separator}_retry=${retryToken}`
+}
+
+const getGalleryThumbnailUrl = (pose, retryToken = '') => {
+  const localThumbnailImage = toGalleryThumbnailImage(pose.modelImage || pose.detailImage || pose.thumbnailImage || '')
+
+  if (!localThumbnailImage || !localThumbnailImage.startsWith('/static/gallery_thumbs/')) {
+    return ''
+  }
+
+  return withRetryToken(cdnAssetUrl(localThumbnailImage), retryToken)
+}
+
+const getFallbackThumbnailUrl = (pose, retryToken = '') => {
+  const localThumbnailImage = toFallbackThumbnailImage(pose.modelImage || pose.detailImage || pose.thumbnailImage || '')
+
+  if (!localThumbnailImage || !localThumbnailImage.startsWith('/static/pose_thumbs/')) {
+    return ''
+  }
+
+  return withRetryToken(cdnAssetUrl(localThumbnailImage), retryToken)
+}
+
+const getGalleryDisplayImage = (pose, retryToken = '', fallbackPoseImages = {}) => (
+  fallbackPoseImages[pose.id]
+    ? getFallbackThumbnailUrl(pose, retryToken)
+    : getGalleryThumbnailUrl(pose, retryToken)
+)
+
+const stopPullDownRefresh = () => {
+  if (typeof wx.stopPullDownRefresh === 'function') {
+    wx.stopPullDownRefresh()
+  }
 }
 
 const findPoseById = (poseId) => {
@@ -41,12 +117,12 @@ const findPoseById = (poseId) => {
   return null
 }
 
-const withGalleryDisplayImages = (categories, retryTokens = {}) => (
+const withGalleryDisplayImages = (categories, retryTokens = {}, fallbackPoseImages = {}) => (
   categories.map((category) => ({
     ...category,
     poses: category.poses.map((pose) => ({
       ...pose,
-      galleryDisplayImage: getGalleryDisplayImage(pose, retryTokens[pose.id])
+      galleryDisplayImage: getGalleryDisplayImage(pose, retryTokens[pose.id], fallbackPoseImages)
     }))
   }))
 )
@@ -80,9 +156,24 @@ const getPageTopStyle = () => {
   return `padding-top: ${pageTop}px;`
 }
 
+const getTopBarStyle = () => {
+  if (typeof wx.getMenuButtonBoundingClientRect !== 'function') {
+    return `height: ${DEFAULT_TOP_BAR_HEIGHT_PX}px;`
+  }
+
+  const menuButtonRect = wx.getMenuButtonBoundingClientRect()
+  const menuButtonHeight = Number(menuButtonRect && menuButtonRect.height)
+  const topBarHeight = menuButtonHeight > 0
+    ? menuButtonHeight
+    : DEFAULT_TOP_BAR_HEIGHT_PX
+
+  return `height: ${topBarHeight}px;`
+}
+
 Page({
   data: {
     pageTopStyle: `padding-top: ${DEFAULT_PAGE_TOP_PX}px;`,
+    topBarStyle: `height: ${DEFAULT_TOP_BAR_HEIGHT_PX}px;`,
     searchKeyword: '',
     poseCategories: [],
     categoryNavs: [],
@@ -90,6 +181,7 @@ Page({
     favoritePoseIds: [],
     hasSearchResult: true,
     failedPoseImages: {},
+    fallbackPoseImages: {},
     imageRetryTokens: {},
     adSlot: adSlots.poseGalleryFeed
   },
@@ -97,6 +189,7 @@ Page({
   onLoad() {
     this.setData({
       pageTopStyle: getPageTopStyle(),
+      topBarStyle: getTopBarStyle(),
       favoritePoseIds: getFavoritePoseIds()
     })
     this.setPoseCategories(poseCategories, {
@@ -120,6 +213,18 @@ Page({
     }, targetCategoryId)
   },
 
+  onPullDownRefresh() {
+    this.refreshPoseCategories({
+      failedPoseImages: {},
+      fallbackPoseImages: {},
+      imageRetryTokens: {}
+    })
+    wx.nextTick(() => {
+      stopPullDownRefresh()
+    })
+    setTimeout(stopPullDownRefresh, 120)
+  },
+
   refreshPoseCategories(extraData = {}) {
     const nextCategories = filterPoseCategories(this.data.searchKeyword)
 
@@ -136,7 +241,8 @@ Page({
     const favoritePoseIds = extraData.favoritePoseIds || getFavoritePoseIds()
     const nextCategoriesWithFavorites = withGalleryDisplayImages(
       withFavoriteStateCategories(nextCategories, favoritePoseIds),
-      this.data.imageRetryTokens
+      this.data.imageRetryTokens,
+      this.data.fallbackPoseImages
     )
 
     if (!nextCategoriesWithFavorites.length) {
@@ -281,6 +387,16 @@ Page({
       return
     }
 
+    if (!this.data.fallbackPoseImages[poseId]) {
+      this.setData({
+        [`fallbackPoseImages.${poseId}`]: true,
+        [`failedPoseImages.${poseId}`]: false
+      }, () => {
+        this.refreshPoseCategories()
+      })
+      return
+    }
+
     this.setData({
       [`failedPoseImages.${poseId}`]: true
     })
@@ -296,6 +412,7 @@ Page({
     const retryToken = Date.now()
 
     this.setData({
+      [`fallbackPoseImages.${poseId}`]: false,
       [`failedPoseImages.${poseId}`]: false,
       [`imageRetryTokens.${poseId}`]: retryToken
     }, () => {
