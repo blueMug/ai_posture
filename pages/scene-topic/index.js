@@ -1,6 +1,11 @@
 const { poseTemplates, findPoseIndex } = require('../../utils/poses')
 const { cacheImage, queueCachePoseCategories, queueImagePreload } = require('../../utils/imageCache')
-const { cdnAssetUrl, homeLocalAssetUrl, HOME_LOCAL_ASSET_FOLDERS } = require('../../utils/assets')
+const {
+  cdnAssetUrl,
+  homeLocalAssetUrl,
+  HOME_LOCAL_ASSET_FOLDERS,
+  JSDELIVR_ASSET_BASE
+} = require('../../utils/assets')
 const { ensurePrivacyNotice } = require('../../utils/privacy')
 const {
   SCENE_TOPIC_DETAIL_KEY,
@@ -26,6 +31,36 @@ const getDisplayImage = (pose = {}) => (
   homeLocalAssetUrl(pose.thumbnailImage) ||
   cdnAssetUrl(pose.detailImage || pose.modelImage || pose.thumbnailImage || pose.guideImage)
 )
+const toLocalAssetPath = (path = '') => {
+  return String(path || '').startsWith(`${JSDELIVR_ASSET_BASE}/`)
+    ? `/${String(path).slice(JSDELIVR_ASSET_BASE.length + 1)}`
+    : path
+}
+const toGalleryThumbnailImage = (path = '') => {
+  const galleryPath = toLocalAssetPath(path)
+    .replace('/static/pose_pairs/', '/static/gallery_thumbs/')
+    .replace('/static/pose_thumbs/', '/static/gallery_thumbs/')
+    .replace('/static/recommend_thumbs/', '/static/gallery_thumbs/')
+
+  if (/_demo\.jpg$/.test(galleryPath)) {
+    return galleryPath.replace(/_demo\.jpg$/, '_gallery_thumb.jpg')
+  }
+
+  if (/_thumb\.jpg$/.test(galleryPath)) {
+    return galleryPath.replace(/_thumb\.jpg$/, '_gallery_thumb.jpg')
+  }
+
+  return galleryPath
+}
+const getTopicCoverImage = (pose = {}) => {
+  const galleryImage = toGalleryThumbnailImage(pose.modelImage || pose.detailImage || pose.thumbnailImage || '')
+
+  if (galleryImage && galleryImage.startsWith('/static/gallery_thumbs/')) {
+    return cdnAssetUrl(galleryImage)
+  }
+
+  return getDisplayImage(pose)
+}
 
 const getShareImage = (pose = {}) => (
   cdnAssetUrl(pose.shareImage || pose.thumbnailImage || pose.detailImage || pose.modelImage || pose.guideImage)
@@ -70,7 +105,7 @@ const buildTopicView = (topicId) => {
 
   return {
     ...topic,
-    coverImage: coverPose ? getDisplayImage(coverPose) : '',
+    coverImage: coverPose ? getTopicCoverImage(coverPose) : '',
     shareImage: coverPose ? getShareImage(coverPose) : '',
     plans,
     moreCount: (topic.morePoseIds || []).length
