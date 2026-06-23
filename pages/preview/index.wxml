@@ -23,9 +23,7 @@
   <view wx:if="{{confirmWithGuide}}" class="bottom-panel safe-area-bottom">
     <view wx:if="{{shareCard.visible}}" class="share-card">
       <view class="share-copy">
-        <view class="share-kicker">{{shareCard.kicker}}</view>
         <view class="share-title">{{shareCard.title}}</view>
-        <view class="share-desc">{{shareCard.desc}}</view>
       </view>
       <button class="share-pose-btn" open-type="share">{{shareCard.buttonText}}</button>
     </view>
@@ -39,9 +37,7 @@
   <view wx:else class="bottom-panel safe-area-bottom">
     <view wx:if="{{shareCard.visible}}" class="share-card">
       <view class="share-copy">
-        <view class="share-kicker">{{shareCard.kicker}}</view>
         <view class="share-title">{{shareCard.title}}</view>
-        <view class="share-desc">{{shareCard.desc}}</view>
       </view>
       <button class="share-pose-btn" open-type="share">{{shareCard.buttonText}}</button>
     </view>

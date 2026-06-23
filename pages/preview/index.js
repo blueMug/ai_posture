@@ -565,7 +565,7 @@ Page({
       return {
         title: shareCard.title || '不知道怎么拍？选场景照着拍',
         path: shareCard.path,
-        imageUrl: this.data.cachedPoseShareImage || this.data.photoPath || this.data.poseShareImage || ''
+        imageUrl: this.data.cachedPoseShareImage || this.data.poseShareImage || this.data.photoPath || ''
       }
     }
 
@@ -576,7 +576,7 @@ Page({
       path: poseId
         ? `/pages/pose-detail/index?poseId=${poseId}`
         : '/pages/home/index',
-      imageUrl: this.data.cachedPoseShareImage || this.data.photoPath || this.data.poseShareImage || ''
+      imageUrl: this.data.cachedPoseShareImage || this.data.poseShareImage || this.data.photoPath || ''
     }
   }
 })
