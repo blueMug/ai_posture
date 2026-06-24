@@ -301,20 +301,30 @@ Page({
     this.clearDetailImageLoadTimer()
   },
 
-  prefetchGuideImage(pose) {
+  prefetchGuideImage(pose, requestId = this.detailImageRequestId, retryToken = '') {
     if (!pose || !pose.guideImage) {
       return
     }
 
-    cacheImage(pose.guideImage).then((cachedGuideImage) => {
-      if (this.data.poseId !== pose.id) {
+    const guideImage = appendImageRetryToken(pose.guideImage, retryToken)
+
+    this.setData({
+      preloadedGuideImage: guideImage
+    })
+
+    cacheImage(guideImage).then((cachedGuideImage) => {
+      if (
+        this.detailImageRequestId !== requestId ||
+        this.data.poseId !== pose.id ||
+        this.data.preloadedGuideImage !== guideImage
+      ) {
         return
       }
 
       this.setData({
         preloadedGuideImage: cachedGuideImage
       })
-    })
+    }).catch(() => {})
   },
 
   preheatCameraImages(pose) {
@@ -373,6 +383,7 @@ Page({
       displayImageFallbackTried: false
     })
     this.startDetailImageLoadTimer(requestId)
+    this.prefetchGuideImage(pose, requestId)
 
     const localPosePromise = pose.isFavorite
       ? getCachedFavoritePoseAssets(pose)
@@ -389,6 +400,7 @@ Page({
         throw new Error('missing detail image')
       }
 
+      this.prefetchGuideImage(resolvedPose, requestId)
       this.preheatCameraImages(resolvedPose)
       if (pose.isFavorite) {
         cacheFavoritePoseAssets(pose).catch(() => {})
@@ -416,8 +428,7 @@ Page({
         displayImage,
         imageLoading: true,
         imageLoadFailed: false,
-        displayImageFallbackTried: false,
-        preloadedGuideImage: resolvedPose.guideImage || ''
+        displayImageFallbackTried: false
       })
       this.startDetailImageLoadTimer(requestId)
     }).catch(() => {
@@ -547,7 +558,8 @@ Page({
       return
     }
 
-    const retryImage = appendImageRetryToken(sourceImage, Date.now())
+    const retryToken = Date.now()
+    const retryImage = appendImageRetryToken(sourceImage, retryToken)
     const requestId = (this.detailImageRequestId || 0) + 1
     this.detailImageRequestId = requestId
 
@@ -559,6 +571,7 @@ Page({
       displayImageFallbackTried: false
     })
     this.startDetailImageLoadTimer(requestId)
+    this.prefetchGuideImage(pose, requestId, retryToken)
     cacheImage(retryImage).catch(() => {})
   },
 

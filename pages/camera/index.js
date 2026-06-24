@@ -44,6 +44,7 @@ const COUNTDOWN_SECONDS_OPTIONS = [0, 3, 5, 10]
 const CAMERA_GUIDE_TIP_DELAY = 500
 const GUIDE_ROTATE_STEP = 90
 const GUIDE_ROTATE_FULL_DEGREES = 360
+const GUIDE_LOADING_FALLBACK_DELAY = 800
 
 let cameraGuideTipShownInSession = false
 
@@ -683,6 +684,48 @@ Page({
     }
   },
 
+  markGuideImageLoaded(guideImage) {
+    if (!guideImage) {
+      return
+    }
+
+    this.loadedGuideImages = {
+      ...(this.loadedGuideImages || {}),
+      [guideImage]: true
+    }
+  },
+
+  isGuideImageLoaded(guideImage) {
+    return Boolean(guideImage && this.loadedGuideImages && this.loadedGuideImages[guideImage])
+  },
+
+  scheduleGuideLoadingFallback(guideImage, guideLoadToken) {
+    this.guideLoadingTimer = setTimeout(async () => {
+      this.guideLoadingTimer = null
+
+      if (this.data.guideLoadToken !== guideLoadToken) {
+        return
+      }
+
+      const currentGuideImage = this.data.guideDisplayImage ||
+        (this.data.currentTemplate && this.data.currentTemplate.guideImage) ||
+        ''
+
+      if (!guideImage || currentGuideImage !== guideImage) {
+        return
+      }
+
+      const guideImageInfo = await getImageInfo(guideImage)
+
+      if (this.data.guideLoadToken !== guideLoadToken || !guideImageInfo) {
+        return
+      }
+
+      this.markGuideImageLoaded(guideImage)
+      this.finishGuideLoading(guideLoadToken)
+    }, GUIDE_LOADING_FALLBACK_DELAY)
+  },
+
   nextGuideLoadToken() {
     this.guideLoadTokenCounter = (this.guideLoadTokenCounter || 0) + 1
     return this.guideLoadTokenCounter
@@ -719,14 +762,19 @@ Page({
     }
 
     const guideLoadToken = this.nextGuideLoadToken()
+    const guideImageLoaded = this.isGuideImageLoaded(guideImage)
 
     this.setData({
-      guideImageLoading: true,
+      guideImageLoading: !guideImageLoaded,
       guideLoadRetryVisible: false,
       guideLoadFailed: false,
       guideImageRenderVisible: true,
       guideLoadToken
     })
+
+    if (!guideImageLoaded) {
+      this.scheduleGuideLoadingFallback(guideImage, guideLoadToken)
+    }
   },
 
   finishGuideLoading(guideLoadToken = this.data.guideLoadToken) {
@@ -989,6 +1037,8 @@ Page({
       return
     }
 
+    const { src } = this.getGuideLoadEventData(event)
+    this.markGuideImageLoaded(src || this.data.guideDisplayImage || (this.data.currentTemplate && this.data.currentTemplate.guideImage))
     this.finishGuideLoading()
   },
 
