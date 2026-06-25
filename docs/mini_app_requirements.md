@@ -214,7 +214,7 @@
 
 默认远程资源走 jsDelivr：
 
-`https://cdn.jsdelivr.net/gh/blueMug/ai_posture@main`
+`https://cdn.jsdelivr.net/gh/blueMug/posture_assets@main`
 
 CDN 是本地缺失资源的兜底来源，不再作为所有非首页图片的默认来源。
 

@@ -700,7 +700,7 @@ Page({
   },
 
   scheduleGuideLoadingFallback(guideImage, guideLoadToken) {
-    this.guideLoadingTimer = setTimeout(async () => {
+    this.guideLoadingTimer = setTimeout(() => {
       this.guideLoadingTimer = null
 
       if (this.data.guideLoadToken !== guideLoadToken) {
@@ -712,12 +712,6 @@ Page({
         ''
 
       if (!guideImage || currentGuideImage !== guideImage) {
-        return
-      }
-
-      const guideImageInfo = await getImageInfo(guideImage)
-
-      if (this.data.guideLoadToken !== guideLoadToken || !guideImageInfo) {
         return
       }
 
@@ -737,13 +731,18 @@ Page({
       : {}
 
     return {
-      src: dataset.src || ''
+      src: dataset.src || '',
+      loadToken: Number(dataset.loadToken || 0)
     }
   },
 
   isCurrentGuideLoadEvent(event) {
-    const { src } = this.getGuideLoadEventData(event)
+    const { src, loadToken } = this.getGuideLoadEventData(event)
     const currentGuideImage = this.data.guideDisplayImage || (this.data.currentTemplate && this.data.currentTemplate.guideImage) || ''
+
+    if (loadToken && loadToken !== this.data.guideLoadToken) {
+      return false
+    }
 
     return !(src && currentGuideImage && src !== currentGuideImage)
   },
@@ -1037,9 +1036,9 @@ Page({
       return
     }
 
-    const { src } = this.getGuideLoadEventData(event)
+    const { src, loadToken } = this.getGuideLoadEventData(event)
     this.markGuideImageLoaded(src || this.data.guideDisplayImage || (this.data.currentTemplate && this.data.currentTemplate.guideImage))
-    this.finishGuideLoading()
+    this.finishGuideLoading(loadToken || this.data.guideLoadToken)
   },
 
   onGuideImageError(event) {

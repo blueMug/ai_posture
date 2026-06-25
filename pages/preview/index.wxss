@@ -132,6 +132,27 @@
   -webkit-box-orient: vertical;
 }
 
+.share-brand {
+  display: flex;
+  align-items: center;
+  margin-top: 12rpx;
+}
+
+.share-logo {
+  width: 34rpx;
+  height: 34rpx;
+  border-radius: 10rpx;
+  background: #ffe95c;
+  overflow: hidden;
+}
+
+.share-brand-text {
+  margin-left: 10rpx;
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 21rpx;
+  font-weight: 700;
+}
+
 .share-desc {
   margin-top: 8rpx;
   color: rgba(255, 255, 255, 0.72);

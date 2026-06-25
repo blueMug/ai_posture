@@ -95,6 +95,21 @@ const getFavoriteImageLoadingState = (poses, previousImageUrls = {}, previousLoa
   return nextLoading
 }
 
+const getFavoriteImageFailedState = (poses, previousImageUrls = {}, previousFailed = {}) => {
+  const nextFailed = {}
+
+  poses.forEach((pose) => {
+    if (!pose.favoriteDisplayImage) {
+      return
+    }
+
+    const previousUrl = previousImageUrls[pose.id]
+    nextFailed[pose.id] = previousUrl === pose.favoriteDisplayImage && previousFailed[pose.id] === true
+  })
+
+  return nextFailed
+}
+
 Page({
   data: {
     pageTopStyle: `padding-top: ${DEFAULT_PAGE_TOP_PX}px;`,
@@ -173,12 +188,18 @@ Page({
       this.data.favoriteImageUrls,
       this.data.loadingFavoriteImages
     )
+    const failedFavoriteImages = getFavoriteImageFailedState(
+      favoritePosesWithImages,
+      this.data.favoriteImageUrls,
+      this.data.failedFavoriteImages
+    )
 
     this.setData({
       favoritePoses: favoritePosesWithImages,
       favoritePoseCount: favoritePoses.length,
       favoriteImageUrls,
-      loadingFavoriteImages
+      loadingFavoriteImages,
+      failedFavoriteImages
     })
   },
 

@@ -7,7 +7,7 @@
 
   <view wx:if="{{topic}}" class="topic-hero">
     <view class="topic-copy">
-      <view class="topic-kicker">场景出片专题</view>
+      <view class="topic-kicker">拍照搭子作业</view>
       <view class="topic-title">{{topic.title}}</view>
       <view class="topic-pain">{{topic.painPoint}}</view>
       <view class="topic-promise">{{topic.promise}}</view>
@@ -24,7 +24,7 @@
     <view class="section-head">
       <view>
         <view class="section-title">先照着这 3 个拍法</view>
-        <view class="section-subtitle">每张卡片都能进详情，也可以直接打开相机照着拍。</view>
+        <view class="section-subtitle">选一张发给拍照搭子，对方打开相机就能按轮廓对齐。</view>
       </view>
     </view>
 
@@ -78,7 +78,7 @@
   </view>
 
   <view wx:if="{{topic}}" class="share-card">
-    <view class="share-title">适合发给一起拍照的人</view>
+    <view class="share-title">把这份作业发给一起拍照的人</view>
     <view class="share-desc">{{topic.shareTitle}}</view>
     <button class="share-btn" open-type="share">分享拍照方案</button>
   </view>

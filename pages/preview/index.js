@@ -9,6 +9,7 @@ const {
 const GUIDE_MODE_YELLOW_PHOTO = 'yellow-photo'
 const GUIDE_ROTATE_STEP = 90
 const GUIDE_ROTATE_FULL_DEGREES = 360
+const SHARE_BRAND_LOGO = '/static/brand/logo_ai_posture.png'
 
 const normalizeGuideRotateAngle = (angle) => {
   if (angle === true) {
@@ -156,6 +157,7 @@ Page({
     poseName: '',
     poseShareImage: '',
     cachedPoseShareImage: '',
+    shareBrandLogo: SHARE_BRAND_LOGO,
     shareCard: {
       visible: false
     }
@@ -429,12 +431,16 @@ Page({
     const poseId = this.data.poseId
     const poseName = this.data.poseName
     const shareCard = this.data.shareCard || {}
+    const shareImage = this.data.cachedPoseShareImage ||
+      this.data.poseShareImage ||
+      this.data.photoPath ||
+      ''
 
     if (shareCard.visible && shareCard.path) {
       return {
         title: shareCard.title || '不知道怎么拍？选场景照着拍',
         path: shareCard.path,
-        imageUrl: this.data.cachedPoseShareImage || this.data.poseShareImage || this.data.photoPath || ''
+        imageUrl: shareImage
       }
     }
 
@@ -442,7 +448,7 @@ Page({
       ...buildPoseShare({
         id: poseId,
         name: poseName,
-        shareImage: this.data.cachedPoseShareImage || this.data.poseShareImage || this.data.photoPath || ''
+        shareImage
       }, {
         poseId,
         role: 'result',

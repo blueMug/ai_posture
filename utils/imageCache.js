@@ -6,6 +6,27 @@ const pendingTasks = {}
 let preloadQueue = Promise.resolve()
 
 const isRemoteUrl = (url) => /^https?:\/\//.test(url || '')
+const getCacheUrl = (url = '') => {
+  if (!isRemoteUrl(url)) {
+    return url || ''
+  }
+
+  const [withoutHash, hash = ''] = String(url).split('#')
+  const queryIndex = withoutHash.indexOf('?')
+
+  if (queryIndex < 0) {
+    return url
+  }
+
+  const baseUrl = withoutHash.slice(0, queryIndex)
+  const query = withoutHash.slice(queryIndex + 1)
+  const nextQuery = query
+    .split('&')
+    .filter((item) => item && !item.startsWith('_retry='))
+    .join('&')
+
+  return `${baseUrl}${nextQuery ? `?${nextQuery}` : ''}${hash ? `#${hash}` : ''}`
+}
 
 const readCache = () => {
   try {
@@ -114,7 +135,7 @@ const unpinCachedImages = (urls = []) => {
   return setPinnedCacheUrls(getPinnedCacheUrls().filter((url) => !removeUrls.has(url)))
 }
 
-const downloadImage = (url) => new Promise((resolve) => {
+const downloadImage = (url, cacheUrl = getCacheUrl(url)) => new Promise((resolve) => {
   wx.downloadFile({
     url,
     success: async (downloadResult) => {
@@ -132,13 +153,13 @@ const downloadImage = (url) => new Promise((resolve) => {
           const now = Date.now()
           const cache = readCache()
 
-          cache[url] = {
+          cache[cacheUrl] = {
             filePath: saveResult.savedFilePath,
             size: Number(tempFileInfo && tempFileInfo.size) || 0,
             lastAccessAt: now
           }
 
-          writeCache(pruneCache(cache, url))
+          writeCache(pruneCache(cache, cacheUrl))
           resolve(saveResult.savedFilePath)
         },
         fail: () => {
@@ -157,8 +178,9 @@ const cacheImage = async (url) => {
     return url
   }
 
+  const cacheUrl = getCacheUrl(url)
   const cache = readCache()
-  const cached = cache[url]
+  const cached = cache[cacheUrl]
 
   if (cached && cached.filePath) {
     const fileInfo = await getSavedFileInfo(cached.filePath)
@@ -166,22 +188,22 @@ const cacheImage = async (url) => {
     if (fileInfo) {
       cached.lastAccessAt = Date.now()
       cached.size = Number(fileInfo.size || cached.size || 0)
-      cache[url] = cached
+      cache[cacheUrl] = cached
       writeCache(cache)
       return cached.filePath
     }
 
-    delete cache[url]
+    delete cache[cacheUrl]
     writeCache(cache)
   }
 
-  if (!pendingTasks[url]) {
-    pendingTasks[url] = downloadImage(url).finally(() => {
-      delete pendingTasks[url]
+  if (!pendingTasks[cacheUrl]) {
+    pendingTasks[cacheUrl] = downloadImage(url, cacheUrl).finally(() => {
+      delete pendingTasks[cacheUrl]
     })
   }
 
-  return pendingTasks[url]
+  return pendingTasks[cacheUrl]
 }
 
 const getCachedImagePath = async (url) => {
@@ -189,8 +211,9 @@ const getCachedImagePath = async (url) => {
     return url || ''
   }
 
+  const cacheUrl = getCacheUrl(url)
   const cache = readCache()
-  const cached = cache[url]
+  const cached = cache[cacheUrl]
 
   if (!cached || !cached.filePath) {
     return ''
@@ -199,14 +222,14 @@ const getCachedImagePath = async (url) => {
   const fileInfo = await getSavedFileInfo(cached.filePath)
 
   if (!fileInfo) {
-    delete cache[url]
+    delete cache[cacheUrl]
     writeCache(cache)
     return ''
   }
 
   cached.lastAccessAt = Date.now()
   cached.size = Number(fileInfo.size || cached.size || 0)
-  cache[url] = cached
+  cache[cacheUrl] = cached
   writeCache(cache)
 
   return cached.filePath
@@ -245,6 +268,16 @@ const cachePoseCategories = async (categories, fields) => Promise.all(categories
   poses: await Promise.all(category.poses.map((pose) => cacheImageFields(pose, fields)))
 })))
 
+const queueCachePoseCategories = (categories, fields) => {
+  const task = preloadQueue
+    .catch(() => {})
+    .then(() => cachePoseCategories(categories, fields))
+
+  preloadQueue = task.then(() => {}).catch(() => {})
+
+  return task
+}
+
 const queueImagePreload = (urls = []) => {
   const remoteUrls = Array.from(new Set(urls.filter(isRemoteUrl)))
 
@@ -269,6 +302,7 @@ module.exports = {
   cachePoseCategories,
   getCachedImageFields,
   getCachedImagePath,
+  queueCachePoseCategories,
   queueImagePreload,
   pinCachedImages,
   unpinCachedImages

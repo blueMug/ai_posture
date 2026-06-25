@@ -32,6 +32,7 @@
             wx:if="{{guideImageRenderVisible}}"
             class="pose-guide-image pose-guide-main {{guideImageClass}}"
             data-src="{{guideDisplayImage || currentTemplate.guideImage}}"
+            data-load-token="{{guideLoadToken}}"
             src="{{guideDisplayImage || currentTemplate.guideImage}}"
             bindload="onGuideImageLoad"
             binderror="onGuideImageError"

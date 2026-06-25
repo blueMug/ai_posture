@@ -26,11 +26,11 @@ const getPoseShareImage = (pose = {}, fallbackImage = '') => (
 )
 
 const HOME_SHARE_TITLES = [
-  '拍照不知道摆什么？先打开这本姿势作业',
-  '出门拍照前先看这个，不用现场想动作',
-  '拍照废人也能照着拍，姿势都整理好了',
-  '想拍得更出片？这里有一整套拍照姿势',
-  '下次拍照别只比耶，直接照着这些姿势来'
+  '拍照搭子作业：选场景，打开就能照着拍',
+  '出门拍照前先把这个发给搭子',
+  '到了现场不用想动作，按场景直接抄姿势',
+  '拍照不知道摆什么？这份出片作业先存好',
+  '下次拍照别只比耶，直接照着轮廓拍'
 ]
 
 const GALLERY_SHARE_TITLES = [
@@ -86,11 +86,11 @@ const PHOTOGRAPHER_TASK_TITLES = [
 ]
 
 const RESULT_CARD_TITLES = [
-  '我刚照着「{poseName}」拍了一张',
-  '这个「{poseName}」姿势还挺出片',
-  '刚试了「{poseName}」，下次拍照可以抄',
+  '我刚照着「{poseName}」拍了一张，同款可以直接抄',
+  '这个「{poseName}」姿势还挺出片，发给拍照搭子',
+  '刚试了「{poseName}」，下次拍照照这个来',
   '拍照不知道摆什么时，这个姿势能救场',
-  '同款姿势在这里，打开就能照着拍'
+  '同款姿势在这里，打开相机就能照着拍'
 ]
 
 const SCENE_RESULT_CARD_TITLES = [
@@ -147,8 +147,8 @@ const buildPhotographerTask = (pose = {}, options = {}) => {
     visible: Boolean(poseId),
     kicker: '帮拍任务',
     title: fillTemplate(pickRandom(PHOTOGRAPHER_TASK_TITLES), { poseName }),
-    desc: '发给拍照搭子，对方打开后按轮廓对齐就能拍。',
-    buttonText: '发给搭子',
+    desc: '发给拍照搭子，对方点开相机就能按轮廓对齐。',
+    buttonText: '发搭子',
     path: poseId ? `/pages/camera/index?poseId=${poseId}` : '/pages/pose-gallery/index'
   }
 }
@@ -169,6 +169,7 @@ const buildSceneShare = (topic = {}) => {
 
 const buildResultShareCard = (previewPose = {}, previewShareSource = {}) => {
   const poseName = getPoseName(previewPose)
+  const poseId = compactText(previewPose.id)
   const sceneTitle = compactText(previewShareSource.sceneTitle)
   const planTitle = compactText(previewShareSource.title) || poseName
   const topicId = compactText(previewShareSource.topicId)
@@ -183,18 +184,20 @@ const buildResultShareCard = (previewPose = {}, previewShareSource = {}) => {
       }),
       desc: previewShareSource.reason || '不知道怎么拍时，直接选场景照着拍。',
       buttonText: '分享拍法',
-      path: `/pages/scene-topic/index?topicId=${topicId}`
+      path: poseId
+        ? `/pages/pose-detail/index?poseId=${poseId}&topicId=${topicId}`
+        : `/pages/scene-topic/index?topicId=${topicId}`
     }
   }
 
-  if (previewPose.id) {
+  if (poseId) {
     return {
       visible: true,
       kicker: '同款姿势',
       title: fillTemplate(pickRandom(RESULT_CARD_TITLES), { poseName }),
       desc: '想要同款效果，点开直接照着姿势拍。',
       buttonText: '分享同款',
-      path: `/pages/pose-detail/index?poseId=${previewPose.id}`
+      path: `/pages/pose-detail/index?poseId=${poseId}`
     }
   }
 

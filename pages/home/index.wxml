@@ -20,8 +20,8 @@
   <view wx:if="{{!searchKeyword && sceneTopics.length}}" class="topic-section">
     <view class="topic-section-head">
       <view class="topic-kicker">场景出片专题</view>
-      <view class="topic-title">到了现场，不知道怎么拍？</view>
-      <view class="topic-subtitle">下面每张卡片都是一个具体场景，点进去看 3 个拍法。</view>
+      <view class="topic-title">到了现场，直接抄这份拍照作业</view>
+      <view class="topic-subtitle">每张卡片都是一个具体场景，点进去看 3 个拍法。</view>
     </view>
 
     <view class="topic-grid">

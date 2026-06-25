@@ -27,11 +27,28 @@
         data-pose-id="{{pose.id}}"
         bindtap="openPoseDetail"
       >
-        <image
-          class="favorite-image"
-          src="{{pose.thumbnailImage || pose.modelImage || pose.detailImage}}"
-          mode="aspectFill"
-        ></image>
+        <view class="favorite-image-wrap">
+          <image
+            wx:if="{{pose.favoriteDisplayImage && !failedFavoriteImages[pose.id]}}"
+            class="favorite-image"
+            src="{{pose.favoriteDisplayImage}}"
+            mode="aspectFill"
+            data-pose-id="{{pose.id}}"
+            bindload="onFavoriteImageLoad"
+            binderror="onFavoriteImageError"
+          ></image>
+          <view wx:if="{{loadingFavoriteImages[pose.id] && !failedFavoriteImages[pose.id]}}" class="favorite-image-loading">
+            加载中
+          </view>
+          <view
+            wx:if="{{failedFavoriteImages[pose.id] || !pose.favoriteDisplayImage}}"
+            class="favorite-image-error"
+            data-pose-id="{{pose.id}}"
+            catchtap="retryFavoriteImage"
+          >
+            点击重试
+          </view>
+        </view>
         <view class="favorite-copy">
           <view class="favorite-name">{{pose.name}}</view>
           <view class="favorite-tip">{{pose.tip}}</view>
