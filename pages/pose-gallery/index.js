@@ -18,6 +18,7 @@ const {
 const { buildGalleryShare } = require('../../utils/shareCopy')
 
 const GALLERY_TARGET_CATEGORY_KEY = 'galleryTargetCategoryId'
+const DETAIL_PREVIEW_IMAGE_KEY = 'poseDetailPreviewImage'
 const DEFAULT_PAGE_TOP_PX = 52
 const DEFAULT_TOP_BAR_HEIGHT_PX = 32
 
@@ -99,6 +100,7 @@ const getGalleryDisplayImage = (pose, retryToken = '', fallbackPoseImages = {}) 
     ? getFallbackThumbnailUrl(pose, retryToken)
     : getGalleryThumbnailUrl(pose, retryToken)
 )
+const isGalleryPreviewImage = (image = '') => String(image).includes('/static/gallery_thumbs/')
 
 const stopPullDownRefresh = () => {
   if (typeof wx.stopPullDownRefresh === 'function') {
@@ -108,6 +110,18 @@ const stopPullDownRefresh = () => {
 
 const findPoseById = (poseId) => {
   for (const category of poseCategories) {
+    const pose = category.poses.find((item) => item.id === poseId)
+
+    if (pose) {
+      return pose
+    }
+  }
+
+  return null
+}
+
+const findDisplayPoseById = (categories, poseId) => {
+  for (const category of categories) {
     const pose = category.poses.find((item) => item.id === poseId)
 
     if (pose) {
@@ -361,6 +375,17 @@ Page({
 
     if (!poseId) {
       return
+    }
+
+    const pose = findDisplayPoseById(this.data.poseCategories, poseId)
+    const previewImage = pose && pose.galleryDisplayImage
+
+    if (isGalleryPreviewImage(previewImage)) {
+      wx.setStorageSync(DETAIL_PREVIEW_IMAGE_KEY, {
+        poseId,
+        image: previewImage,
+        createdAt: Date.now()
+      })
     }
 
     wx.navigateTo({

@@ -26,10 +26,15 @@
         <view class="loading-text">图片加载中</view>
       </view>
       <view
-        wx:if="{{imageLoadFailed}}"
+        wx:if="{{imageLoadFailed && imageRetryVisible}}"
         class="image-error"
         catchtap="retryDetailImage"
       >图片加载失败，点击重试</view>
+      <view
+        wx:if="{{highResImageLoadFailed && highResImageRetryVisible && previewImage}}"
+        class="high-res-status failed"
+        catchtap="retryHighResImage"
+      >高清图加载失败，点击重试</view>
     </view>
 
     <view wx:if="{{detailGuide && detailGuide.hasImageText}}" class="image-note">
@@ -107,6 +112,14 @@
 
   </view>
 
+  <image
+    wx:if="{{highResImage}}"
+    class="preload-guide-image"
+    src="{{highResImage}}"
+    mode="aspectFit"
+    bindload="onHighResImageLoad"
+    binderror="onHighResImageError"
+  ></image>
   <image
     wx:if="{{preloadedGuideImage}}"
     class="preload-guide-image"

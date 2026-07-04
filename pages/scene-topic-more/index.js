@@ -1,7 +1,9 @@
 const { poseTemplates } = require('../../utils/poses')
+const { cacheImage } = require('../../utils/imageCache')
 const { cdnAssetUrl, JSDELIVR_ASSET_BASE } = require('../../utils/assets')
 const { getSceneTopic } = require('../../utils/sceneTopics')
 
+const DETAIL_PREVIEW_IMAGE_KEY = 'poseDetailPreviewImage'
 const DEFAULT_PAGE_TOP_PX = 52
 
 const poseTemplateMap = poseTemplates.reduce((map, pose) => {
@@ -87,6 +89,7 @@ const getGalleryDisplayImage = (pose, retryToken = '', fallbackPoseImages = {}) 
     ? getFallbackThumbnailUrl(pose, retryToken)
     : getGalleryThumbnailUrl(pose, retryToken)
 )
+const isGalleryPreviewImage = (image = '') => String(image).includes('/static/gallery_thumbs/')
 
 const getShareImage = (pose = {}) => (
   cdnAssetUrl(pose.shareImage || pose.thumbnailImage || pose.detailImage || pose.modelImage || pose.guideImage)
@@ -161,6 +164,28 @@ Page({
       pageTopStyle: getPageTopStyle(),
       topic
     })
+    this.cacheMoreShareImage(topic)
+  },
+
+  cacheMoreShareImage(topic) {
+    if (!topic || !topic.id || !topic.shareImage) {
+      return
+    }
+
+    cacheImage(topic.shareImage).then((cachedShareImage) => {
+      if (
+        !cachedShareImage ||
+        cachedShareImage === topic.shareImage ||
+        !this.data.topic ||
+        this.data.topic.id !== topic.id
+      ) {
+        return
+      }
+
+      this.setData({
+        'topic.cachedShareImage': cachedShareImage
+      })
+    }).catch(() => {})
   },
 
   onPullDownRefresh() {
@@ -182,12 +207,18 @@ Page({
       return
     }
 
+    const cachedShareImage = this.data.topic.cachedShareImage
+    const nextTopic = buildMoreTopicView(
+      this.data.topic.id,
+      this.data.imageRetryTokens,
+      this.data.fallbackPoseImages
+    )
+
     this.setData({
-      topic: buildMoreTopicView(
-        this.data.topic.id,
-        this.data.imageRetryTokens,
-        this.data.fallbackPoseImages
-      )
+      topic: {
+        ...nextTopic,
+        ...(cachedShareImage ? { cachedShareImage } : {})
+      }
     })
   },
 
@@ -206,6 +237,17 @@ Page({
 
     if (!poseId || !this.data.topic) {
       return
+    }
+
+    const pose = (this.data.topic.poses || []).find((item) => item.id === poseId)
+    const previewImage = pose && pose.galleryDisplayImage
+
+    if (isGalleryPreviewImage(previewImage)) {
+      wx.setStorageSync(DETAIL_PREVIEW_IMAGE_KEY, {
+        poseId,
+        image: previewImage,
+        createdAt: Date.now()
+      })
     }
 
     wx.navigateTo({
@@ -259,7 +301,7 @@ Page({
     return {
       title: topic.shareTitle || topic.title || '更多场景拍照姿势',
       path: `/pages/scene-topic-more/index?topicId=${topic.id || ''}`,
-      imageUrl: topic.shareImage || ''
+      imageUrl: topic.shareImage || topic.cachedShareImage || ''
     }
   }
 })

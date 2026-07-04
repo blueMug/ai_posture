@@ -290,6 +290,14 @@ Page({
   },
 
   onShareAppMessage() {
-    return buildSceneShare(this.data.topic || {})
+    const topic = this.data.topic || {}
+    const preferredShareImage = topic.coverImage ||
+      (((topic.plans || []).find((plan) => plan.thumbnailImage) || {}).thumbnailImage) ||
+      ''
+
+    return buildSceneShare({
+      ...topic,
+      preferredShareImage
+    })
   }
 })

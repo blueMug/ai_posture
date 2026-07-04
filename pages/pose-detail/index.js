@@ -23,10 +23,35 @@ const {
 
 const getPose = (poseId) => getPoseById(poseId)
 const MAX_ACTION_POINTS = 3
-const DETAIL_IMAGE_LOAD_TIMEOUT = 12000
+const DETAIL_IMAGE_LOAD_TIMEOUT = 60000
+const IMAGE_RETRY_VISIBLE_DURATION = 5000
+const DETAIL_PREVIEW_IMAGE_KEY = 'poseDetailPreviewImage'
+const DETAIL_PREVIEW_MAX_AGE_MS = 5 * 60 * 1000
 const getDisplayImageSource = (pose = {}) => (
   pose.detailImage || pose.thumbnailImage || pose.guideImage || ''
 )
+const getShareImageSource = (pose = {}) => (
+  pose.shareImage || pose.thumbnailImage || pose.detailImage || pose.modelImage || pose.guideImage || ''
+)
+const isGalleryPreviewImage = (image = '') => String(image).includes('/static/gallery_thumbs/')
+const consumeDetailPreviewImage = (poseId) => {
+  try {
+    const preview = wx.getStorageSync(DETAIL_PREVIEW_IMAGE_KEY) || {}
+    wx.removeStorageSync(DETAIL_PREVIEW_IMAGE_KEY)
+
+    if (
+      preview.poseId !== poseId ||
+      !isGalleryPreviewImage(preview.image) ||
+      Date.now() - Number(preview.createdAt || 0) > DETAIL_PREVIEW_MAX_AGE_MS
+    ) {
+      return ''
+    }
+
+    return preview.image
+  } catch (error) {
+    return ''
+  }
+}
 const appendImageRetryToken = (url = '', retryToken = '') => {
   if (!retryToken || !/^https?:\/\//.test(url)) {
     return url
@@ -206,8 +231,17 @@ Page({
     pose: null,
     displayImage: '',
     displayImageSource: '',
+    previewImage: '',
+    highResImage: '',
+    highResImageSource: '',
+    highResImageLoading: false,
+    highResImageLoadFailed: false,
+    highResImageRetryVisible: false,
+    highResImageFallbackTried: false,
+    cachedShareImage: '',
     imageLoading: false,
     imageLoadFailed: false,
+    imageRetryVisible: false,
     displayImageFallbackTried: false,
     preloadedGuideImage: '',
     preloadedCameraImages: [],
@@ -238,14 +272,24 @@ Page({
     const shootingGuide = getShootingGuide(pose)
     const detailGuide = buildDetailGuide(pose, shootingGuide)
     const sourceTopic = options.topicId ? getSceneTopic(options.topicId) : null
+    const previewImage = consumeDetailPreviewImage(pose.id)
 
     this.setData({
       poseId: pose.id,
       pose: poseWithFavorite,
-      displayImage: '',
+      displayImage: previewImage,
       displayImageSource: getDisplayImageSource(poseWithFavorite),
-      imageLoading: true,
+      previewImage,
+      highResImage: '',
+      highResImageSource: '',
+      highResImageLoading: false,
+      highResImageLoadFailed: false,
+      highResImageRetryVisible: false,
+      highResImageFallbackTried: false,
+      cachedShareImage: '',
+      imageLoading: !previewImage,
       imageLoadFailed: false,
+      imageRetryVisible: false,
       displayImageFallbackTried: false,
       preloadedGuideImage: '',
       preloadedCameraImages: [],
@@ -262,6 +306,7 @@ Page({
     })
 
     this.loadDetailImages(poseWithFavorite)
+    this.cachePoseShareImage(poseWithFavorite)
 
     wx.showShareMenu({
       withShareTicket: true,
@@ -276,7 +321,11 @@ Page({
       return
     }
 
-    const poseWithFavorite = withFavoriteState(pose, getFavoritePoseIds())
+    const cachedShareImage = this.data.cachedShareImage
+    const poseWithFavorite = {
+      ...withFavoriteState(pose, getFavoritePoseIds()),
+      ...(cachedShareImage ? { cachedShareImage } : {})
+    }
 
     this.setData({
       pose: poseWithFavorite,
@@ -291,7 +340,10 @@ Page({
         }
 
         this.setData({
-          pose: withFavoriteState(localPose, getFavoritePoseIds())
+          pose: {
+            ...withFavoriteState(localPose, getFavoritePoseIds()),
+            ...(this.data.cachedShareImage ? { cachedShareImage: this.data.cachedShareImage } : {})
+          }
         })
       })
     }
@@ -299,6 +351,9 @@ Page({
 
   onUnload() {
     this.clearDetailImageLoadTimer()
+    this.clearHighResImageLoadTimer()
+    this.clearDetailImageRetryTimer()
+    this.clearHighResImageRetryTimer()
   },
 
   prefetchGuideImage(pose, requestId = this.detailImageRequestId, retryToken = '') {
@@ -348,11 +403,90 @@ Page({
     })
   },
 
+  cachePoseShareImage(pose = {}) {
+    const shareImage = getShareImageSource(pose)
+
+    if (!shareImage) {
+      return
+    }
+
+    cacheImage(shareImage).then((cachedShareImage) => {
+      if (
+        !cachedShareImage ||
+        cachedShareImage === shareImage ||
+        this.data.poseId !== pose.id
+      ) {
+        return
+      }
+
+      const currentPose = this.data.pose || {}
+
+      this.setData({
+        cachedShareImage,
+        pose: {
+          ...currentPose,
+          cachedShareImage
+        }
+      })
+    }).catch(() => {})
+  },
+
   clearDetailImageLoadTimer() {
     if (this.detailImageLoadTimer) {
       clearTimeout(this.detailImageLoadTimer)
       this.detailImageLoadTimer = null
     }
+  },
+
+  clearHighResImageLoadTimer() {
+    if (this.highResImageLoadTimer) {
+      clearTimeout(this.highResImageLoadTimer)
+      this.highResImageLoadTimer = null
+    }
+  },
+
+  clearDetailImageRetryTimer() {
+    if (this.detailImageRetryTimer) {
+      clearTimeout(this.detailImageRetryTimer)
+      this.detailImageRetryTimer = null
+    }
+  },
+
+  clearHighResImageRetryTimer() {
+    if (this.highResImageRetryTimer) {
+      clearTimeout(this.highResImageRetryTimer)
+      this.highResImageRetryTimer = null
+    }
+  },
+
+  startDetailImageRetryTimer() {
+    this.clearDetailImageRetryTimer()
+
+    this.detailImageRetryTimer = setTimeout(() => {
+      this.detailImageRetryTimer = null
+      if (!this.data.imageLoadFailed || !this.data.imageRetryVisible) {
+        return
+      }
+
+      this.setData({
+        imageRetryVisible: false
+      })
+    }, IMAGE_RETRY_VISIBLE_DURATION)
+  },
+
+  startHighResImageRetryTimer() {
+    this.clearHighResImageRetryTimer()
+
+    this.highResImageRetryTimer = setTimeout(() => {
+      this.highResImageRetryTimer = null
+      if (!this.data.highResImageLoadFailed || !this.data.highResImageRetryVisible) {
+        return
+      }
+
+      this.setData({
+        highResImageRetryVisible: false
+      })
+    }, IMAGE_RETRY_VISIBLE_DURATION)
   },
 
   startDetailImageLoadTimer(requestId) {
@@ -366,8 +500,28 @@ Page({
       this.detailImageLoadTimer = null
       this.setData({
         imageLoading: false,
-        imageLoadFailed: true
+        imageLoadFailed: true,
+        imageRetryVisible: true
       })
+      this.startDetailImageRetryTimer()
+    }, DETAIL_IMAGE_LOAD_TIMEOUT)
+  },
+
+  startHighResImageLoadTimer(requestId) {
+    this.clearHighResImageLoadTimer()
+
+    this.highResImageLoadTimer = setTimeout(() => {
+      if (this.detailImageRequestId !== requestId || !this.data.highResImageLoading) {
+        return
+      }
+
+      this.highResImageLoadTimer = null
+      this.setData({
+        highResImageLoading: false,
+        highResImageLoadFailed: true,
+        highResImageRetryVisible: true
+      })
+      this.startHighResImageRetryTimer()
     }, DETAIL_IMAGE_LOAD_TIMEOUT)
   },
 
@@ -375,14 +529,26 @@ Page({
     const requestId = (this.detailImageRequestId || 0) + 1
     this.detailImageRequestId = requestId
     const initialDisplayImage = getDisplayImageSource(pose)
+    const previewImage = this.data.previewImage
 
     this.setData({
       displayImageSource: initialDisplayImage,
-      imageLoading: true,
+      highResImage: '',
+      highResImageSource: '',
+      highResImageLoading: false,
+      highResImageLoadFailed: false,
+      highResImageRetryVisible: false,
+      highResImageFallbackTried: false,
+      imageLoading: !previewImage,
       imageLoadFailed: false,
+      imageRetryVisible: false,
       displayImageFallbackTried: false
     })
-    this.startDetailImageLoadTimer(requestId)
+    this.clearDetailImageRetryTimer()
+    this.clearHighResImageRetryTimer()
+    if (!previewImage) {
+      this.startDetailImageLoadTimer(requestId)
+    }
     this.prefetchGuideImage(pose, requestId)
 
     const localPosePromise = pose.isFavorite
@@ -408,9 +574,20 @@ Page({
         getCachedImagePath(displayImage).then((cachedImage) => {
           if (
             this.detailImageRequestId !== requestId ||
-            !cachedImage ||
-            !this.data.imageLoading
+            !cachedImage
           ) {
+            return
+          }
+
+          if (this.data.previewImage) {
+            this.setData({
+              highResImage: cachedImage
+            })
+            this.startHighResImageLoadTimer(requestId)
+            return
+          }
+
+          if (!this.data.imageLoading) {
             return
           }
 
@@ -422,30 +599,65 @@ Page({
         cacheImage(displayImage).catch(() => {})
       }
 
-      this.setData({
-        pose: withFavoriteState(resolvedPose, getFavoritePoseIds()),
+      const hasPreviewImage = Boolean(this.data.previewImage)
+      const nextData = {
+        pose: {
+          ...withFavoriteState(resolvedPose, getFavoritePoseIds()),
+          ...(this.data.cachedShareImage ? { cachedShareImage: this.data.cachedShareImage } : {})
+        },
         displayImageSource: initialDisplayImage || displayImage,
-        displayImage,
-        imageLoading: true,
+        imageLoading: !hasPreviewImage,
         imageLoadFailed: false,
+        imageRetryVisible: false,
         displayImageFallbackTried: false
-      })
-      this.startDetailImageLoadTimer(requestId)
+      }
+
+      if (hasPreviewImage) {
+        nextData.highResImage = displayImage
+        nextData.highResImageSource = displayImage
+        nextData.highResImageLoading = true
+        nextData.highResImageLoadFailed = false
+        nextData.highResImageRetryVisible = false
+        nextData.highResImageFallbackTried = false
+      } else {
+        nextData.displayImage = displayImage
+      }
+
+      this.setData(nextData)
+      if (hasPreviewImage) {
+        this.startHighResImageLoadTimer(requestId)
+      } else {
+        this.startDetailImageLoadTimer(requestId)
+      }
     }).catch(() => {
       if (this.detailImageRequestId !== requestId) {
         return
       }
 
       this.clearDetailImageLoadTimer()
+      this.clearHighResImageLoadTimer()
+      const hasPreviewImage = Boolean(this.data.previewImage)
+
       this.setData({
         displayImageSource: initialDisplayImage,
         imageLoading: false,
-        imageLoadFailed: true
+        imageLoadFailed: !hasPreviewImage,
+        imageRetryVisible: !hasPreviewImage,
+        highResImageLoading: false,
+        highResImageLoadFailed: hasPreviewImage,
+        highResImageRetryVisible: hasPreviewImage
       })
-      wx.showToast({
-        title: '大图加载失败',
-        icon: 'none'
-      })
+      if (hasPreviewImage) {
+        this.startHighResImageRetryTimer()
+      } else {
+        this.startDetailImageRetryTimer()
+      }
+      if (!hasPreviewImage) {
+        wx.showToast({
+          title: '大图加载失败',
+          icon: 'none'
+        })
+      }
     })
   },
 
@@ -476,7 +688,10 @@ Page({
   toggleFavorite() {
     const result = togglePoseFavorite(this.data.poseId)
     const basePose = getPose(this.data.poseId)
-    const pose = withFavoriteState(basePose, result.favoritePoseIds)
+    const pose = {
+      ...withFavoriteState(basePose, result.favoritePoseIds),
+      ...(this.data.cachedShareImage ? { cachedShareImage: this.data.cachedShareImage } : {})
+    }
 
     this.setData({
       pose,
@@ -509,8 +724,10 @@ Page({
       this.clearDetailImageLoadTimer()
       this.setData({
         imageLoading: false,
-        imageLoadFailed: true
+        imageLoadFailed: true,
+        imageRetryVisible: true
       })
+      this.startDetailImageRetryTimer()
       return
     }
 
@@ -521,8 +738,10 @@ Page({
         displayImage: fallbackImage,
         displayImageFallbackTried: true,
         imageLoading: true,
-        imageLoadFailed: false
+        imageLoadFailed: false,
+        imageRetryVisible: false
       })
+      this.clearDetailImageRetryTimer()
       this.startDetailImageLoadTimer(this.detailImageRequestId)
       return
     }
@@ -530,8 +749,10 @@ Page({
     this.clearDetailImageLoadTimer()
     this.setData({
       imageLoading: false,
-      imageLoadFailed: true
+      imageLoadFailed: true,
+      imageRetryVisible: true
     })
+    this.startDetailImageRetryTimer()
     wx.showToast({
       title: '大图加载失败',
       icon: 'none'
@@ -542,8 +763,82 @@ Page({
     this.clearDetailImageLoadTimer()
     this.setData({
       imageLoading: false,
-      imageLoadFailed: false
+      imageLoadFailed: false,
+      imageRetryVisible: false
     })
+    this.clearDetailImageRetryTimer()
+  },
+
+  onHighResImageLoad() {
+    const highResImage = this.data.highResImage
+
+    if (!highResImage) {
+      return
+    }
+
+    this.clearHighResImageLoadTimer()
+    this.setData({
+      displayImage: highResImage,
+      highResImageLoading: false,
+      highResImageLoadFailed: false,
+      highResImageRetryVisible: false,
+      highResImageFallbackTried: false
+    })
+    this.clearHighResImageRetryTimer()
+  },
+
+  onHighResImageError() {
+    const highResImage = this.data.highResImage
+    const sourceImage = this.data.highResImageSource || this.data.displayImageSource || highResImage
+    const fallbackImage = cdnAssetUrl(sourceImage)
+
+    if (!this.data.highResImageFallbackTried && fallbackImage && fallbackImage !== highResImage) {
+      this.setData({
+        highResImage: fallbackImage,
+        highResImageFallbackTried: true,
+        highResImageLoading: true,
+        highResImageLoadFailed: false,
+        highResImageRetryVisible: false
+      })
+      this.clearHighResImageRetryTimer()
+      this.startHighResImageLoadTimer(this.detailImageRequestId)
+      return
+    }
+
+    this.clearHighResImageLoadTimer()
+    this.setData({
+      highResImageLoading: false,
+      highResImageLoadFailed: true,
+      highResImageRetryVisible: true
+    })
+    this.startHighResImageRetryTimer()
+  },
+
+  retryHighResImage() {
+    const pose = this.data.pose || getPose(this.data.poseId)
+    const sourceImage = this.data.displayImageSource || getDisplayImageSource(pose)
+
+    if (!sourceImage) {
+      return
+    }
+
+    const retryToken = Date.now()
+    const retryImage = appendImageRetryToken(sourceImage, retryToken)
+    const requestId = (this.detailImageRequestId || 0) + 1
+    this.detailImageRequestId = requestId
+
+    this.setData({
+      highResImage: retryImage,
+      highResImageSource: sourceImage,
+      highResImageLoading: true,
+      highResImageLoadFailed: false,
+      highResImageRetryVisible: false,
+      highResImageFallbackTried: false
+    })
+    this.clearHighResImageRetryTimer()
+    this.startHighResImageLoadTimer(requestId)
+    this.prefetchGuideImage(pose, requestId, retryToken)
+    cacheImage(retryImage).catch(() => {})
   },
 
   retryDetailImage() {
@@ -553,8 +848,10 @@ Page({
     if (!sourceImage) {
       this.setData({
         imageLoading: false,
-        imageLoadFailed: true
+        imageLoadFailed: true,
+        imageRetryVisible: true
       })
+      this.startDetailImageRetryTimer()
       return
     }
 
@@ -568,8 +865,10 @@ Page({
       displayImageSource: sourceImage,
       imageLoading: true,
       imageLoadFailed: false,
+      imageRetryVisible: false,
       displayImageFallbackTried: false
     })
+    this.clearDetailImageRetryTimer()
     this.startDetailImageLoadTimer(requestId)
     this.prefetchGuideImage(pose, requestId, retryToken)
     cacheImage(retryImage).catch(() => {})
@@ -579,6 +878,7 @@ Page({
     const pose = this.data.pose || {}
     const poseId = this.data.poseId
     const sourceTopic = this.data.sourceTopic
+    const preferredImage = this.data.displayImage || this.data.previewImage || ''
     const shareType = options.target && options.target.dataset
       ? options.target.dataset.shareType
       : ''
@@ -587,6 +887,7 @@ Page({
       return buildPoseShare(pose, {
         poseId,
         role: 'photographer',
+        preferredImage,
         path: `/pages/camera/index?poseId=${poseId}`
       })
     }
@@ -594,13 +895,16 @@ Page({
     if (shareType === 'pose') {
       return buildPoseShare(pose, {
         poseId,
-        role: 'detail'
+        role: 'detail',
+        preferredImage
       })
     }
 
     if (sourceTopic && sourceTopic.id) {
       return buildSceneShare({
         ...sourceTopic,
+        cachedShareImage: pose.cachedShareImage || this.data.cachedShareImage || sourceTopic.cachedShareImage,
+        preferredShareImage: preferredImage || sourceTopic.preferredShareImage,
         shareImage: pose.shareImage || sourceTopic.shareImage,
         coverImage: sourceTopic.coverImage || pose.thumbnailImage || pose.detailImage || pose.guideImage
       })
@@ -608,7 +912,8 @@ Page({
 
     return buildPoseShare(pose, {
       poseId,
-      role: 'detail'
+      role: 'detail',
+      preferredImage
     })
   }
 })

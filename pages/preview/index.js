@@ -431,8 +431,8 @@ Page({
     const poseId = this.data.poseId
     const poseName = this.data.poseName
     const shareCard = this.data.shareCard || {}
-    const shareImage = this.data.cachedPoseShareImage ||
-      this.data.poseShareImage ||
+    const shareImage = this.data.poseShareImage ||
+      this.data.cachedPoseShareImage ||
       this.data.photoPath ||
       ''
 

@@ -15,8 +15,10 @@ const pickRandom = (items = []) => {
 const fillTemplate = (template = '', values = {}) => Object.keys(values).reduce((text, key) => (
   text.replace(new RegExp(`\\{${key}\\}`, 'g'), values[key])
 ), template)
-const getPoseShareImage = (pose = {}, fallbackImage = '') => (
+const getPoseShareImage = (pose = {}, fallbackImage = '', preferredImage = '') => (
   pose.shareImage ||
+  pose.cachedShareImage ||
+  preferredImage ||
   pose.thumbnailImage ||
   pose.detailImage ||
   pose.modelImage ||
@@ -135,7 +137,7 @@ const buildPoseShare = (pose = {}, options = {}) => {
   return {
     title,
     path,
-    imageUrl: getPoseShareImage(pose, options.fallbackImage)
+    imageUrl: getPoseShareImage(pose, options.fallbackImage, options.preferredImage)
   }
 }
 
@@ -163,7 +165,11 @@ const buildSceneShare = (topic = {}) => {
   return {
     title,
     path: `/pages/scene-topic/index?topicId=${topic.id || ''}`,
-    imageUrl: topic.cachedShareImage || topic.shareImage || topic.coverImage || DEFAULT_HOME_SHARE_IMAGE
+    imageUrl: topic.shareImage ||
+      topic.cachedShareImage ||
+      topic.coverImage ||
+      topic.preferredShareImage ||
+      DEFAULT_HOME_SHARE_IMAGE
   }
 }
 
