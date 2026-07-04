@@ -27,7 +27,7 @@
         <view class="share-title">{{shareCard.title}}</view>
         <view class="share-brand">
           <image class="share-logo" src="{{shareBrandLogo}}" mode="aspectFit"></image>
-          <view class="share-brand-text">出片姿势小程序</view>
+          <view class="share-brand-text">清意姿势拍照小程序</view>
         </view>
       </view>
       <button class="share-pose-btn" open-type="share">{{shareCard.buttonText}}</button>
@@ -46,7 +46,7 @@
         <view class="share-title">{{shareCard.title}}</view>
         <view class="share-brand">
           <image class="share-logo" src="{{shareBrandLogo}}" mode="aspectFit"></image>
-          <view class="share-brand-text">出片姿势小程序</view>
+          <view class="share-brand-text">清意姿势拍照小程序</view>
         </view>
       </view>
       <button class="share-pose-btn" open-type="share">{{shareCard.buttonText}}</button>

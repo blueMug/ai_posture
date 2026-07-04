@@ -1,4 +1,4 @@
-const DEFAULT_HOME_SHARE_IMAGE = '/assets/brand/logo_pose_custom5_contour.png'
+const DEFAULT_HOME_SHARE_IMAGE = '/static/brand/logo_ai_posture.png'
 
 const compactText = (text = '') => String(text || '').replace(/\s+/g, ' ').trim()
 const getPoseName = (pose = {}) => compactText(pose.name) || '这个姿势'
@@ -38,7 +38,7 @@ const GALLERY_SHARE_TITLES = [
   '显腿长、不露脸、街拍旅行姿势，一次找齐',
   '拍照没动作？这里都是能直接照着拍的姿势',
   '收藏这份姿势大全，下次拍照直接抄作业',
-  '从自拍到旅行打卡，出片姿势都给你分好了'
+  '从自拍到旅行打卡，清意姿势拍照都给你分好了'
 ]
 
 const POSE_SHARE_TITLES = {
@@ -66,14 +66,14 @@ const POSE_SHARE_TITLES = {
   favorite: [
     '这个「{poseName}」姿势可以先收藏',
     '下次拍照想试这个：「{poseName}」',
-    '发现一个值得收藏的出片姿势',
+    '发现一个值得收藏的拍照姿势',
     '这个姿势留着，下次拍照直接用'
   ],
   scene: [
     '{sceneTitle}不知道怎么拍？这个姿势直接照着来',
     '{sceneTitle}拍照可以试试「{poseName}」',
     '到了{sceneTitle}，这个姿势比站着拍自然',
-    '{sceneTitle}出片姿势，打开直接照着拍'
+    '{sceneTitle}清意姿势拍照，打开直接照着拍'
   ]
 }
 

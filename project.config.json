@@ -1,5 +1,5 @@
 {
-  "description": "出片姿势：场景拍照姿势推荐，提供拍照姿势模板、姿势相机、自拍穿搭旅行街拍姿势参考",
+  "description": "清意姿势拍照：场景拍照姿势推荐，提供拍照姿势模板、姿势相机、自拍穿搭旅行街拍姿势参考",
   "miniprogramRoot": "./",
   "packOptions": {
     "ignore": [
@@ -138,6 +138,10 @@
       {
         "value": "README.md",
         "type": "file"
+      },
+      {
+        "type": "folder",
+        "value": "/minitest"
       }
     ],
     "include": []
@@ -171,12 +175,13 @@
   },
   "compileType": "miniprogram",
   "libVersion": "3.7.0",
-  "appid": "wxa3858e3346b96612",
-  "projectname": "出片姿势",
+  "appid": "wxcab7fdc4f27d5eb5",
+  "projectname": "清意姿势拍照",
   "condition": {},
   "editorSetting": {
     "tabIndent": "insertSpaces",
     "tabSize": 2
   },
-  "simulatorPluginLibVersion": {}
+  "simulatorPluginLibVersion": {},
+  "testRoot": "minitest/"
 }

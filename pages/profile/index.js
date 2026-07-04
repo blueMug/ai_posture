@@ -1,5 +1,6 @@
 const GUIDE_CONFIRM_STORAGE_KEY = 'keepGuideForConfirm'
 const GUIDE_MODE_STORAGE_KEY = 'cameraGuideMode'
+const DEFAULT_KEEP_GUIDE_FOR_CONFIRM = true
 const GUIDE_MODE_OUTLINE = 'outline'
 const GUIDE_MODE_PHOTO = 'photo'
 const { adSlots } = require('../../utils/adConfig')
@@ -22,6 +23,16 @@ const DEFAULT_TOP_BAR_HEIGHT_PX = 32
 const normalizeGuideMode = (guideMode) => (
   guideMode === GUIDE_MODE_PHOTO ? GUIDE_MODE_PHOTO : GUIDE_MODE_OUTLINE
 )
+
+const getStoredGuideConfirmSetting = () => {
+  const storageInfo = wx.getStorageInfoSync() || {}
+  const hasStoredSetting = Array.isArray(storageInfo.keys) &&
+    storageInfo.keys.includes(GUIDE_CONFIRM_STORAGE_KEY)
+
+  return hasStoredSetting
+    ? Boolean(wx.getStorageSync(GUIDE_CONFIRM_STORAGE_KEY))
+    : DEFAULT_KEEP_GUIDE_FOR_CONFIRM
+}
 
 const getPageTopStyle = () => {
   if (typeof wx.getMenuButtonBoundingClientRect !== 'function') {
@@ -114,7 +125,7 @@ Page({
   data: {
     pageTopStyle: `padding-top: ${DEFAULT_PAGE_TOP_PX}px;`,
     topBarStyle: `height: ${DEFAULT_TOP_BAR_HEIGHT_PX}px;`,
-    keepGuideForConfirm: false,
+    keepGuideForConfirm: DEFAULT_KEEP_GUIDE_FOR_CONFIRM,
     guideMode: GUIDE_MODE_OUTLINE,
     favoritePoses: [],
     favoritePoseCount: 0,
@@ -146,7 +157,7 @@ Page({
 
   loadGuideConfirmSetting() {
     this.setData({
-      keepGuideForConfirm: Boolean(wx.getStorageSync(GUIDE_CONFIRM_STORAGE_KEY)),
+      keepGuideForConfirm: getStoredGuideConfirmSetting(),
       guideMode: normalizeGuideMode(wx.getStorageSync(GUIDE_MODE_STORAGE_KEY))
     })
   },

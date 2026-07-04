@@ -12,6 +12,7 @@ const GUIDE_CONFIRM_STORAGE_KEY = 'keepGuideForConfirm'
 const GUIDE_MODE_STORAGE_KEY = 'cameraGuideMode'
 const GUIDE_ROTATE_STORAGE_KEY = 'cameraGuideRotate90'
 const CAMERA_ASPECT_STORAGE_KEY = 'cameraAspectRatio'
+const DEFAULT_KEEP_GUIDE_FOR_CONFIRM = true
 const GALLERY_TARGET_CATEGORY_KEY = 'galleryTargetCategoryId'
 const CACHE_TEMPLATE_SUPPORT_IMAGE_FIELDS = ['thumbnailImage']
 const POSE_GALLERY_ROUTE = 'pages/pose-gallery/index'
@@ -99,6 +100,15 @@ const normalizeStoredGuideMode = (guideMode) => {
   return GUIDE_MODE_OUTLINE
 }
 const getStoredGuideMode = () => normalizeStoredGuideMode(wx.getStorageSync(GUIDE_MODE_STORAGE_KEY))
+const getStoredGuideConfirmSetting = () => {
+  const storageInfo = wx.getStorageInfoSync() || {}
+  const hasStoredSetting = Array.isArray(storageInfo.keys) &&
+    storageInfo.keys.includes(GUIDE_CONFIRM_STORAGE_KEY)
+
+  return hasStoredSetting
+    ? Boolean(wx.getStorageSync(GUIDE_CONFIRM_STORAGE_KEY))
+    : DEFAULT_KEEP_GUIDE_FOR_CONFIRM
+}
 const normalizeCameraAspectRatio = (aspectRatio) => (
   CAMERA_ASPECT_OPTIONS.includes(aspectRatio)
     ? aspectRatio
@@ -574,7 +584,7 @@ Page({
     cameraZoomText: '1.0x',
     guideToggleTitle: '轮廓',
     guideLoadFailed: false,
-    keepGuideForConfirm: false,
+    keepGuideForConfirm: DEFAULT_KEEP_GUIDE_FOR_CONFIRM,
     settingsPanelOpen: false,
     currentIsSelfie: false,
     guideMode: GUIDE_MODE_OUTLINE,
@@ -1448,7 +1458,7 @@ Page({
 
   loadGuideSettings(options = {}) {
     const { includeGuideMode = true } = options
-    const keepGuideForConfirm = Boolean(wx.getStorageSync(GUIDE_CONFIRM_STORAGE_KEY))
+    const keepGuideForConfirm = getStoredGuideConfirmSetting()
     const guideRotateAngle = normalizeGuideRotateAngle(wx.getStorageSync(GUIDE_ROTATE_STORAGE_KEY))
     const cameraAspectRatio = getStoredCameraAspectRatio()
     const guideSettings = {

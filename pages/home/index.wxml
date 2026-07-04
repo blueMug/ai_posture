@@ -1,6 +1,6 @@
 <view class="page" style="{{pageTopStyle}}">
   <view class="brand-copy">
-    <view class="brand-name">出片姿势</view>
+    <view class="brand-name">清意姿势拍照</view>
     <view class="brand-tagline">按场景推荐拍照姿势，照着模板轻松出片</view>
   </view>
 
