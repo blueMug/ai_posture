@@ -4,7 +4,7 @@ const {
   cdnAssetUrl,
   homeLocalAssetUrl,
   HOME_LOCAL_ASSET_FOLDERS,
-  JSDELIVR_ASSET_BASE
+  normalizeAssetPath
 } = require('../../utils/assets')
 const { ensurePrivacyNotice } = require('../../utils/privacy')
 const {
@@ -33,9 +33,7 @@ const getDisplayImage = (pose = {}) => (
   cdnAssetUrl(pose.detailImage || pose.modelImage || pose.thumbnailImage || pose.guideImage)
 )
 const toLocalAssetPath = (path = '') => {
-  return String(path || '').startsWith(`${JSDELIVR_ASSET_BASE}/`)
-    ? `/${String(path).slice(JSDELIVR_ASSET_BASE.length + 1)}`
-    : path
+  return normalizeAssetPath(String(path || ''))
 }
 const toGalleryThumbnailImage = (path = '') => {
   const galleryPath = toLocalAssetPath(path)

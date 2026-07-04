@@ -1,6 +1,6 @@
 const { poseTemplates } = require('../../utils/poses')
 const { cacheImage } = require('../../utils/imageCache')
-const { cdnAssetUrl, JSDELIVR_ASSET_BASE } = require('../../utils/assets')
+const { cdnAssetUrl, normalizeAssetPath } = require('../../utils/assets')
 const { getSceneTopic } = require('../../utils/sceneTopics')
 
 const DETAIL_PREVIEW_IMAGE_KEY = 'poseDetailPreviewImage'
@@ -16,9 +16,7 @@ const toLocalAssetPath = (assetPath = '') => {
     return ''
   }
 
-  return String(assetPath).startsWith(`${JSDELIVR_ASSET_BASE}/`)
-    ? `/${String(assetPath).slice(JSDELIVR_ASSET_BASE.length + 1)}`
-    : assetPath
+  return normalizeAssetPath(String(assetPath))
 }
 
 const toGalleryThumbnailImage = (assetPath = '') => {

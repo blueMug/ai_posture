@@ -1,11 +1,18 @@
 const CACHE_STORAGE_KEY = 'imageFileCacheV1'
 const PINNED_CACHE_URLS_KEY = 'pinnedImageCacheUrlsV1'
 const MAX_CACHE_BYTES = 8 * 1024 * 1024
+const { REMOTE_ASSET_SOURCE, REMOTE_ASSET_BASE } = require('./assets')
+const BYPASS_GITEE_DOWNLOAD_CACHE = true
 
 const pendingTasks = {}
 let preloadQueue = Promise.resolve()
 
 const isRemoteUrl = (url) => /^https?:\/\//.test(url || '')
+const shouldBypassDownloadCache = (url = '') => (
+  BYPASS_GITEE_DOWNLOAD_CACHE &&
+  REMOTE_ASSET_SOURCE === 'gitee' &&
+  String(url).startsWith(`${REMOTE_ASSET_BASE}/`)
+)
 const getCacheUrl = (url = '') => {
   if (!isRemoteUrl(url)) {
     return url || ''
@@ -175,6 +182,10 @@ const downloadImage = (url, cacheUrl = getCacheUrl(url)) => new Promise((resolve
 
 const cacheImage = async (url) => {
   if (!isRemoteUrl(url)) {
+    return url
+  }
+
+  if (shouldBypassDownloadCache(url)) {
     return url
   }
 

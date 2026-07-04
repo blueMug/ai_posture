@@ -1,5 +1,14 @@
-const USE_JSDELIVR_ASSETS = true
+const USE_REMOTE_ASSETS = true
+// Roll back to jsDelivr quickly by changing this value to 'jsdelivr'.
+const REMOTE_ASSET_SOURCE = 'gitee'
 const JSDELIVR_ASSET_BASE = 'https://cdn.jsdelivr.net/gh/blueMug/posture_assets@main'
+const GITEE_ASSET_BASE = 'https://gitee.com/blueMug/posture_assets/raw/main'
+const REMOTE_ASSET_BASES = {
+  jsdelivr: JSDELIVR_ASSET_BASE,
+  gitee: GITEE_ASSET_BASE
+}
+const REMOTE_ASSET_BASE = REMOTE_ASSET_BASES[REMOTE_ASSET_SOURCE] || JSDELIVR_ASSET_BASE
+const REMOTE_ASSET_BASE_LIST = Array.from(new Set(Object.values(REMOTE_ASSET_BASES)))
 const LOCAL_PACKED_PREFIXES = ['/static/recommend_thumbs/']
 const REMOTE_ONLY_ASSET_PATHS = new Set([
   '/static/pose_pairs/custom74/custom74_r01_g01_demo.jpg',
@@ -158,8 +167,10 @@ const normalizeAssetPath = (path) => {
     return path
   }
 
-  return path.startsWith(`${JSDELIVR_ASSET_BASE}/`)
-    ? `/${path.slice(JSDELIVR_ASSET_BASE.length + 1)}`
+  const matchedBase = REMOTE_ASSET_BASE_LIST.find((base) => path.startsWith(`${base}/`))
+
+  return matchedBase
+    ? `/${path.slice(matchedBase.length + 1)}`
     : path
 }
 
@@ -173,7 +184,7 @@ const cdnAssetUrl = (path) => {
     .replace('/static/recommend_guides/', '/static/pose_guides/')
     .replace('/static/home_guides/', '/static/pose_guides/')
 
-  return `${JSDELIVR_ASSET_BASE}/${remotePath.replace(/^\/+/, '')}`
+  return `${REMOTE_ASSET_BASE}/${remotePath.replace(/^\/+/, '')}`
 }
 
 const assetUrl = (path) => {
@@ -191,7 +202,7 @@ const assetUrl = (path) => {
     return localPath
   }
 
-  if (!USE_JSDELIVR_ASSETS) {
+  if (!USE_REMOTE_ASSETS) {
     return localPath
   }
 
@@ -234,5 +245,9 @@ module.exports = {
   HOME_LOCAL_ASSET_FOLDERS,
   HOME_LOCAL_GUIDE_FOLDERS,
   normalizeAssetPath,
+  USE_REMOTE_ASSETS,
+  REMOTE_ASSET_SOURCE,
+  REMOTE_ASSET_BASE,
+  GITEE_ASSET_BASE,
   JSDELIVR_ASSET_BASE
 }

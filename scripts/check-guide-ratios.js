@@ -1,7 +1,7 @@
 const fs = require('fs')
 const { execFileSync } = require('child_process')
 const { poseTemplates } = require('../utils/poses')
-const { JSDELIVR_ASSET_BASE } = require('../utils/assets')
+const { normalizeAssetPath } = require('../utils/assets')
 const { getGuideImageSize } = require('../utils/guideImageSizes')
 
 const RATIO_DIFF_THRESHOLD = 0.01
@@ -53,11 +53,7 @@ const readHeadPngSize = (file) => {
 }
 
 const toLocalStaticPath = (url) => {
-  let path = String(url || '').split('?')[0]
-
-  if (path.startsWith(`${JSDELIVR_ASSET_BASE}/`)) {
-    path = `/${path.slice(JSDELIVR_ASSET_BASE.length + 1)}`
-  }
+  const path = normalizeAssetPath(String(url || '').split('?')[0])
 
   const staticIndex = path.indexOf('/static/')
 

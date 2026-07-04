@@ -28,7 +28,7 @@ detailImage: `/static/pose_pairs/${folder}/${pairId}_demo.jpg`
 | --- | --- | --- |
 | `assets/pose_pairs/custom106/` | `custom106_r01_g01_demo.png` | 原始或高清真人示例，项目内作为源资源留档 |
 | `assets/pose_pairs/custom106/` | `custom106_r01_g01_contour_hd.png` | 原始或高清轮廓，校验脚本会用它和 active 轮廓比比例 |
-| `static/pose_pairs/custom106/` | `custom106_r01_g01_demo.jpg` | 真人参考图，详情页、半透明照片引导、CDN 资源来源 |
+| `static/pose_pairs/custom106/` | `custom106_r01_g01_demo.jpg` | 真人参考图，详情页、半透明照片引导、远程资源来源 |
 | `static/pose_pairs/custom106/` | `custom106_r01_g01_contour.png` | 默认轮廓兜底，通常不作为 active 相机轮廓 |
 | `static/pose_guides/custom106/` | `custom106_r01_g01_contour.png` | active 相机轮廓，通常需要在元数据里显式指定 |
 | `static/pose_thumbs/custom106/` | `custom106_r01_g01_thumb.jpg` | 通用缩略图 |
@@ -85,7 +85,7 @@ detailImage: `/static/pose_pairs/${folder}/${pairId}_demo.jpg`
 
    如果要让首页/推荐模块使用本地 `static/recommend_thumbs/custom106/...`，把 `custom106` 加入 `HOME_LOCAL_ASSET_FOLDERS`。
 
-   注意 `project.config.json` 里 `static/pose_pairs`、`static/pose_guides`、`static/pose_thumbs`、`static/gallery_thumbs`、`static/share_images`、`static/recommend_guides`、`static/home_guides` 都被忽略打包；当前本地打包策略主要保留 `static/recommend_thumbs`。其他路径通常会通过 `cdnAssetUrl()` 映射到 `https://cdn.jsdelivr.net/gh/blueMug/posture_assets@main/static/...`。
+   注意 `project.config.json` 里 `static/pose_pairs`、`static/pose_guides`、`static/pose_thumbs`、`static/gallery_thumbs`、`static/share_images`、`static/recommend_guides`、`static/home_guides` 都被忽略打包；当前本地打包策略主要保留 `static/recommend_thumbs`。其他路径通常会通过 `cdnAssetUrl()` 映射到 `utils/assets.js` 里 `REMOTE_ASSET_SOURCE` 指定的远程源，当前默认是 Gitee 的 `https://gitee.com/blueMug/posture_assets/raw/main/static/...`，需要回退时可切到 jsDelivr。
 
    如果某个资源明确不能本地加载，可加入 `REMOTE_ONLY_ASSET_PATHS`。现有例子是 `custom74` 的 demo 和 thumb。
 

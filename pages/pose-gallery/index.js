@@ -1,6 +1,6 @@
 const { poseCategories } = require('../../utils/poses')
 const { adSlots } = require('../../utils/adConfig')
-const { cdnAssetUrl, JSDELIVR_ASSET_BASE } = require('../../utils/assets')
+const { cdnAssetUrl, normalizeAssetPath } = require('../../utils/assets')
 const { ensurePrivacyNotice } = require('../../utils/privacy')
 const {
   getFavoritePoseIds,
@@ -27,9 +27,7 @@ const toLocalAssetPath = (assetPath = '') => {
     return ''
   }
 
-  return String(assetPath).startsWith(`${JSDELIVR_ASSET_BASE}/`)
-    ? `/${String(assetPath).slice(JSDELIVR_ASSET_BASE.length + 1)}`
-    : assetPath
+  return normalizeAssetPath(String(assetPath))
 }
 
 const toGalleryThumbnailImage = (assetPath = '') => {

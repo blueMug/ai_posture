@@ -1,7 +1,7 @@
 const app = getApp()
 const { poseTemplates, findPoseIndex, getPoseById } = require('../../utils/poses')
 const { cacheImage, cacheImageFields } = require('../../utils/imageCache')
-const { assetUrl, cdnAssetUrl, homeLocalAssetUrl, normalizeAssetPath, JSDELIVR_ASSET_BASE } = require('../../utils/assets')
+const { assetUrl, cdnAssetUrl, homeLocalAssetUrl, normalizeAssetPath } = require('../../utils/assets')
 const { isPoseFavorite, recordPoseUsage } = require('../../utils/userData')
 const { ensurePrivacyNotice, hasAcceptedPrivacyNotice } = require('../../utils/privacy')
 const { cacheFavoritePoseAssets } = require('../../utils/favoriteAssetCache')
@@ -158,10 +158,10 @@ const getLocalStaticAssetPath = (src = '') => {
     return src
   }
 
-  const cdnStaticPrefix = `${JSDELIVR_ASSET_BASE}/static/`
+  const localPath = normalizeAssetPath(src)
 
-  return src.startsWith(cdnStaticPrefix)
-    ? `/static/${src.slice(cdnStaticPrefix.length)}`
+  return localPath.startsWith('/static/')
+    ? localPath
     : ''
 }
 const toGalleryThumbnailImage = (src = '') => {
