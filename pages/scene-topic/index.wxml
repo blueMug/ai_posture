@@ -1,13 +1,13 @@
 <view class="page" style="{{pageTopStyle}}">
   <view class="top-bar">
     <view class="back-btn" bindtap="backToHome">返回</view>
-    <view class="title">场景专题</view>
+    <view class="title">{{topic.pageTitle || '日常场景'}}</view>
     <view class="placeholder"></view>
   </view>
 
   <view wx:if="{{topic}}" class="topic-hero">
     <view class="topic-copy">
-      <view class="topic-kicker">拍照搭子作业</view>
+      <view class="topic-kicker">{{topic.kicker}}</view>
       <view class="topic-title">{{topic.title}}</view>
       <view class="topic-pain">{{topic.painPoint}}</view>
       <view class="topic-promise">{{topic.promise}}</view>
@@ -23,8 +23,8 @@
   <view wx:if="{{topic && topic.plans.length}}" class="plan-section">
     <view class="section-head">
       <view>
-        <view class="section-title">先照着这 3 个拍法</view>
-        <view class="section-subtitle">选一张发给拍照搭子，对方打开相机就能按轮廓对齐。</view>
+        <view class="section-title">{{topic.planSectionTitle}}</view>
+        <view class="section-subtitle">{{topic.planSectionSubtitle}}</view>
       </view>
     </view>
 
@@ -72,7 +72,7 @@
   <view wx:if="{{topic && topic.moreCount}}" class="more-card" bindtap="openMorePoses">
     <view class="more-copy">
       <view class="more-title">更多{{topic.shortTitle}}姿势</view>
-      <view class="more-desc">查看 {{topic.moreCount}} 张同场景照片</view>
+      <view class="more-desc">{{topic.moreDesc}}</view>
     </view>
     <view class="more-action">进入列表</view>
   </view>

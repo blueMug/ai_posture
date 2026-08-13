@@ -1,14 +1,16 @@
-<view class="page">
+<view class="page" catchtouchmove="onCameraTouchMove">
   <camera
     wx:if="{{privacyAccepted}}"
     class="camera"
     style="{{cameraStyle}}"
     device-position="{{devicePosition}}"
     flash="off"
-    resolution="high"
+    resolution="{{cameraResolution}}"
+    frame-size="{{cameraFrameSize}}"
     zoom="{{cameraZoom}}"
     bindinitdone="onCameraInitDone"
     binderror="onCameraError"
+    catchtouchmove="onCameraTouchMove"
   >
     <cover-view
       wx:if="{{settingsPanelOpen}}"
@@ -16,16 +18,16 @@
       catchtap="closeSettingsPanel"
     ></cover-view>
 
-    <cover-view class="pose-stage" style="{{poseStageStyle}}" bindtap="closeSettingsPanel">
+    <cover-view
+      class="pose-stage"
+      style="{{poseStageStyle}}"
+      bindtap="closeSettingsPanel"
+    >
       <cover-view
-        wx:if="{{currentTemplate.guideImage}}"
+        wx:if="{{currentTemplate.guideImage && !usePageGuideOverlay}}"
         class="pose-guide-box"
         style="{{guideBoxStyle}}"
         bindtap="closeSettingsPanel"
-        catchtouchstart="onGuideDragStart"
-        catchtouchmove="onGuideDragMove"
-        catchtouchend="onGuideDragEnd"
-        catchtouchcancel="onGuideDragEnd"
       >
         <cover-view class="pose-guide-layer">
           <cover-image
@@ -48,6 +50,15 @@
           >轮廓加载失败，点一下重试</cover-view>
         </cover-view>
       </cover-view>
+      <cover-view
+        wx:if="{{currentTemplate.guideImage && !guideLoadRetryVisible}}"
+        class="guide-touch-capture"
+        catchtap="closeSettingsPanel"
+        catchtouchstart="onGuideDragStart"
+        catchtouchmove="onGuideDragMove"
+        catchtouchend="onGuideDragEnd"
+        catchtouchcancel="onGuideDragEnd"
+      ></cover-view>
       <cover-view wx:if="{{countdownActive}}" class="countdown-mask">
         <cover-view class="countdown-number">{{countdownRemaining}}</cover-view>
       </cover-view>
@@ -105,6 +116,39 @@
       </cover-view>
     </cover-view>
   </camera>
+
+  <view
+    wx:if="{{privacyAccepted && usePageGuideOverlay}}"
+    class="page-pose-stage"
+    style="{{pagePoseStageStyle}}"
+  >
+    <view
+      wx:if="{{currentTemplate.guideImage}}"
+      class="page-pose-guide-box"
+      style="{{guideBoxStyle}}"
+      catchtap="closeSettingsPanel"
+    >
+      <image
+        wx:if="{{guideImageRenderVisible}}"
+        class="pose-guide-image page-pose-guide-image {{guideImageClass}}"
+        data-src="{{guideDisplayImage || currentTemplate.guideImage}}"
+        data-load-token="{{guideLoadToken}}"
+        src="{{guideDisplayImage || currentTemplate.guideImage}}"
+        mode="aspectFit"
+        bindload="onGuideImageLoad"
+        binderror="onGuideImageError"
+      ></image>
+      <view
+        wx:if="{{guideImageLoading}}"
+        class="guide-load-status page-guide-load-status"
+      >轮廓加载中</view>
+      <view
+        wx:if="{{guideLoadRetryVisible}}"
+        class="guide-load-status guide-load-retry page-guide-load-status"
+        catchtap="retryGuideLoad"
+      >轮廓加载失败，点一下重试</view>
+    </view>
+  </view>
 
   <view wx:if="{{!privacyAccepted}}" class="privacy-wait">
     <view class="privacy-title">使用相机前需要确认权限说明</view>

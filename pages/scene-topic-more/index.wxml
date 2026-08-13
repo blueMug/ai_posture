@@ -18,7 +18,7 @@
         <image
           class="pose-image"
           src="{{pose.galleryDisplayImage}}"
-          mode="{{pose.thumbnailMode}}"
+          mode="aspectFit"
           lazy-load="{{true}}"
           data-pose-id="{{pose.id}}"
           binderror="onPoseImageError"

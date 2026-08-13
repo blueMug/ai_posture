@@ -116,9 +116,19 @@ const stopPullDownRefresh = () => {
 const buildMoreTopicView = (topicId, retryTokens = {}, fallbackPoseImages = {}) => {
   const topic = getSceneTopic(topicId)
   const coverPose = poseTemplateMap.get(topic.coverPoseId)
-  const planPoseIds = new Set((topic.plans || []).map((plan) => plan.poseId))
-  const poses = (topic.morePoseIds || [])
-    .filter((poseId) => !planPoseIds.has(poseId))
+  const seenPoseIds = new Set()
+  const topicPoseIds = [
+    ...(topic.plans || []).map((plan) => plan.poseId),
+    ...(topic.morePoseIds || [])
+  ].filter((poseId) => {
+    if (!poseId || seenPoseIds.has(poseId)) {
+      return false
+    }
+
+    seenPoseIds.add(poseId)
+    return true
+  })
+  const poses = topicPoseIds
     .map((poseId) => {
       const pose = poseTemplateMap.get(poseId)
 
@@ -297,7 +307,7 @@ Page({
     const topic = this.data.topic || {}
 
     return {
-      title: topic.shareTitle || topic.title || '更多场景拍照姿势',
+      title: topic.shareTitle || topic.title || '更多日常场景拍照姿势',
       path: `/pages/scene-topic-more/index?topicId=${topic.id || ''}`,
       imageUrl: topic.shareImage || topic.cachedShareImage || ''
     }

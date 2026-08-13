@@ -18,9 +18,14 @@ const {
 const { buildGalleryShare } = require('../../utils/shareCopy')
 
 const GALLERY_TARGET_CATEGORY_KEY = 'galleryTargetCategoryId'
+const GALLERY_SCROLL_TOP_KEY = 'galleryScrollTopOnShow'
 const DETAIL_PREVIEW_IMAGE_KEY = 'poseDetailPreviewImage'
 const DEFAULT_PAGE_TOP_PX = 52
 const DEFAULT_TOP_BAR_HEIGHT_PX = 32
+const CATEGORY_ANCHOR_PREFIX = 'gallery-category-'
+const CATEGORY_PANEL_ANCHOR_PREFIX = 'category-panel-'
+const CATEGORY_ACTIVE_VIEWPORT_TOP_PX = 180
+const CATEGORY_SCROLL_SYNC_INTERVAL_MS = 120
 
 const toLocalAssetPath = (assetPath = '') => {
   if (!assetPath) {
@@ -191,8 +196,10 @@ Page({
     poseCategories: [],
     categoryNavs: [],
     activeCategoryId: '',
+    activeCategoryPanelAnchor: '',
     favoritePoseIds: [],
     hasSearchResult: true,
+    isCategoryPanelVisible: false,
     failedPoseImages: {},
     fallbackPoseImages: {},
     imageRetryTokens: {},
@@ -216,7 +223,25 @@ Page({
   },
 
   onShow() {
+    const shouldScrollTop = wx.getStorageSync(GALLERY_SCROLL_TOP_KEY)
     const targetCategoryId = wx.getStorageSync(GALLERY_TARGET_CATEGORY_KEY)
+
+    if (shouldScrollTop) {
+      wx.removeStorageSync(GALLERY_SCROLL_TOP_KEY)
+      wx.removeStorageSync(GALLERY_TARGET_CATEGORY_KEY)
+      this.setPoseCategories(poseCategories, {
+        searchKeyword: '',
+        favoritePoseIds: getFavoritePoseIds(),
+        hasSearchResult: true
+      })
+      wx.nextTick(() => {
+        wx.pageScrollTo({
+          scrollTop: 0,
+          duration: 0
+        })
+      })
+      return
+    }
 
     if (!targetCategoryId) {
       this.refreshPoseCategories()
@@ -269,7 +294,9 @@ Page({
         favoritePoseIds,
         poseCategories: nextCategoriesWithFavorites,
         categoryNavs: [],
-        activeCategoryId: ''
+        activeCategoryId: '',
+        activeCategoryPanelAnchor: '',
+        isCategoryPanelVisible: false
       })
       return
     }
@@ -288,7 +315,8 @@ Page({
         name: category.name,
         count: category.poses.length
       })),
-      activeCategoryId
+      activeCategoryId,
+      activeCategoryPanelAnchor: `${CATEGORY_PANEL_ANCHOR_PREFIX}${activeCategoryId}`
     }, () => {
       if (targetCategoryId) {
         wx.nextTick(() => {
@@ -304,10 +332,64 @@ Page({
     }
 
     wx.pageScrollTo({
-      selector: `#gallery-category-${categoryId}`,
+      selector: `#${CATEGORY_ANCHOR_PREFIX}${categoryId}`,
       offsetTop: 16,
       duration: 240
     })
+  },
+
+  updateActiveCategoryFromViewport(callback) {
+    if (!this.data.hasSearchResult || !this.data.categoryNavs.length) {
+      if (typeof callback === 'function') {
+        callback()
+      }
+      return
+    }
+
+    wx.createSelectorQuery()
+      .in(this)
+      .selectAll('.category')
+      .boundingClientRect((rects = []) => {
+        const visibleRects = rects
+          .filter((rect) => rect && rect.id && rect.bottom > CATEGORY_ACTIVE_VIEWPORT_TOP_PX)
+          .sort((left, right) => left.top - right.top)
+
+        if (!visibleRects.length) {
+          if (typeof callback === 'function') {
+            callback()
+          }
+          return
+        }
+
+        const activeRect = visibleRects
+          .filter((rect) => rect.top <= CATEGORY_ACTIVE_VIEWPORT_TOP_PX)
+          .pop() || visibleRects[0]
+        const activeCategoryId = String(activeRect.id).replace(CATEGORY_ANCHOR_PREFIX, '')
+
+        if (activeCategoryId && activeCategoryId !== this.data.activeCategoryId) {
+          this.setData({
+            activeCategoryId,
+            activeCategoryPanelAnchor: `${CATEGORY_PANEL_ANCHOR_PREFIX}${activeCategoryId}`
+          }, callback)
+          return
+        }
+
+        if (typeof callback === 'function') {
+          callback()
+        }
+      })
+      .exec()
+  },
+
+  onPageScroll() {
+    const now = Date.now()
+
+    if (this.lastCategoryScrollSyncAt && now - this.lastCategoryScrollSyncAt < CATEGORY_SCROLL_SYNC_INTERVAL_MS) {
+      return
+    }
+
+    this.lastCategoryScrollSyncAt = now
+    this.updateActiveCategoryFromViewport()
   },
 
   scrollToCategory(event) {
@@ -318,11 +400,50 @@ Page({
     }
 
     this.setData({
-      activeCategoryId: categoryId
+      activeCategoryId: categoryId,
+      activeCategoryPanelAnchor: `${CATEGORY_PANEL_ANCHOR_PREFIX}${categoryId}`
     })
 
     this.scrollToCategoryId(categoryId)
   },
+
+  openCategoryPanel() {
+    if (!this.data.hasSearchResult || !this.data.categoryNavs.length) {
+      return
+    }
+
+    this.updateActiveCategoryFromViewport(() => {
+      this.setData({
+        isCategoryPanelVisible: true
+      })
+    })
+  },
+
+  closeCategoryPanel() {
+    this.setData({
+      isCategoryPanelVisible: false
+    })
+  },
+
+  selectCategoryFromPanel(event) {
+    const { categoryId } = event.currentTarget.dataset
+
+    if (!categoryId) {
+      return
+    }
+
+    this.setData({
+      activeCategoryId: categoryId,
+      activeCategoryPanelAnchor: `${CATEGORY_PANEL_ANCHOR_PREFIX}${categoryId}`,
+      isCategoryPanelVisible: false
+    })
+
+    wx.nextTick(() => {
+      this.scrollToCategoryId(categoryId)
+    })
+  },
+
+  noop() {},
 
   onSearchInput(event) {
     const searchKeyword = event.detail.value

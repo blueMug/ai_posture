@@ -8,6 +8,7 @@
     "pages/pose-detail/index",
     "pages/scene-topic/index",
     "pages/scene-topic-more/index",
+    "pages/topic-library/index",
     "pages/camera/index",
     "pages/preview/index"
   ],

@@ -196,6 +196,11 @@
   background: #ffe95c;
 }
 
+.landmark-kicker {
+  color: #111111;
+  background: rgba(255, 233, 92, 0.92);
+}
+
 .topic-title {
   margin-top: 18rpx;
   color: #ffffff;
@@ -229,6 +234,11 @@
   border: 1rpx solid rgba(255, 255, 255, 0.2);
 }
 
+.landmark-card {
+  background: rgba(255, 255, 255, 0.10);
+  border-color: rgba(255, 233, 92, 0.22);
+}
+
 .topic-image {
   position: absolute;
   right: -8rpx;
@@ -249,6 +259,12 @@
   background:
     radial-gradient(circle at 90% 92%, rgba(255, 233, 92, 0.22), transparent 42%),
     linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04));
+}
+
+.landmark-mask {
+  background:
+    radial-gradient(circle at 90% 92%, rgba(255, 233, 92, 0.20), transparent 42%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.04));
 }
 
 .home-image-loading {
@@ -325,10 +341,10 @@
 }
 
 .topic-card-desc {
-  margin-top: 10rpx;
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 21rpx;
-  line-height: 1.4;
+  margin-top: 12rpx;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 24rpx;
+  line-height: 1.48;
   word-break: break-all;
 }
 
@@ -337,6 +353,27 @@
   color: rgba(255, 255, 255, 0.56);
   font-size: 23rpx;
   text-align: center;
+}
+
+.topic-more-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 20rpx;
+  margin-left: auto;
+  padding: 0 6rpx;
+  border-radius: 999rpx;
+  color: rgba(255, 233, 92, 0.94);
+  font-size: 23rpx;
+  font-weight: 800;
+}
+
+.topic-more-link::after {
+  content: ">";
+  margin-left: 8rpx;
+  color: rgba(255, 233, 92, 0.82);
+  font-size: 24rpx;
+  font-weight: 900;
 }
 
 .section-head {

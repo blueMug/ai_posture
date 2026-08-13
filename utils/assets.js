@@ -9,7 +9,16 @@ const REMOTE_ASSET_BASES = {
 }
 const REMOTE_ASSET_BASE = REMOTE_ASSET_BASES[REMOTE_ASSET_SOURCE] || JSDELIVR_ASSET_BASE
 const REMOTE_ASSET_BASE_LIST = Array.from(new Set(Object.values(REMOTE_ASSET_BASES)))
-const LOCAL_PACKED_PREFIXES = ['/static/recommend_thumbs/']
+const LOCAL_PACKED_PREFIXES = []
+const SHARE_IMAGE_DEMO_FALLBACK_RANGES = [
+  [136, 150],
+  [160, 175],
+  [192, 264],
+  [318, 326],
+  [567, 567],
+  [569, 590],
+  [612, 620]
+]
 const REMOTE_ONLY_ASSET_PATHS = new Set([
   '/static/pose_pairs/custom74/custom74_r01_g01_demo.jpg',
   '/static/pose_thumbs/custom74/custom74_r01_g01_thumb.jpg'
@@ -126,7 +135,7 @@ const HOME_LOCAL_ASSET_FOLDERS = new Set([
   'custom128',
   'custom129',
   'custom130',
-  'custom131'
+  'custom131',
 ])
 const isRemoteUrl = (path) => /^https?:\/\//.test(path)
 const getPoseFolder = (path) => {
@@ -134,10 +143,8 @@ const getPoseFolder = (path) => {
   return match ? match[1] : ''
 }
 const isPackedLocalAsset = (path) => {
-  const folder = getPoseFolder(path)
-
   if (path.startsWith('/static/recommend_thumbs/')) {
-    return HOME_LOCAL_ASSET_FOLDERS.has(folder)
+    return false
   }
 
   return LOCAL_PACKED_PREFIXES.some((prefix) => path.startsWith(prefix))
@@ -156,6 +163,37 @@ const isPoseThumb = (path) => (
   (path.startsWith('/static/recommend_thumbs/') && /_thumb\.jpg$/.test(path)) ||
   (path.startsWith('/static/pose_pairs/') && /_demo\.jpg$/.test(path))
 )
+const getCustomPoseNumberFromPath = (path = '') => {
+  const match = String(path).match(/\/custom(\d+)\//)
+
+  return match ? Number(match[1]) : 0
+}
+const shouldUseDemoForShareImage = (path = '') => {
+  if (!/^\/static\/share_images\/custom\d+\/custom\d+_r01_g01_share\.jpg$/.test(path)) {
+    return false
+  }
+
+  const poseNumber = getCustomPoseNumberFromPath(path)
+
+  return SHARE_IMAGE_DEMO_FALLBACK_RANGES.some(([start, end]) => poseNumber >= start && poseNumber <= end)
+}
+const normalizeRemoteAssetPath = (path = '') => {
+  if (isPoseContour(path)) {
+    return path
+      .replace('/static/pose_guides/', '/static/pose_pairs/')
+      .replace('/static/recommend_guides/', '/static/pose_pairs/')
+      .replace('/static/home_guides/', '/static/pose_pairs/')
+  }
+
+  if (shouldUseDemoForShareImage(path)) {
+    return path
+      .replace('/static/share_images/', '/static/pose_pairs/')
+      .replace(/_share\.jpg$/, '_demo.jpg')
+  }
+
+  return path
+    .replace('/static/recommend_thumbs/', '/static/pose_thumbs/')
+}
 const toHomeGuidePath = (path = '') => (
   path
     .replace('/static/pose_pairs/', '/static/home_guides/')
@@ -179,10 +217,7 @@ const cdnAssetUrl = (path) => {
     return path
   }
 
-  const remotePath = path
-    .replace('/static/recommend_thumbs/', '/static/pose_thumbs/')
-    .replace('/static/recommend_guides/', '/static/pose_guides/')
-    .replace('/static/home_guides/', '/static/pose_guides/')
+  const remotePath = normalizeRemoteAssetPath(path)
 
   return `${REMOTE_ASSET_BASE}/${remotePath.replace(/^\/+/, '')}`
 }
@@ -229,10 +264,12 @@ const homeLocalAssetUrl = (path) => {
   }
 
   if (isPoseThumb(localPath)) {
-    return localPath
+    const recommendThumbPath = localPath
       .replace('/static/pose_pairs/', '/static/recommend_thumbs/')
       .replace('/static/pose_thumbs/', '/static/recommend_thumbs/')
       .replace(/_demo\.jpg$/, '_thumb.jpg')
+
+    return cdnAssetUrl(recommendThumbPath)
   }
 
   return assetUrl(localPath)

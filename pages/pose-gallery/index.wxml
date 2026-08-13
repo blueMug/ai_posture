@@ -10,7 +10,7 @@
     <input
       class="search-input"
       value="{{searchKeyword}}"
-      placeholder="搜索半身、全身、自拍、景点、咖啡"
+      placeholder="搜索海边、古镇、半身、咖啡、蹲姿"
       placeholder-class="search-placeholder"
       confirm-type="search"
       bindinput="onSearchInput"
@@ -113,6 +113,50 @@
           >拍</view>
         </view>
       </view>
+    </view>
+  </view>
+
+  <view
+    wx:if="{{hasSearchResult}}"
+    class="category-fab"
+    bindtap="openCategoryPanel"
+  >
+    <view class="category-fab-icon">≡</view>
+    <view class="category-fab-text">分类</view>
+  </view>
+
+  <view wx:if="{{isCategoryPanelVisible}}" class="category-panel-mask" catchtap="closeCategoryPanel" catchtouchmove="noop">
+    <view class="category-panel" catchtap="noop">
+      <view class="category-panel-head">
+        <view>
+          <view class="category-panel-title">快速切换分类</view>
+          <view class="category-panel-desc">当前共 {{categoryNavs.length}} 个分类</view>
+        </view>
+        <view class="category-panel-close" catchtap="closeCategoryPanel">关闭</view>
+      </view>
+
+      <scroll-view
+        class="category-panel-scroll"
+        scroll-y
+        enhanced
+        scroll-into-view="{{activeCategoryPanelAnchor}}"
+        show-scrollbar="{{false}}"
+      >
+        <view class="category-panel-grid">
+          <view
+            wx:for="{{categoryNavs}}"
+            wx:key="id"
+            wx:for-item="category"
+            id="category-panel-{{category.id}}"
+            class="category-panel-item {{activeCategoryId == category.id ? 'active' : ''}}"
+            data-category-id="{{category.id}}"
+            catchtap="selectCategoryFromPanel"
+          >
+            <view class="category-panel-name">{{category.name}}</view>
+            <view class="category-panel-count">{{category.count}} 个姿势</view>
+          </view>
+        </view>
+      </scroll-view>
     </view>
   </view>
 </view>

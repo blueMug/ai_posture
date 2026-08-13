@@ -47,7 +47,7 @@
 
 .pose-preview {
   position: relative;
-  height: 380rpx;
+  height: calc((100vw - 78rpx) / 2 * 4 / 3);
   border-radius: 30rpx;
   overflow: hidden;
   background: rgba(255, 255, 255, 0.12);

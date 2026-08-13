@@ -26,49 +26,107 @@ const { buildHomeShare } = require('../../utils/shareCopy')
 const GALLERY_TARGET_CATEGORY_KEY = 'galleryTargetCategoryId'
 const RECOMMEND_LIMIT_PER_CATEGORY = 4
 const SCENE_ADVISOR_PLAN_LIMIT = 3
+const HOME_TOPIC_PREVIEW_LIMIT = 4
+const HOME_SCENE_TOPIC_IDS = [
+  'imported-jietou',
+  'imported-kafei',
+  'imported-caodi',
+  'beach-vacation'
+]
+const HOME_LANDMARK_TOPIC_IDS = [
+  'imported-tiandan',
+  'shanghai-bund',
+  'imported-yinta',
+  'changsha-orange-island'
+]
+const HOME_TOPIC_CARD_COPY = {
+  'imported-jietou': '街角、路边、转身都能拍，适合日常出门随手拍。',
+  'imported-kafei': '饮品、甜点和窗边都有动作，咖啡馆探店不只拍大头照。',
+  'imported-caodi': '草地坐姿、躺姿和撑地动作，拍出松弛自然感。',
+  'beach-vacation': '沙滩、海浪和背影拍法，适合旅行度假氛围照。',
+  'imported-tiandan': '祈年殿、红墙和栏杆构图，古建筑合影更稳。',
+  'shanghai-bund': '东方明珠、江景和街头机位，外滩夜景白天都能拍。',
+  'imported-yinta': '白塔、镜面水景和拱门构图，芒市银塔更容易出片。',
+  'changsha-orange-island': '雕塑前、江边和广场打卡，橘子洲头照着拍更稳。'
+}
 const DEFAULT_PAGE_TOP_PX = 52
-const DAY_MS = 24 * 60 * 60 * 1000
 const DAILY_RECOMMEND_CONFIGS = [
   {
-    title: '穿搭显比例',
-    subtitle: '想拍全身照，先从这 4 个显比例姿势开始。',
-    categoryId: 'outfit-standing'
-  },
-  {
-    title: '不露脸也出片',
-    subtitle: '不用看镜头，背影和回眸也能很出片。',
-    categoryId: 'back-view'
-  },
-  {
-    title: '咖啡馆拍法',
-    subtitle: '只推荐带咖啡杯、窗边或店外街拍的动作。',
-    categoryId: 'props-action',
+    title: '今日想拍城市街头',
+    subtitle: '斑马线、彩色路口和街边行走，拍出更有动感的街拍。',
+    categoryId: 'street-commute',
     poseIds: [
-      'pair-custom84-r01-g01',
-      'pair-custom40-r01-g01',
-      'pair-custom76-r01-g01',
-      'pair-custom78-r01-g01'
+      'pair-custom421-r01-g01',
+      'pair-custom420-r01-g01',
+      'pair-custom422-r01-g01',
+      'pair-custom402-r01-g01'
     ]
   },
   {
-    title: '自拍不尴尬',
-    subtitle: '近景自拍、表情管理和酷一点的姿势都在这里。',
-    categoryId: 'selfie'
+    title: '今日想拍咖啡馆',
+    subtitle: '饮品、甜点和窗边坐姿，新咖啡馆图更适合探店。',
+    categoryId: 'props-action',
+    poseIds: [
+      'pair-custom666-r01-g01',
+      'pair-custom667-r01-g01',
+      'pair-custom668-r01-g01',
+      'pair-custom672-r01-g01'
+    ]
   },
   {
-    title: '出门街拍',
-    subtitle: '通勤路上、街角、机车和运动风都能照着拍。',
-    categoryId: 'street-commute'
+    title: '今日想拍花海花田',
+    subtitle: '花前轻嗅、花间回眸和大片花海，适合清新写真。',
+    categoryId: 'park-garden',
+    poseIds: [
+      'pair-custom704-r01-g01',
+      'pair-custom691-r01-g01',
+      'pair-custom692-r01-g01',
+      'pair-custom693-r01-g01'
+    ]
   },
   {
-    title: '旅行打卡',
-    subtitle: '到景点不用临场想姿势，选一个直接拍。',
-    categoryId: 'travel-back'
+    title: '今日想拍海边沙滩',
+    subtitle: '捧脸、举椰、跪坐和仰头闭眼，海边度假感更直接。',
+    categoryId: 'sea-lake',
+    poseIds: [
+      'pair-custom682-r01-g01',
+      'pair-custom683-r01-g01',
+      'pair-custom684-r01-g01',
+      'pair-custom685-r01-g01'
+    ]
   },
   {
-    title: '坐着也好拍',
-    subtitle: '坐姿、蹲姿、野餐和松弛生活照都适合。',
-    categoryId: 'sitting-life'
+    title: '今日想拍森林树林',
+    subtitle: '树枝、绿荫和林间小径，适合拍清透自然的户外照。',
+    categoryId: 'park-garden',
+    poseIds: [
+      'pair-custom252-r01-g01',
+      'pair-custom253-r01-g01',
+      'pair-custom254-r01-g01',
+      'pair-custom258-r01-g01'
+    ]
+  },
+  {
+    title: '今日想拍公园草地',
+    subtitle: '俯身看书、树旁回眸和草地坐姿，松弛自然不僵硬。',
+    categoryId: 'sitting-life',
+    poseIds: [
+      'pair-custom274-r01-g01',
+      'pair-custom275-r01-g01',
+      'pair-custom276-r01-g01',
+      'pair-custom277-r01-g01'
+    ]
+  },
+  {
+    title: '今日想拍半身写真',
+    subtitle: '花墙、托腮和轻嗅花束，适合头像和近景氛围照。',
+    categoryId: 'portrait-half',
+    poseIds: [
+      'pair-custom700-r01-g01',
+      'pair-custom701-r01-g01',
+      'pair-custom702-r01-g01',
+      'pair-custom704-r01-g01'
+    ]
   }
 ]
 const SCENE_ADVISOR_CONFIGS = [
@@ -338,23 +396,51 @@ const SCENE_ADVISOR_POSE_OWNER_MAP = SCENE_ADVISOR_CONFIGS.reduce((map, scene) =
 const RECOMMEND_CATEGORY_CONFIGS = [
   {
     sourceId: 'outfit-standing',
-    name: '穿搭全身',
-    subtitle: '显高显比例'
+    name: '全身穿搭',
+    subtitle: '站着更显比例',
+    coverPoseId: 'pair-custom420-r01-g01'
   },
   {
     sourceId: 'portrait-half',
     name: '半身人像',
-    subtitle: '表情和手部更自然'
+    subtitle: '表情手部更自然',
+    coverPoseId: 'pair-custom280-r01-g01'
+  },
+  {
+    sourceId: 'sitting-life',
+    name: '坐着也好拍',
+    subtitle: '台阶草地都能用',
+    coverPoseId: 'pair-custom266-r01-g01'
   },
   {
     sourceId: 'back-view',
-    name: '不露脸背影',
-    subtitle: '不看镜头也出片'
+    name: '背影系列',
+    subtitle: '不露脸也有氛围',
+    coverPoseId: 'pair-custom100-r01-g01'
   },
   {
     sourceId: 'selfie',
-    name: '自拍近景',
-    subtitle: '近景表情不尴尬'
+    name: '自拍不尴尬',
+    subtitle: '近景自拍有动作',
+    coverPoseId: 'pair-custom107-r01-g01'
+  },
+  {
+    sourceId: 'street-commute',
+    name: '行走抓拍',
+    subtitle: '走路转身更生动',
+    coverPoseId: 'pair-custom421-r01-g01'
+  },
+  {
+    sourceId: 'crouch-lying',
+    name: '蹲姿趴姿',
+    subtitle: '低机位更有变化',
+    coverPoseId: 'pair-custom273-r01-g01'
+  },
+  {
+    sourceId: 'props-action',
+    name: '手拿道具',
+    subtitle: '花束相机书本都能用',
+    coverPoseId: 'pair-custom668-r01-g01'
   }
 ]
 
@@ -382,17 +468,19 @@ const getHomeDisplayImage = (pose) => {
     return ''
   }
 
-  const thumbnailImage = pose.thumbnailImage || ''
-  const localThumbnailImage = homeLocalAssetUrl(thumbnailImage)
+  const sourceImage = pose.thumbnailImage || pose.modelImage || pose.detailImage || pose.guideImage || ''
 
-  if (localThumbnailImage && localThumbnailImage.startsWith('/static/recommend_thumbs/')) {
-    return localThumbnailImage
-  }
-
-  return ''
+  return homeLocalAssetUrl(sourceImage)
 }
-const buildSceneTopicCards = () => (
-  sceneTopics
+const buildTopicCardsByIds = (topicIds = []) => {
+  const topicMap = sceneTopics.reduce((map, topic) => {
+    map.set(topic.id, topic)
+    return map
+  }, new Map())
+
+  return topicIds
+    .map((topicId) => topicMap.get(topicId))
+    .filter(Boolean)
     .map((topic) => {
       const coverPose = poseTemplateMap.get(topic.coverPoseId)
 
@@ -402,11 +490,16 @@ const buildSceneTopicCards = () => (
         fullTitle: topic.title,
         painPoint: topic.painPoint,
         promise: topic.promise,
+        desc: HOME_TOPIC_CARD_COPY[topic.id] || truncateText(topic.promise, 14),
         coverImage: getHomeDisplayImage(coverPose)
       }
     })
     .filter((topic) => topic.coverImage)
-)
+}
+const buildSceneTopicCards = () => buildTopicCardsByIds(HOME_SCENE_TOPIC_IDS)
+  .slice(0, HOME_TOPIC_PREVIEW_LIMIT)
+const buildLandmarkTopicCards = () => buildTopicCardsByIds(HOME_LANDMARK_TOPIC_IDS)
+  .slice(0, HOME_TOPIC_PREVIEW_LIMIT)
 const compactText = (text = '') => String(text || '').replace(/\s+/g, ' ').trim()
 const splitTextParts = (text = '') => compactText(text)
   .split(/[。.!！?？；;]/)
@@ -534,7 +627,8 @@ const buildTypeEntries = () => (
   RECOMMEND_CATEGORY_CONFIGS
     .map((config) => {
       const sourceCategory = poseCategoryMap.get(config.sourceId) || {}
-      const coverPose = (sourceCategory.poses || [])
+      const preferredCoverPose = config.coverPoseId ? poseTemplateMap.get(config.coverPoseId) : null
+      const coverPose = preferredCoverPose || (sourceCategory.poses || [])
         .find((pose) => pose.detailImage || pose.modelImage || pose.thumbnailImage || pose.guideImage)
 
       return {
@@ -577,15 +671,14 @@ const filterPoseCategories = (keyword) => {
   return buildSearchResultCategories(keyword)
 }
 
-const getLocalDayIndex = () => {
+const getLocalWeekdayIndex = () => {
   const now = new Date()
-  const localMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
 
-  return Math.floor(localMidnight / DAY_MS)
+  return (now.getDay() + 6) % 7
 }
 
 const getDailyRecommendConfig = () => {
-  const dayIndex = getLocalDayIndex()
+  const dayIndex = getLocalWeekdayIndex()
   return DAILY_RECOMMEND_CONFIGS[dayIndex % DAILY_RECOMMEND_CONFIGS.length]
 }
 
@@ -724,6 +817,7 @@ Page({
       poses: []
     },
     sceneTopics: [],
+    landmarkTopics: [],
     typeEntries: [],
     poseCategories: [],
     favoritePoseIds: [],
@@ -739,6 +833,7 @@ Page({
       pageTopStyle: getPageTopStyle(),
       favoritePoseIds: getFavoritePoseIds(),
       sceneTopics: buildSceneTopicCards(),
+      landmarkTopics: buildLandmarkTopicCards(),
       typeEntries: buildTypeEntries()
     })
     this.refreshDailyRecommend()
@@ -930,6 +1025,15 @@ Page({
 
     wx.navigateTo({
       url: `/pages/scene-topic/index?topicId=${topicId}`
+    })
+  },
+
+  openTopicLibrary(event) {
+    const { topicType } = event.currentTarget.dataset
+    const type = topicType === 'landmark' ? 'landmark' : 'scene'
+
+    wx.navigateTo({
+      url: `/pages/topic-library/index?type=${type}`
     })
   },
 

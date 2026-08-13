@@ -19,9 +19,9 @@
 
   <view wx:if="{{!searchKeyword && sceneTopics.length}}" class="topic-section">
     <view class="topic-section-head">
-      <view class="topic-kicker">场景出片专题</view>
-      <view class="topic-title">到了现场，直接抄这份拍照作业</view>
-      <view class="topic-subtitle">每张卡片都是一个具体场景，点进去看 3 个拍法。</view>
+      <view class="topic-kicker">日常场景</view>
+      <view class="topic-title">按场景选拍法，到现场不尴尬</view>
+      <view class="topic-subtitle">先选你所在的场景，再看对应动作、道具和构图提示。</view>
     </view>
 
     <view class="topic-grid">
@@ -38,6 +38,7 @@
           class="topic-image"
           src="{{topic.coverImage}}"
           mode="aspectFit"
+          lazy-load="{{true}}"
           data-pose-id="{{topic.id}}"
           bindload="onPoseImageLoad"
           binderror="onPoseImageError"
@@ -54,12 +55,66 @@
         <view class="topic-mask"></view>
         <view class="topic-copy">
           <view class="topic-card-title">{{topic.title}}</view>
-          <view class="topic-card-desc">{{topic.promise}}</view>
+          <view class="topic-card-desc">{{topic.desc}}</view>
         </view>
       </view>
     </view>
 
-    <view class="topic-update-tip">更多场景持续更新中</view>
+    <view
+      class="topic-more-link"
+      data-topic-type="scene"
+      bindtap="openTopicLibrary"
+    >查看更多日常场景</view>
+  </view>
+
+  <view wx:if="{{!searchKeyword && landmarkTopics.length}}" class="topic-section landmark-section">
+    <view class="topic-section-head">
+      <view class="topic-kicker landmark-kicker">旅行景点</view>
+      <view class="topic-title">热门景点，直接照着拍</view>
+      <view class="topic-subtitle">按地标整理动作和机位，到现场不用临时想姿势。</view>
+    </view>
+
+    <view class="topic-grid">
+      <view
+        wx:for="{{landmarkTopics}}"
+        wx:key="id"
+        wx:for-item="topic"
+        class="topic-card landmark-card"
+        data-topic-id="{{topic.id}}"
+        bindtap="openSceneTopic"
+      >
+        <image
+          wx:if="{{!retryingPoseImages[topic.id]}}"
+          class="topic-image"
+          src="{{topic.coverImage}}"
+          mode="aspectFit"
+          lazy-load="{{true}}"
+          data-pose-id="{{topic.id}}"
+          bindload="onPoseImageLoad"
+          binderror="onPoseImageError"
+        ></image>
+        <view
+          wx:if="{{!loadedPoseImages[topic.id] && !failedPoseImages[topic.id] && !retryingPoseImages[topic.id]}}"
+          class="home-image-loading compact topic-loading"
+        >
+          <view class="home-loading-spinner"></view>
+        </view>
+        <view wx:if="{{failedPoseImages[topic.id]}}" class="mini-image-error">
+          图片加载失败
+        </view>
+        <view class="topic-mask landmark-mask"></view>
+        <view class="topic-copy">
+          <view class="topic-card-title">{{topic.title}}</view>
+          <view class="topic-card-desc">{{topic.desc}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view
+      class="topic-more-link"
+      data-topic-type="landmark"
+      bindtap="openTopicLibrary"
+    >查看更多旅行景点</view>
   </view>
 
   <view wx:if="{{!hasSearchResult}}" class="empty-state">
@@ -102,6 +157,7 @@
               class="daily-image"
               src="{{pose.thumbnailImage || pose.guideImage}}"
               mode="{{pose.thumbnailMode || 'aspectFit'}}"
+              lazy-load="{{true}}"
               data-pose-id="{{pose.id}}"
               bindload="onPoseImageLoad"
               binderror="onPoseImageError"
@@ -130,8 +186,8 @@
   </view>
 
   <view wx:if="{{!searchKeyword && hasSearchResult}}" class="more-head">
-    <view class="more-kicker">按类型继续挑</view>
-    <view class="more-desc">专题之外，也可以按姿势类型继续找。</view>
+    <view class="more-kicker">按姿势类型找</view>
+    <view class="more-desc">按场景和动作快速挑，景点、海边、古镇、咖啡店都有入口。</view>
   </view>
 
   <view wx:if="{{!searchKeyword && typeEntries.length}}" class="type-entry-grid">
@@ -153,6 +209,7 @@
           class="type-entry-image"
           src="{{entry.coverImage}}"
           mode="aspectFit"
+          lazy-load="{{true}}"
           data-pose-id="{{entry.id}}"
           bindload="onPoseImageLoad"
           binderror="onPoseImageError"
@@ -215,6 +272,7 @@
               class="mini-guide-image"
               src="{{pose.thumbnailImage || pose.guideImage}}"
               mode="{{pose.thumbnailMode || 'aspectFit'}}"
+              lazy-load="{{true}}"
               data-pose-id="{{pose.id}}"
               bindload="onPoseImageLoad"
               binderror="onPoseImageError"

@@ -5,7 +5,7 @@ const { assetUrl, cdnAssetUrl, homeLocalAssetUrl, normalizeAssetPath } = require
 const { isPoseFavorite, recordPoseUsage } = require('../../utils/userData')
 const { ensurePrivacyNotice, hasAcceptedPrivacyNotice } = require('../../utils/privacy')
 const { cacheFavoritePoseAssets } = require('../../utils/favoriteAssetCache')
-const { SCENE_TOPIC_DETAIL_KEY } = require('../../utils/sceneTopics')
+const { SCENE_TOPIC_DETAIL_KEY, getSceneTopic, sceneTopics } = require('../../utils/sceneTopics')
 const { getGuideImageSize } = require('../../utils/guideImageSizes')
 
 const GUIDE_CONFIRM_STORAGE_KEY = 'keepGuideForConfirm'
@@ -14,20 +14,28 @@ const GUIDE_ROTATE_STORAGE_KEY = 'cameraGuideRotate90'
 const CAMERA_ASPECT_STORAGE_KEY = 'cameraAspectRatio'
 const DEFAULT_KEEP_GUIDE_FOR_CONFIRM = true
 const GALLERY_TARGET_CATEGORY_KEY = 'galleryTargetCategoryId'
+const GALLERY_SCROLL_TOP_KEY = 'galleryScrollTopOnShow'
 const CACHE_TEMPLATE_SUPPORT_IMAGE_FIELDS = ['thumbnailImage']
 const POSE_GALLERY_ROUTE = 'pages/pose-gallery/index'
 const POSE_GALLERY_URL = `/${POSE_GALLERY_ROUTE}`
+const SCENE_TOPIC_MORE_ROUTE = 'pages/scene-topic-more/index'
 const CAMERA_MIN_ZOOM = 1
 const CAMERA_DEFAULT_MAX_ZOOM = 10
-const GUIDE_MAX_OFFSET_X = 120
-const GUIDE_MAX_OFFSET_Y = 160
+const GUIDE_FALLBACK_MAX_OFFSET_X = 120
+const GUIDE_FALLBACK_MAX_OFFSET_Y = 160
 const GUIDE_MIN_SCALE = 0.35
 const GUIDE_MAX_SCALE = 2.2
 const GUIDE_SCALE_STEP = 0.1
+const GUIDE_TOUCH_CANCEL_CLEAR_DELAY = 180
 const BOTTOM_PANEL_RPX = 330
 const CAMERA_VERTICAL_OFFSET_RPX = 36
+const CAMERA_RESOLUTION_HIGH = 'high'
+const CAMERA_RESOLUTION_LOW = 'low'
+const CAMERA_FRAME_SIZE_MEDIUM = 'medium'
+const CAMERA_FRAME_SIZE_LARGE = 'large'
 const CAMERA_ASPECT_3_4 = '3:4'
 const CAMERA_ASPECT_9_16 = '9:16'
+const IOS_CAMERA_ASPECT_3_4_HEIGHT_RATIO = 4 / 3
 const CAMERA_ASPECT_OPTIONS = [CAMERA_ASPECT_3_4, CAMERA_ASPECT_9_16]
 const CAMERA_ASPECT_HEIGHT_RATIOS = {
   [CAMERA_ASPECT_3_4]: 4 / 3,
@@ -121,9 +129,27 @@ const getNextCameraAspectRatio = (aspectRatio) => (
     : CAMERA_ASPECT_3_4
 )
 const getCameraAspectText = (aspectRatio) => `比例 ${normalizeCameraAspectRatio(aspectRatio)}`
-const getCameraHeightRatio = (aspectRatio) => CAMERA_ASPECT_HEIGHT_RATIOS[normalizeCameraAspectRatio(aspectRatio)]
 const isGuidePhotoMode = (guideMode) => normalizeStoredGuideMode(guideMode) === GUIDE_MODE_PHOTO
 const isGuideOutlineMode = (guideMode) => !isGuidePhotoMode(guideMode)
+const isIOSDevice = (systemInfo = wx.getSystemInfoSync()) => String(systemInfo.platform || '').toLowerCase() === 'ios'
+const getCameraHeightRatio = (aspectRatio, systemInfo = wx.getSystemInfoSync()) => {
+  const normalizedAspectRatio = normalizeCameraAspectRatio(aspectRatio)
+
+  if (normalizedAspectRatio === CAMERA_ASPECT_3_4 && isIOSDevice(systemInfo)) {
+    return IOS_CAMERA_ASPECT_3_4_HEIGHT_RATIO
+  }
+
+  return CAMERA_ASPECT_HEIGHT_RATIOS[normalizedAspectRatio]
+}
+const getCameraResolution = () => CAMERA_RESOLUTION_HIGH
+const getSafeAreaBottomHeight = (systemInfo = wx.getSystemInfoSync()) => {
+  const screenHeight = Number(systemInfo.screenHeight || 0)
+  const safeAreaBottom = Number(systemInfo.safeArea && systemInfo.safeArea.bottom)
+
+  return screenHeight > 0 && safeAreaBottom > 0
+    ? Math.max(screenHeight - safeAreaBottom, 0)
+    : 0
+}
 const normalizeGuideMode = (template, guideMode) => {
   const normalizedMode = normalizeStoredGuideMode(guideMode)
 
@@ -230,6 +256,11 @@ const normalizeGuideRotateAngle = (angle) => {
 const getNextGuideRotateAngle = (angle) => (
   (normalizeGuideRotateAngle(angle) + GUIDE_ROTATE_STEP) % GUIDE_ROTATE_FULL_DEGREES
 )
+const getMoveTouches = (event = {}) => {
+  const touches = event.touches || []
+
+  return touches.length ? touches : (event.changedTouches || [])
+}
 const getTouchCenter = (touches) => ({
   x: (touches[0].pageX + touches[1].pageX) / 2,
   y: (touches[0].pageY + touches[1].pageY) / 2
@@ -299,23 +330,31 @@ const getGuideTransformStyle = (offsetX, offsetY, scale = 1, guideRotateAngle = 
     `rotate(${normalizeGuideRotateAngle(guideRotateAngle)}deg)`
   ].filter(Boolean).join(' ')
 )
+const getGuideBoxTransformStyle = (scale = 1, guideRotateAngle = 0) => (
+  [
+    `scale(${scale})`,
+    `rotate(${normalizeGuideRotateAngle(guideRotateAngle)}deg)`
+  ].filter(Boolean).join(' ')
+)
 const getGuideBoxStyle = (offsetX, offsetY, scale = 1, guideBoxRect = null, guideRotateAngle = 0) => (
   [
-    guideBoxRect ? `left: ${guideBoxRect.left}px` : '',
-    guideBoxRect ? `top: ${guideBoxRect.top}px` : '',
+    guideBoxRect ? `left: ${Number(guideBoxRect.left || 0) + Number(offsetX || 0)}px` : '',
+    guideBoxRect ? `top: ${Number(guideBoxRect.top || 0) + Number(offsetY || 0)}px` : '',
     guideBoxRect ? `width: ${guideBoxRect.width}px` : '',
     guideBoxRect ? `height: ${guideBoxRect.height}px` : '',
     'transform-origin: center center',
-    `transform: ${getGuideTransformStyle(offsetX, offsetY, scale, guideRotateAngle)}`
+    `transform: ${guideBoxRect
+      ? getGuideBoxTransformStyle(scale, guideRotateAngle)
+      : getGuideTransformStyle(offsetX, offsetY, scale, guideRotateAngle)}`
   ].filter(Boolean).join('; ')
 )
 const getGuideScaleText = (scale) => `${Math.round(scale * 100)}%`
-const getCameraPreviewLayout = (windowWidth, windowHeight, aspectRatio = CAMERA_ASPECT_3_4) => {
+const getCameraPreviewLayout = (windowWidth, windowHeight, aspectRatio = CAMERA_ASPECT_3_4, systemInfo = wx.getSystemInfoSync()) => {
   const rpxToPx = windowWidth / 750
-  const bottomPanelHeight = BOTTOM_PANEL_RPX * rpxToPx
+  const bottomPanelHeight = BOTTOM_PANEL_RPX * rpxToPx + getSafeAreaBottomHeight(systemInfo)
   const cameraVerticalOffset = CAMERA_VERTICAL_OFFSET_RPX * rpxToPx
   const availableHeight = Math.max(windowHeight - bottomPanelHeight, 1)
-  const cameraHeightRatio = getCameraHeightRatio(aspectRatio)
+  const cameraHeightRatio = getCameraHeightRatio(aspectRatio, systemInfo)
   const nativePhotoHeight = windowWidth * cameraHeightRatio
   const cameraHeight = Math.min(availableHeight, nativePhotoHeight)
   const frameWidth = Math.min(windowWidth, cameraHeight / cameraHeightRatio)
@@ -327,7 +366,8 @@ const getCameraPreviewLayout = (windowWidth, windowHeight, aspectRatio = CAMERA_
     frameLeft,
     frameWidth,
     cameraTop,
-    cameraWidth: windowWidth,
+    cameraLeft: frameLeft,
+    cameraWidth: frameWidth,
     cameraHeight,
     availableHeight
   }
@@ -336,18 +376,19 @@ const getCameraStyle = (aspectRatio = getStoredCameraAspectRatio()) => {
   const systemInfo = wx.getSystemInfoSync()
   const windowWidth = Number(systemInfo.windowWidth || 375)
   const windowHeight = Number(systemInfo.windowHeight || 667)
-  const { cameraTop, cameraWidth, cameraHeight } = getCameraPreviewLayout(windowWidth, windowHeight, aspectRatio)
+  const { cameraLeft, cameraTop, cameraWidth, cameraHeight } = getCameraPreviewLayout(windowWidth, windowHeight, aspectRatio, systemInfo)
 
-  return `width: ${cameraWidth}px; height: ${cameraHeight}px; margin-top: ${cameraTop}px`
+  return `width: ${cameraWidth}px; height: ${cameraHeight}px; margin-left: ${cameraLeft}px; margin-top: ${cameraTop}px`
 }
 const getGuideStageLayout = (windowWidth, windowHeight, aspectRatio = getStoredCameraAspectRatio()) => {
-  const { cameraHeight } = getCameraPreviewLayout(windowWidth, windowHeight, aspectRatio)
-  const guideReferenceHeight = Math.min(cameraHeight, windowWidth * getCameraHeightRatio(CAMERA_ASPECT_3_4))
+  const systemInfo = wx.getSystemInfoSync()
+  const { cameraWidth, cameraHeight } = getCameraPreviewLayout(windowWidth, windowHeight, aspectRatio, systemInfo)
+  const guideReferenceHeight = Math.min(cameraHeight, cameraWidth * getCameraHeightRatio(CAMERA_ASPECT_3_4, systemInfo))
   const stageTop = guideReferenceHeight * STAGE_TOP_CAMERA_RATIO
   const stageBottom = guideReferenceHeight * STAGE_BOTTOM_CAMERA_RATIO
   const stageHeight = Math.max(guideReferenceHeight - stageTop - stageBottom, 1)
-  const stageLeft = windowWidth * GUIDE_LEFT_RATIO
-  const stageWidth = windowWidth * GUIDE_WIDTH_RATIO
+  const stageLeft = cameraWidth * GUIDE_LEFT_RATIO
+  const stageWidth = cameraWidth * GUIDE_WIDTH_RATIO
 
   return {
     stageLeft,
@@ -360,25 +401,98 @@ const getPoseStageStyle = (aspectRatio = getStoredCameraAspectRatio()) => {
   const systemInfo = wx.getSystemInfoSync()
   const windowWidth = Number(systemInfo.windowWidth || 375)
   const windowHeight = Number(systemInfo.windowHeight || 667)
-  const { stageLeft, stageTop, stageWidth, stageHeight } = getGuideStageLayout(windowWidth, windowHeight, aspectRatio)
+  const { cameraWidth, cameraHeight } = getCameraPreviewLayout(windowWidth, windowHeight, aspectRatio, systemInfo)
 
-  return `left: ${stageLeft}px; top: ${stageTop}px; width: ${stageWidth}px; height: ${stageHeight}px`
+  return `left: 0; top: 0; width: ${cameraWidth}px; height: ${cameraHeight}px`
+}
+const getPagePoseStageStyle = (aspectRatio = getStoredCameraAspectRatio()) => {
+  const systemInfo = wx.getSystemInfoSync()
+  const windowWidth = Number(systemInfo.windowWidth || 375)
+  const windowHeight = Number(systemInfo.windowHeight || 667)
+  const { cameraLeft, cameraTop, cameraWidth, cameraHeight } = getCameraPreviewLayout(windowWidth, windowHeight, aspectRatio, systemInfo)
+
+  return `left: ${cameraLeft}px; top: ${cameraTop}px; width: ${cameraWidth}px; height: ${cameraHeight}px`
+}
+const normalizeLegacyPlanTitle = (title = '') => {
+  if (title === '斜倚举鞋') {
+    return '斜倚举帽'
+  }
+
+  return title
+}
+const getLatestScenePlanDetail = (detail = {}) => {
+  if (!detail || !detail.poseId) {
+    return detail
+  }
+
+  const topic = detail.topicId ? getSceneTopic(detail.topicId) : null
+  const latestPlan = topic && (topic.plans || []).find((plan) => plan.poseId === detail.poseId)
+
+  if (!latestPlan) {
+    return {
+      ...detail,
+      title: normalizeLegacyPlanTitle(detail.title || '')
+    }
+  }
+
+  return {
+    ...detail,
+    sceneTitle: detail.sceneTitle || topic.shortTitle || topic.title || '',
+    title: latestPlan.title || normalizeLegacyPlanTitle(detail.title || ''),
+    badge: latestPlan.badge || detail.badge || '',
+    reason: latestPlan.reason || detail.reason || '',
+    composition: latestPlan.composition || detail.composition || '',
+    camera: latestPlan.camera || detail.camera || '',
+    avoid: latestPlan.avoid || detail.avoid || ''
+  }
 }
 const getPreviewShareSource = (poseId) => {
   const detail = wx.getStorageSync(SCENE_TOPIC_DETAIL_KEY)
+  const latestDetail = getLatestScenePlanDetail(detail)
 
-  if (!detail || detail.poseId !== poseId) {
+  if (!latestDetail || latestDetail.poseId !== poseId) {
     return null
   }
 
   return {
     poseId,
-    topicId: detail.topicId || '',
-    sceneTitle: detail.sceneTitle || '',
-    title: detail.title || '',
-    badge: detail.badge || '',
-    reason: detail.reason || ''
+    topicId: latestDetail.topicId || '',
+    sceneTitle: latestDetail.sceneTitle || '',
+    title: latestDetail.title || '',
+    badge: latestDetail.badge || '',
+    reason: latestDetail.reason || ''
   }
+}
+const getTopicPoseIds = (topic = {}) => new Set([
+  topic.coverPoseId,
+  ...((topic.plans || []).map((plan) => plan.poseId)),
+  ...(topic.morePoseIds || [])
+].filter(Boolean))
+const findSceneTopicById = (topicId = '') => sceneTopics.find((topic) => topic.id === topicId) || null
+const isPoseInTopic = (topic, poseId) => Boolean(topic && poseId && getTopicPoseIds(topic).has(poseId))
+const findSceneTopicByPoseId = (poseId = '') => sceneTopics.find((topic) => isPoseInTopic(topic, poseId)) || null
+const getStoredSceneTopicDetail = (poseId = '') => {
+  const detail = wx.getStorageSync(SCENE_TOPIC_DETAIL_KEY)
+
+  return detail && detail.poseId === poseId ? detail : null
+}
+const resolveReturnTopicId = (options = {}, poseId = '') => {
+  const optionTopic = findSceneTopicById(options.topicId)
+
+  if (isPoseInTopic(optionTopic, poseId)) {
+    return optionTopic.id
+  }
+
+  const storedDetail = getStoredSceneTopicDetail(poseId)
+  const storedTopic = storedDetail ? findSceneTopicById(storedDetail.topicId) : null
+
+  if (isPoseInTopic(storedTopic, poseId)) {
+    return storedTopic.id
+  }
+
+  const matchedTopic = findSceneTopicByPoseId(poseId)
+
+  return matchedTopic ? matchedTopic.id : ''
 }
 const getGuideTransformState = (offsetX, offsetY, scale, guideBoxRect = null, guideRotateAngle = 0) => {
   const normalizedAngle = normalizeGuideRotateAngle(guideRotateAngle)
@@ -393,11 +507,17 @@ const getGuideTransformState = (offsetX, offsetY, scale, guideBoxRect = null, gu
     ...(guideBoxRect ? { guideBoxRect } : {})
   }
 }
+const getGuideDragTransformState = (offsetX, offsetY, scale, guideBoxRect = null, guideRotateAngle = 0) => ({
+  guideOffsetX: offsetX,
+  guideOffsetY: offsetY,
+  guideScale: scale,
+  guideBoxStyle: getGuideBoxStyle(offsetX, offsetY, scale, guideBoxRect, guideRotateAngle)
+})
 const getCameraGuideLayout = (guideImageInfo = null, aspectRatio = getStoredCameraAspectRatio()) => {
   const systemInfo = wx.getSystemInfoSync()
   const windowWidth = Number(systemInfo.windowWidth || 375)
   const windowHeight = Number(systemInfo.windowHeight || 667)
-  const { cameraTop, cameraHeight } = getCameraPreviewLayout(windowWidth, windowHeight, aspectRatio)
+  const { cameraLeft, cameraTop, cameraWidth, cameraHeight } = getCameraPreviewLayout(windowWidth, windowHeight, aspectRatio, systemInfo)
   const { stageLeft, stageTop, stageWidth, stageHeight } = getGuideStageLayout(windowWidth, windowHeight, aspectRatio)
   const guideAreaTop = stageHeight * GUIDE_TOP_IN_STAGE_RATIO
   const guideAreaWidth = stageWidth
@@ -413,8 +533,8 @@ const getCameraGuideLayout = (guideImageInfo = null, aspectRatio = getStoredCame
         height: guideAreaHeight
       }
   const boxRect = {
-    left: fitRect.x,
-    top: guideAreaTop + fitRect.y,
+    left: stageLeft + fitRect.x,
+    top: stageTop + guideAreaTop + fitRect.y,
     width: fitRect.width,
     height: fitRect.height
   }
@@ -422,15 +542,16 @@ const getCameraGuideLayout = (guideImageInfo = null, aspectRatio = getStoredCame
   return {
     boxRect,
     previewRect: {
-      left: stageLeft + boxRect.left,
-      top: cameraTop + stageTop + boxRect.top,
+      left: cameraLeft + boxRect.left,
+      top: cameraTop + boxRect.top,
       width: boxRect.width,
       height: boxRect.height
     },
     poseStageStyle: getPoseStageStyle(aspectRatio),
-    cameraLeft: 0,
+    pagePoseStageStyle: getPagePoseStageStyle(aspectRatio),
+    cameraLeft,
     cameraTop,
-    cameraWidth: windowWidth,
+    cameraWidth,
     cameraHeight,
     baseWidth: windowWidth,
     baseHeight: windowHeight
@@ -460,6 +581,7 @@ const getGuideLayoutState = (guideImageInfo, offsetX = 0, offsetY = 0, scale = 1
   return {
     guidePreviewRect,
     poseStageStyle: layout.poseStageStyle,
+    pagePoseStageStyle: layout.pagePoseStageStyle,
     ...getGuideTransformState(offsetX, offsetY, scale, layout.boxRect, guideRotateAngle)
   }
 }
@@ -473,6 +595,65 @@ const getPreviewGuideStyle = (offsetX, offsetY, guideScale, guideMode, rect = ge
     'transform-origin: center center',
     `transform: ${getGuideTransformStyle(offsetX, offsetY, guideScale, guideRotateAngle)}`
   ].join('; ')
+}
+const isTouchInsideGuidePreview = (touch = {}, data = {}) => {
+  const rect = data.guidePreviewRect
+
+  if (!rect) {
+    return true
+  }
+
+  const scale = Number(data.guideScale || 1)
+  const width = Number(rect.width || 0) * scale
+  const height = Number(rect.height || 0) * scale
+  const left = Number(rect.left || 0) +
+    Number(data.guideOffsetX || 0) -
+    (width - Number(rect.width || 0)) / 2
+  const top = Number(rect.top || 0) +
+    Number(data.guideOffsetY || 0) -
+    (height - Number(rect.height || 0)) / 2
+  const pageX = Number(touch.pageX || 0)
+  const pageY = Number(touch.pageY || 0)
+
+  return pageX >= left &&
+    pageX <= left + width &&
+    pageY >= top &&
+    pageY <= top + height
+}
+const getGuideDragBounds = (data = {}) => {
+  const rect = data.guidePreviewRect
+
+  if (!rect) {
+    return {
+      minX: -GUIDE_FALLBACK_MAX_OFFSET_X,
+      maxX: GUIDE_FALLBACK_MAX_OFFSET_X,
+      minY: -GUIDE_FALLBACK_MAX_OFFSET_Y,
+      maxY: GUIDE_FALLBACK_MAX_OFFSET_Y
+    }
+  }
+
+  const cameraLeft = Number(rect.cameraLeft || 0)
+  const cameraTop = Number(rect.cameraTop || 0)
+  const cameraWidth = Number(rect.cameraWidth || 0)
+  const cameraHeight = Number(rect.cameraHeight || 0)
+  const guideCenterX = Number(rect.left || 0) + Number(rect.width || 0) / 2
+  const guideCenterY = Number(rect.top || 0) + Number(rect.height || 0) / 2
+
+  if (!cameraWidth || !cameraHeight) {
+    return {
+      minX: -GUIDE_FALLBACK_MAX_OFFSET_X,
+      maxX: GUIDE_FALLBACK_MAX_OFFSET_X,
+      minY: -GUIDE_FALLBACK_MAX_OFFSET_Y,
+      maxY: GUIDE_FALLBACK_MAX_OFFSET_Y
+    }
+  }
+
+  return {
+    minX: cameraLeft - guideCenterX,
+    maxX: cameraLeft + cameraWidth - guideCenterX,
+    minY: cameraTop - guideCenterY,
+    maxY: cameraTop + cameraHeight - guideCenterY
+  }
 }
 const queryRects = (selectorQuery) => new Promise((resolve) => {
   selectorQuery.exec((res) => {
@@ -573,6 +754,8 @@ const getGuideFallbackImages = (guideImage) => {
 Page({
   data: {
     devicePosition: 'back',
+    cameraResolution: getCameraResolution(),
+    cameraFrameSize: CAMERA_FRAME_SIZE_LARGE,
     cameraStyle: getCameraStyle(),
     cameraAspectRatio: getStoredCameraAspectRatio(),
     cameraAspectText: getCameraAspectText(getStoredCameraAspectRatio()),
@@ -605,6 +788,8 @@ Page({
     guideRotateAngle: 0,
     guideBoxStyle: getGuideBoxStyle(0, 0, 1),
     poseStageStyle: getPoseStageStyle(),
+    pagePoseStageStyle: getPagePoseStageStyle(),
+    usePageGuideOverlay: isIOSDevice(),
     guideBoxRect: null,
     guidePreviewRect: null,
     countdownSeconds: 0,
@@ -617,6 +802,7 @@ Page({
     sessionPhotoCount: 0,
     latestPhotoPath: '',
     isCapturing: false,
+    returnTopicId: '',
     privacyAccepted: hasAcceptedPrivacyNotice()
   },
 
@@ -636,6 +822,7 @@ Page({
     const templateIndex = findPoseIndex(options.poseId)
     const template = poseTemplates[(templateIndex + poseTemplates.length) % poseTemplates.length]
     const homeLocalAssets = options.homeLocal === '1'
+    const returnTopicId = resolveReturnTopicId(options, selectedPose.id)
 
     if (!this.data.privacyAccepted) {
       const accepted = await ensurePrivacyNotice('打开相机拍照')
@@ -655,7 +842,8 @@ Page({
       cameraStyle: getCameraStyle(guideSettings.cameraAspectRatio),
       devicePosition: getDefaultDevicePosition(template),
       currentIsSelfie: isSelfiePose(template),
-      homeLocalAssets
+      homeLocalAssets,
+      returnTopicId
     })
     this.setTemplate(templateIndex, guideSettings.guideMode)
     this.scheduleGuideUsageTip()
@@ -679,18 +867,27 @@ Page({
     this.clearCountdownTimer()
     this.stopGuideLoadingTimer()
     this.clearGuideUsageTipTimer()
+    this.clearGuideDragCancelTimer()
   },
 
   onHide() {
     this.clearCountdownTimer()
     this.stopGuideLoadingTimer()
     this.clearGuideUsageTipTimer()
+    this.clearGuideDragCancelTimer()
   },
 
   stopGuideLoadingTimer() {
     if (this.guideLoadingTimer) {
       clearTimeout(this.guideLoadingTimer)
       this.guideLoadingTimer = null
+    }
+  },
+
+  clearGuideDragCancelTimer() {
+    if (this.guideDragCancelTimer) {
+      clearTimeout(this.guideDragCancelTimer)
+      this.guideDragCancelTimer = null
     }
   },
 
@@ -1108,10 +1305,16 @@ Page({
   onGuideDragStart(event) {
     const touches = event.touches || []
 
+    this.clearGuideDragCancelTimer()
     this.dismissGuideUsageTip()
     this.closeSettingsPanel()
 
     if (!touches.length || !this.data.currentTemplate.guideImage) {
+      this.guideDragState = null
+      return
+    }
+
+    if (!isTouchInsideGuidePreview(touches[0], this.data)) {
       this.guideDragState = null
       return
     }
@@ -1141,11 +1344,13 @@ Page({
   },
 
   onGuideDragMove(event) {
-    const touches = event.touches || []
+    const touches = getMoveTouches(event)
 
     if (!touches.length || !this.guideDragState) {
       return
     }
+
+    this.clearGuideDragCancelTimer()
 
     if (touches.length >= 2) {
       if (this.guideDragState.type !== 'pinch') {
@@ -1170,19 +1375,24 @@ Page({
         GUIDE_MIN_SCALE,
         GUIDE_MAX_SCALE
       )
+      const dragBounds = getGuideDragBounds(this.data)
+      const dx = center.x - this.guideDragState.startCenterX
+      const dy = center.y - this.guideDragState.startCenterY
+      const rawOffsetX = this.guideDragState.baseOffsetX + dx
+      const rawOffsetY = this.guideDragState.baseOffsetY + dy
       const guideOffsetX = clamp(
-        this.guideDragState.baseOffsetX + center.x - this.guideDragState.startCenterX,
-        -GUIDE_MAX_OFFSET_X,
-        GUIDE_MAX_OFFSET_X
+        rawOffsetX,
+        dragBounds.minX,
+        dragBounds.maxX
       )
       const guideOffsetY = clamp(
-        this.guideDragState.baseOffsetY + center.y - this.guideDragState.startCenterY,
-        -GUIDE_MAX_OFFSET_Y,
-        GUIDE_MAX_OFFSET_Y
+        rawOffsetY,
+        dragBounds.minY,
+        dragBounds.maxY
       )
 
       this.setData({
-        ...getGuideTransformState(guideOffsetX, guideOffsetY, guideScale, this.data.guideBoxRect, this.data.guideRotateAngle)
+        ...getGuideDragTransformState(guideOffsetX, guideOffsetY, guideScale, this.data.guideBoxRect, this.data.guideRotateAngle)
       })
       return
     }
@@ -1197,24 +1407,43 @@ Page({
       }
     }
 
+    const dragBounds = getGuideDragBounds(this.data)
+    const dx = touches[0].pageX - this.guideDragState.startX
+    const dy = touches[0].pageY - this.guideDragState.startY
+    const rawOffsetX = this.guideDragState.baseOffsetX + dx
+    const rawOffsetY = this.guideDragState.baseOffsetY + dy
     const guideOffsetX = clamp(
-      this.guideDragState.baseOffsetX + touches[0].pageX - this.guideDragState.startX,
-      -GUIDE_MAX_OFFSET_X,
-      GUIDE_MAX_OFFSET_X
+      rawOffsetX,
+      dragBounds.minX,
+      dragBounds.maxX
     )
     const guideOffsetY = clamp(
-      this.guideDragState.baseOffsetY + touches[0].pageY - this.guideDragState.startY,
-      -GUIDE_MAX_OFFSET_Y,
-      GUIDE_MAX_OFFSET_Y
+      rawOffsetY,
+      dragBounds.minY,
+      dragBounds.maxY
     )
 
     this.setData({
-      ...getGuideTransformState(guideOffsetX, guideOffsetY, this.data.guideScale, this.data.guideBoxRect, this.data.guideRotateAngle)
+      ...getGuideDragTransformState(guideOffsetX, guideOffsetY, this.data.guideScale, this.data.guideBoxRect, this.data.guideRotateAngle)
     })
   },
 
   onGuideDragEnd(event) {
     const touches = event.touches || []
+
+    if (event.type === 'touchcancel' && this.guideDragState) {
+      this.clearGuideDragCancelTimer()
+      this.guideDragCancelTimer = setTimeout(() => {
+        this.guideDragState = null
+        this.guideDragCancelTimer = null
+        this.setData({
+          guideScaleText: getGuideScaleText(this.data.guideScale)
+        })
+      }, GUIDE_TOUCH_CANCEL_CLEAR_DELAY)
+      return
+    }
+
+    this.clearGuideDragCancelTimer()
 
     if (touches.length >= 2) {
       this.onGuideDragStart(event)
@@ -1233,6 +1462,9 @@ Page({
     }
 
     this.guideDragState = null
+    this.setData({
+      guideScaleText: getGuideScaleText(this.data.guideScale)
+    })
   },
 
   setGuideScale(nextScale) {
@@ -1275,6 +1507,12 @@ Page({
   },
 
   noop() {},
+
+  onCameraTouchMove(event) {
+    if (this.guideDragState) {
+      this.onGuideDragMove(event)
+    }
+  },
 
   decreaseGuideScale() {
     this.setGuideScale(this.data.guideScale - GUIDE_SCALE_STEP)
@@ -1535,13 +1773,48 @@ Page({
   },
 
   backToPoseGallery() {
-    const currentTemplate = this.data.currentTemplate || poseTemplates[this.data.currentIndex] || {}
-    const categoryId = currentTemplate.categoryId || (poseTemplates[this.data.currentIndex] || {}).categoryId
+    const returnTopicId = this.data.returnTopicId
 
-    if (this.hasTemplateLoaded && categoryId) {
-      wx.setStorageSync(GALLERY_TARGET_CATEGORY_KEY, categoryId)
+    if (returnTopicId) {
+      this.backToTopicPoseList(returnTopicId)
+      return
     }
 
+    wx.removeStorageSync(GALLERY_TARGET_CATEGORY_KEY)
+    wx.setStorageSync(GALLERY_SCROLL_TOP_KEY, true)
+    this.switchToPoseGallery()
+  },
+
+  backToTopicPoseList(topicId) {
+    const pages = getCurrentPages()
+    const topicListIndex = pages.findIndex((page) => (
+      page.route === SCENE_TOPIC_MORE_ROUTE &&
+      (!page.options || !page.options.topicId || page.options.topicId === topicId)
+    ))
+
+    if (topicListIndex >= 0 && topicListIndex < pages.length - 1) {
+      wx.navigateBack({
+        delta: pages.length - 1 - topicListIndex
+      })
+      return
+    }
+
+    wx.redirectTo({
+      url: `/pages/scene-topic-more/index?topicId=${topicId}`,
+      fail: () => {
+        wx.navigateTo({
+          url: `/pages/scene-topic-more/index?topicId=${topicId}`,
+          fail: () => {
+            wx.removeStorageSync(GALLERY_TARGET_CATEGORY_KEY)
+            wx.setStorageSync(GALLERY_SCROLL_TOP_KEY, true)
+            this.switchToPoseGallery()
+          }
+        })
+      }
+    })
+  },
+
+  switchToPoseGallery() {
     const pages = getCurrentPages()
     const galleryIndex = pages.findIndex((page) => page.route === POSE_GALLERY_ROUTE)
 
@@ -1839,6 +2112,21 @@ Page({
     const message = event.detail && event.detail.errMsg ? event.detail.errMsg : '相机不可用'
 
     if (!isPermissionDeniedError(message)) {
+      if (
+        this.data.cameraResolution === CAMERA_RESOLUTION_HIGH ||
+        this.data.cameraFrameSize === CAMERA_FRAME_SIZE_LARGE
+      ) {
+        this.setData({
+          cameraResolution: CAMERA_RESOLUTION_LOW,
+          cameraFrameSize: CAMERA_FRAME_SIZE_MEDIUM
+        })
+        wx.showToast({
+          title: '已切换兼容画质',
+          icon: 'none'
+        })
+        return
+      }
+
       wx.showToast({
         title: message,
         icon: 'none'

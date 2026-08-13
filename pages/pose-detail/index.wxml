@@ -1,4 +1,10 @@
-<view class="page">
+<view
+  class="page"
+  bindtouchstart="onPageTouchStart"
+  bindtouchmove="onPageTouchMove"
+  bindtouchend="onPageTouchEnd"
+  bindtouchcancel="onPageTouchCancel"
+>
   <view class="top-bar">
     <view class="back-btn" bindtap="backToHome">返回</view>
     <view class="title">姿势详情</view>
@@ -133,6 +139,10 @@
     src="{{item}}"
     mode="scaleToFill"
   ></image>
+
+  <view wx:if="{{bottomSwitchHintVisible}}" class="bottom-switch-hint">
+    松手后继续上滑切换下一张
+  </view>
 
   <view class="bottom-panel safe-area-bottom">
     <button class="share-btn" open-type="share" data-share-type="pose">分享同款</button>

@@ -9,7 +9,8 @@ const {
 const { ensurePrivacyNotice } = require('../../utils/privacy')
 const {
   SCENE_TOPIC_DETAIL_KEY,
-  getSceneTopic
+  getSceneTopic,
+  isLandmarkTopic
 } = require('../../utils/sceneTopics')
 const { buildSceneShare } = require('../../utils/shareCopy')
 
@@ -94,6 +95,7 @@ const buildTopicView = (topicId) => {
 
       return {
         ...plan,
+        title: pose.name || plan.title,
         poseName: pose.name,
         poseDescription: pose.description,
         thumbnailImage: getDisplayImage(pose),
@@ -101,13 +103,27 @@ const buildTopicView = (topicId) => {
       }
     })
     .filter(Boolean)
+  const moreCount = new Set([
+    ...plans.map((plan) => plan.poseId),
+    ...(topic.morePoseIds || [])
+  ].filter(Boolean)).size
 
   return {
     ...topic,
+    isLandmark: isLandmarkTopic(topic.id),
+    pageTitle: isLandmarkTopic(topic.id) ? '旅行景点' : '日常场景',
+    kicker: isLandmarkTopic(topic.id) ? '旅行景点拍照作业' : '日常场景拍照作业',
+    planSectionTitle: isLandmarkTopic(topic.id) ? '先照着这 3 个地标拍法' : '先照着这 3 个拍法',
+    planSectionSubtitle: isLandmarkTopic(topic.id)
+      ? '选一个地标姿势，到现场打开相机按轮廓对齐。'
+      : '选一张发给拍照搭子，对方打开相机就能按轮廓对齐。',
+    moreDesc: isLandmarkTopic(topic.id)
+      ? `查看 ${moreCount} 张同景点照片`
+      : `查看 ${moreCount} 张同场景照片`,
     coverImage: coverPose ? getTopicCoverImage(coverPose) : '',
     shareImage: coverPose ? getShareImage(coverPose) : '',
     plans,
-    moreCount: (topic.morePoseIds || []).length
+    moreCount
   }
 }
 
@@ -259,7 +275,7 @@ Page({
     const shouldUseHomeLocalAssets = isHomeLocalPose({ id: poseId })
 
     wx.navigateTo({
-      url: `/pages/camera/index?poseId=${poseId}${shouldUseHomeLocalAssets ? '&homeLocal=1' : ''}`
+      url: `/pages/camera/index?poseId=${poseId}&topicId=${this.data.topic.id}${shouldUseHomeLocalAssets ? '&homeLocal=1' : ''}`
     })
   },
 

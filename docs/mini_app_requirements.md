@@ -170,45 +170,36 @@
 - `modelImage`：真人参考图，用于半透明照片模式和分类页展示。
 - `detailImage`：详情图，用于详情页和部分卡片封面。
 
-### 4.2 本地优先资源策略
+### 4.2 Gitee 优先资源策略
 
-图片资源整体遵循“本地优先，本地没有再走 CDN”的规则。
+当前图片资源整体遵循“Gitee 优先、主包瘦身”的规则。新增姿势的真人图、轮廓图、缩略图、分享图和推荐图必须发布到 Gitee，不能只依赖本仓库里的 `static/...` 本地文件。
 
 通用要求：
 
-- `guideImage`、`thumbnailImage`、`modelImage`、`detailImage` 都应先判断是否存在可用本地资源。
-- 可用本地资源是指未被 `packOptions.ignore` 排除、会实际进入小程序包的文件。
-- 本地存在且实际打包的图片和轮廓图直接使用 `/static/...` 本地路径。
-- 本地缺失、包体不适合放入本地、或资源配置中明确声明为远程的图片，才使用 CDN 地址。
-- 资源兜底应尽量收敛到具体文件，不应因为某个姿势缺少一张图就强制整组图片都走 CDN。
-- 同一姿势中，可用本地轮廓图可以继续走本地，本地缺失或未打包的真人图、缩略图、轮廓图单独走 CDN。
-- 姿势详情页大图如果本地路径加载失败，需要自动切换到对应 CDN 地址重试。
+- `guideImage`、`thumbnailImage`、`modelImage`、`detailImage` 都应可解析为 Gitee 远程地址。
+- 本仓库里的 `static/...` 同路径文件只作为生成、校验和上传来源；是否存在本地文件不代表线上可用。
+- 新增姿势不加入本地打包白名单，避免自动预览和上传包超过 2MB。
+- 资源兜底应尽量收敛到具体文件，不应因为某个姿势缺少一张图就强制整组图片改变路径。
+- 姿势详情页大图如果加载失败，需要自动切换到对应 Gitee 地址重试。
 
-首页首屏和推荐模块还需要使用本地轻量图，减少加载不稳定。
-
-本地首页资源目录：
+以下目录当前也不应随新增姿势进入主包：
 
 - `static/recommend_thumbs/`
 - `static/home_guides/`
+- `static/pose_pairs/`
+- `static/pose_guides/`
+- `static/pose_thumbs/`
+- `static/gallery_thumbs/`
+- `static/share_images/`
+- `static/recommend_guides/`
 
-本地首页图片映射规则：
+首页图片映射规则：
 
-- 轮廓图从 `static/pose_pairs`、`static/pose_guides` 或 `static/recommend_guides` 映射到 `static/home_guides`。
-- 缩略图从 `static/pose_pairs`、`static/pose_thumbs` 或 `static/recommend_thumbs` 映射到 `static/recommend_thumbs`。
+- 轮廓图从 `static/pose_pairs`、`static/pose_guides` 或 `static/recommend_guides` 解析为 Gitee 上的 `static/pose_guides`。
+- 缩略图从 `static/pose_pairs`、`static/pose_thumbs` 或 `static/recommend_thumbs` 解析为 Gitee 上的 `static/pose_thumbs`。
 - `_demo.jpg` 会映射为 `_thumb.jpg`。
 
-首页本地资源池要求：
-
-- 首页本地缩略图可以覆盖较多推荐姿势，因为 `static/recommend_thumbs/` 体积较小，优先保障首页图片稳定显示。
-- 首页本地轮廓必须严格控制数量，避免主包超过 2MB。
-- 本地轮廓只保留用户最容易直接点进拍照的高曝光入口：默认场景首屏推荐和当前高曝光今日推荐。
-- 当前实现中，本地轮廓白名单由 `utils/assets.js` 的 `HOME_LOCAL_GUIDE_FOLDERS` 控制，目前只保留 7 张高曝光轮廓。
-- 当前 7 张本地轮廓为：`custom76`、`custom78`、`custom80`、`custom84`、`custom88`、`custom103`、`custom105`。如果首页默认场景或今日推荐策略调整，需要同步评估并更新这个集合。
-- 不在 `HOME_LOCAL_GUIDE_FOLDERS` 内的首页姿势，即使缩略图在本地，点击拍照后的轮廓也应走 CDN。
-- 放入本地轮廓池的姿势必须同时具备轻量缩略图和轮廓图。
-- 首页本地资源优先保障轻量缩略图，避免首屏图片空白。
-- 如果某张轮廓放入主包后会导致超过 2MB，优先把该轮廓移出本地白名单，继续走 CDN。
-- 首页出现过的姿势，即使用户没有点进详情页，也需要在后台预加载详情大图；远程图应依赖缓存流程提升进入详情页和拍照页速度。
+首页出现过的姿势，即使用户没有点进详情页，也需要在后台预加载详情大图；远程图应依赖缓存流程提升进入详情页和拍照页速度。
 
 ### 4.3 远程资源
 
@@ -220,13 +211,13 @@
 
 `https://cdn.jsdelivr.net/gh/blueMug/posture_assets@main`
 
-远程源是本地缺失资源的兜底来源，不再作为所有非首页图片的默认来源。
+远程源是新增姿势资源的默认运行来源。本地文件只用于生成、校验、上传和缓存后的 saved file，不作为新增姿势的主包运行来源。
 
 如有特殊图片需要强制远程加载，应只在资源配置中按文件声明，避免按姿势整组扩大影响范围，也避免在需求文档里写死具体姿势编号。
 
 ### 4.4 不同页面的图片优先级
 
-以下优先级指字段选择顺序。每个字段在解析最终 URL 时仍遵循本地优先、CDN 兜底。
+以下优先级指字段选择顺序。每个字段在解析最终 URL 时仍遵循 Gitee 优先和缓存兜底。
 
 首页推荐卡片：
 

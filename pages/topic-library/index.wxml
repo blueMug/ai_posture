@@ -1,0 +1,46 @@
+<view class="page" style="{{pageTopStyle}}">
+  <view class="top-bar">
+    <view class="back-btn" bindtap="backToHome">返回</view>
+    <view class="title">{{title}}</view>
+    <view class="placeholder"></view>
+  </view>
+
+  <view class="hero-card">
+    <view class="hero-kicker">{{kicker}}</view>
+    <view class="hero-title">{{title}}</view>
+    <view class="hero-subtitle">{{subtitle}}</view>
+  </view>
+
+  <view wx:if="{{topics.length}}" class="topic-grid">
+    <view
+      wx:for="{{topics}}"
+      wx:key="id"
+      wx:for-item="topic"
+      class="topic-card"
+      data-topic-id="{{topic.id}}"
+      bindtap="openSceneTopic"
+    >
+      <view class="topic-copy">
+        <view class="topic-title">{{topic.title}}</view>
+        <view class="topic-desc">{{topic.promise}}</view>
+        <view class="topic-count">{{topic.moreCount}} 张更多姿势</view>
+      </view>
+      <image
+        wx:if="{{!failedTopicImages[topic.id]}}"
+        class="topic-image"
+        src="{{topic.coverImage}}"
+        mode="aspectFit"
+        data-topic-id="{{topic.id}}"
+        binderror="onTopicImageError"
+      ></image>
+      <view wx:if="{{failedTopicImages[topic.id]}}" class="image-error">
+        图片加载失败
+      </view>
+      <view class="topic-mask"></view>
+    </view>
+  </view>
+
+  <view wx:if="{{!topics.length}}" class="empty-state">
+    暂时没有专题
+  </view>
+</view>
