@@ -650,14 +650,27 @@ const buildSearchResultCategories = (keyword = '') => {
     return []
   }
 
-  return poseCategories
+  const seenPoseIds = new Set()
+  const sortedCategories = [...poseCategories].sort((left, right) => {
+    const leftMatchesCategory = normalizeSearchText(left.name).includes(query)
+    const rightMatchesCategory = normalizeSearchText(right.name).includes(query)
+
+    return Number(rightMatchesCategory) - Number(leftMatchesCategory)
+  })
+
+  return sortedCategories
     .map((category) => {
       const allMatchedPoses = category.poses
         .filter((pose) => isPoseMatchedSearch(pose, category, query))
+        .filter((pose) => !seenPoseIds.has(pose.id))
       const matchedPoses = allMatchedPoses
         .slice(0, SEARCH_RESULT_LIMIT_PER_CATEGORY)
         .map(withHomeCardAssets)
         .filter((pose) => pose.thumbnailImage)
+
+      matchedPoses.forEach((pose) => {
+        seenPoseIds.add(pose.id)
+      })
 
       return {
         ...category,

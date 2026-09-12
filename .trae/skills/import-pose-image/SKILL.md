@@ -269,6 +269,19 @@ Tune `threshold` only after visually checking the output. The goal is not to pre
    - `utils/sceneTopics.js`: topic `coverPoseId`, `morePoseIds`, `plans[].poseId`.
    - `pages/home/index.js`: home scene advisor `SCENE_ADVISOR_CONFIGS`.
 
+   Topic placement rule:
+
+   - A topic whose title has an explicit geographic identity, such as a city,
+     region, country, or named attraction, belongs in the travel-landmark
+     section. Add its topic ID to `LANDMARK_TOPIC_IDS` in
+     `utils/sceneTopics.js`.
+   - Generic environments and styles, such as beach, cafe, lawn, sunset, or
+     Korean-style selfie, remain in the daily-scene section unless they name a
+     real destination.
+   - After importing topics, audit the full topic list with
+     `isLandmarkTopic()` so locality-based topics do not remain in the
+     daily-scene library.
+
 9. Handle the remote Gitee asset repo.
 
    Choose the repository from the numeric pose ID before copying or pushing:
