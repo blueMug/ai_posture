@@ -170,7 +170,7 @@ Page({
     if (!photoPath) {
       if (previewPose.id) {
         wx.redirectTo({
-          url: `/pages/camera/index?poseId=${previewPose.id}`
+          url: `/subpackages/camera/index?poseId=${previewPose.id}`
         })
         return
       }
@@ -309,7 +309,7 @@ Page({
         }
 
         wx.redirectTo({
-          url: `/pages/camera/index${poseParam}`
+          url: `/subpackages/camera/index${poseParam}`
         })
       }
     })
@@ -324,7 +324,7 @@ Page({
     const cameraPage = pages
       .slice()
       .reverse()
-      .find((page) => page.route === 'pages/camera/index')
+      .find((page) => page.route === 'subpackages/camera/index')
 
     if (!cameraPage || typeof cameraPage.setData !== 'function') {
       return
@@ -431,8 +431,8 @@ Page({
     const poseId = this.data.poseId
     const poseName = this.data.poseName
     const shareCard = this.data.shareCard || {}
-    const shareImage = this.data.poseShareImage ||
-      this.data.cachedPoseShareImage ||
+    const shareImage = this.data.cachedPoseShareImage ||
+      this.data.poseShareImage ||
       this.data.photoPath ||
       ''
 
@@ -455,7 +455,7 @@ Page({
         fallbackImage: this.data.photoPath
       }),
       path: poseId
-        ? `/pages/pose-detail/index?poseId=${poseId}`
+        ? `/subpackages/pose-detail/index?poseId=${poseId}`
         : '/pages/home/index',
     }
   }

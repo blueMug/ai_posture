@@ -76,7 +76,7 @@ const categoryDefinitions = [
     name: '半身近景',
     subtitle: '只放胸上、半身、肩颈、表情和手部近景人像',
     preferredPoseNumbers: [280, 84, 76, 88, 80, 85, 89, 78, 87],
-    poseNumbers: [5, 19, 20, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 154, 173, 179, 186, 187, 190, 214, 223, 224, 235, 264, 280, 291, 293, 294, 304, 310, 311, 315, 318, 319, 328, 331, 334, 336, 337, 350, 357, 379, 397, 399, 401, 403, 404, 411, 421, 424, 427, 428, 429, 430, 433, 435, 437, 438, 439, 440, 441, 445, 455, 456, 458, 459, 466, 473, 480, 500, 505, 506, 510, 514, 521, 529, 570, 572, 574, 576, 583, 586, 591, 599, 609, 612, 614, 618, 621, 625, 630, 632, 633, 634, 639, 643, 644, 646, 647, 649, 650, 657, 661, 666, 667, 669, 670, 674, 677, 681, 682, 685, 686, 688, 692, 693, 694, 695, 699]
+    poseNumbers: [5, 19, 20, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 154, 173, 179, 186, 187, 190, 214, 223, 224, 235, 264, 280, 291, 293, 294, 304, 310, 311, 315, 318, 319, 328, 331, 334, 336, 337, 350, 357, 379, 397, 399, 401, 403, 404, 411, 421, 424, 427, 428, 429, 430, 433, 435, 437, 438, 439, 440, 441, 445, 455, 456, 458, 459, 466, 473, 480, 500, 505, 506, 510, 514, 521, 529, 570, 572, 574, 576, 583, 586, 591, 599, 609, 612, 614, 618, 621, 625, 630, 632, 633, 634, 639, 643, 644, 646, 647, 649, 650, 657, 661, 666, 667, 669, 670, 674, 677, 681, 682, 685, 686, 688, 692, 693, 694, 695, 699, ...Array.from({ length: 9 }, (_, index) => 1143 + index)]
   },
   {
     id: 'street-commute',
@@ -84,7 +84,7 @@ const categoryDefinitions = [
     subtitle: '适合城市街头、通勤路上、西装、机车和运动感照片',
     preferredPoseNumbers: [119, 130, 127, 126, 128, 116, 123, 101, 92, 107, 110, 121, 87, 34],
     deprioritizedPoseNumbers: [131],
-    poseNumbers: [16, 34, 40, 42, 46, 49, 50, 53, 54, 57, 58, 60, 64, 66, 67, 68, 87, 91, 92, 93, 97, 101, 104, 107, 109, 110, 115, 116, 119, 120, 121, 123, 124, 126, 127, 128, 130, 131, 331, 332, 333, 341, 373, 376, 389, 391, 392, 402, 403, 404, 405, 406, 407, 408, 409, 410, 411, 412, 413, 414, 415, 416, 417, 418, 419, 420, 421, 422, 423, 424, 425, 426, 472, 474, 493, 496, 497, 500, 511, 560, 564, 581, 582, 585, 592, 596, 648, 651, 653, 656]
+    poseNumbers: [16, 34, 40, 42, 46, 49, 50, 53, 54, 57, 58, 60, 64, 66, 67, 68, 87, 91, 92, 93, 97, 101, 104, 107, 109, 110, 115, 116, 119, 120, 121, 123, 124, 126, 127, 128, 130, 131, 331, 332, 333, 341, 373, 376, 389, 391, 392, 402, 403, 404, 405, 406, 407, 408, 409, 410, 411, 412, 413, 414, 415, 416, 417, 418, 419, 420, 421, 422, 423, 424, 425, 426, 472, 474, 493, 496, 497, 500, 511, 560, 564, 581, 582, 585, 592, 596, 648, 651, 653, 656, ...Array.from({ length: 16 }, (_, index) => 1005 + index), ...Array.from({ length: 15 }, (_, index) => 1152 + index), ...Array.from({ length: 9 }, (_, index) => 1275 + index), ...Array.from({ length: 25 }, (_, index) => 1355 + index)]
   },
   {
     id: 'travel-back',
@@ -163,6 +163,10 @@ const insertCategoryAfter = (targetCategoryId, nextCategory) => {
 
 const seaLakePoseNumbers = uniquePoseNumbers(
   [17, 57, 99, 96, 122, 504, 102, 103, 354, 384, 237, 254],
+  Array.from({ length: 25 }, (_, index) => 1037 + index),
+  Array.from({ length: 81 }, (_, index) => 1062 + index),
+  Array.from({ length: 4 }, (_, index) => 1312 + index),
+  Array.from({ length: 4 }, (_, index) => 1324 + index),
   findPoseNumbersByText(['海边', '海滩', '海水', '沙滩', '湖边', '西湖', '水边', '河畔', '码头', '瀑布', '浅水', '海浪', '浪花'])
 )
 const oldTownPoseNumbers = uniquePoseNumbers(
@@ -171,31 +175,50 @@ const oldTownPoseNumbers = uniquePoseNumbers(
 )
 const landmarkPoseNumbers = uniquePoseNumbers(
   [151, 152, 153, 154, 155, 156, 157, 158, 159, 293, 294, 295, 296, 297, 298, 299, 300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 316, 317, 327, 328, 329, 330, 331, 332, 333, 334, 335, 443, 444, 445, 446, 447, 448, 449, 450, 451, 462, 463, 464, 465, 466, 467, 468, 480, 481, 482, 483, 484, 485, 486, 487, 488, 489, 490, 491, 492, 493, 494, 495, 496, 497, 498, 499, 500, 501, 502, 503, 567, 568, 569, 570, 571, 572, 573, 574, 575, 576, 577, 578, 579, 580, 581, 583, 610, 612, 613, 614, 615, 616, 617, 618],
+  Array.from({ length: 8 }, (_, index) => 1380 + index),
   findPoseNumbersByText(['长城', '城墙', '城楼', '城垛', '垛口', '天安门', '天坛', '祈年殿', '东方明珠', '外滩', '鼓楼', '红墙古建筑', '宫墙', '大金塔', '金塔', '银塔', '白塔', '佛塔', '毛泽东雕塑', '青年毛泽东雕塑'], {
     limit: 160
   })
 )
 const parkGardenPoseNumbers = uniquePoseNumbers(
   [91, 95, 105, 117, 123, 125, 126, 127, 128, 621, 648, 657],
+  Array.from({ length: 9 }, (_, index) => 1266 + index),
+  Array.from({ length: 8 }, (_, index) => 1316 + index),
+  Array.from({ length: 9 }, (_, index) => 1328 + index),
+  Array.from({ length: 9 }, (_, index) => 1346 + index),
   findPoseNumbersByText(['公园', '花园', '花海', '花田', '花丛', '花束', '花店', '樱花', '向日葵', '郁金香', '薰衣草', '银杏', '秋叶', '落叶', '草地', '植物园'])
 )
 const cafePoseNumbers = uniquePoseNumbers(
-  [116, 84, 88, 427, 428, 432, 434, 438, 442, 433, 429, 439, 436, 441, 440, 431, 437, 435, 430, 64, 70, 40]
+  [116, 84, 88, 427, 428, 432, 434, 438, 442, 433, 429, 439, 436, 441, 440, 431, 437, 435, 430, 64, 70, 40],
+  Array.from({ length: 16 }, (_, index) => 973 + index),
+  Array.from({ length: 16 }, (_, index) => 1021 + index)
 )
 const handPropPoseNumbers = uniquePoseNumbers(
   [269, 274, 76, 88, 84, 130, 127, 128, 121, 111, 659, 662, 648, 655],
+  Array.from({ length: 32 }, (_, index) => 973 + index),
+  Array.from({ length: 16 }, (_, index) => 1021 + index),
+  Array.from({ length: 9 }, (_, index) => 1053 + index),
+  Array.from({ length: 16 }, (_, index) => 1062 + index),
+  [1078, 1085, 1089, 1093, 1095, 1103],
+  Array.from({ length: 34 }, (_, index) => 1109 + index),
+  Array.from({ length: 9 }, (_, index) => 1266 + index),
+  Array.from({ length: 8 }, (_, index) => 1316 + index),
+  Array.from({ length: 9 }, (_, index) => 1346 + index),
+  Array.from({ length: 9 }, (_, index) => 1388 + index),
   findPoseNumbersByText(['道具', '手拿', '拿着', '捧花', '捧杯', '捧书', '相机', '书本', '花束', '雨伞', '帽子', '杯子', '银杏叶', '大叶', '包', '行李箱', '扇'], {
     limit: 170
   })
 )
 const stairSittingPoseNumbers = uniquePoseNumbers(
-  [121, 101, 313, 310, 312, 316, 505, 508, 529, 565],
+  [121, 101, 313, 310, 312, 316, 505, 508, 529, 565, 1055, 1056, 1072, 1090, 1108, 1109, 1111, 1112, 1117, 1118, 1119, 1121, 1122, 1124, 1125, 1134, 1136, 1138, 1140],
+  Array.from({ length: 32 }, (_, index) => 973 + index),
+  Array.from({ length: 16 }, (_, index) => 1021 + index),
   findPoseNumbersByText(['坐姿', '坐在', '坐地', '侧坐', '端坐', '盘坐', '倚坐', '坐靠', '静坐', '石凳', '长椅', '椅子'], {
     limit: 150
   })
 )
 const crouchLyingPoseNumbers = uniquePoseNumbers(
-  [273, 274, 110, 115, 281, 312, 316, 652, 653, 655, 664],
+  [273, 274, 110, 115, 281, 312, 316, 652, 653, 655, 664, 1056, 1072, 1090, 1109, 1118, 1119, 1124, 1138],
   findPoseNumbersByText(['蹲姿', '半蹲', '蹲在', '低位蹲', '跪地', '跪坐', '单膝跪', '侧跪', '趴', '躺', '斜躺', '倒躺', '侧卧'])
 )
 
@@ -206,10 +229,25 @@ replaceCategoryDefinition('travel-back', {
   preferredPoseNumbers: [17, 57, 100, 104, 99, 97, 504, 357, 480, 488, 621, 657],
   poseNumbers: uniquePoseNumbers(
     [17, 57, 100, 104, 99, 97, 504, 357, 480, 488, 621, 657],
+    Array.from({ length: 16 }, (_, index) => 957 + index),
+    Array.from({ length: 16 }, (_, index) => 1037 + index),
+    Array.from({ length: 99 }, (_, index) => 1167 + index),
+    Array.from({ length: 28 }, (_, index) => 1284 + index),
+    Array.from({ length: 18 }, (_, index) => 1328 + index),
     seaLakePoseNumbers.slice(0, 80),
     oldTownPoseNumbers.slice(0, 70),
     landmarkPoseNumbers.slice(0, 70),
     parkGardenPoseNumbers.slice(0, 70)
+  )
+})
+
+const existingBackViewDefinition = categoryDefinitions.find((category) => category.id === 'back-view')
+replaceCategoryDefinition('back-view', {
+  ...existingBackViewDefinition,
+  poseNumbers: uniquePoseNumbers(
+    existingBackViewDefinition.poseNumbers,
+    Array.from({ length: 16 }, (_, index) => 1037 + index),
+    [1063, 1064, 1065, 1066, 1068, 1069, 1073, 1074, 1076, 1077, 1083, 1084, 1092, 1102, 1120, 1123]
   )
 })
 
@@ -284,6 +322,17 @@ insertCategoryAfter('sitting-life', {
   poseNumbers: crouchLyingPoseNumbers
 })
 
+// Generated imports declare a primary category in metadata. Keep category pages
+// in sync automatically so future import modules do not need another ID list.
+categoryDefinitions.forEach((category) => {
+  category.poseNumbers = uniquePoseNumbers(
+    category.poseNumbers,
+    poseTemplates
+      .filter((pose) => pose.categoryId === category.id)
+      .map((pose) => getPoseNumber(pose.id))
+  )
+})
+
 const preferredCategoryOrder = [
   'outfit-standing',
   'travel-back',
@@ -320,7 +369,7 @@ const strictCategoryProfiles = {
     excludeTerms: ['自拍', '半身', '蹲姿', '趴', '躺']
   },
   'travel-back': {
-    includeTerms: ['景点打卡', '旅行打卡', '旅行景点', '到此一游', '游客照', '雕塑', '广场', '景区', '纪念照'],
+    includeTerms: ['景点打卡', '旅行打卡', '旅行景点', '旅行', '旅拍', '到此一游', '游客照', '雕塑', '广场', '景区', '纪念照', '沙漠', '沙丘', '戈壁', '草原', '雪山', '高原', '旷野', '山湖'],
     excludeTerms: ['咖啡馆', '咖啡店', '咖啡厅', '室内', '卧室', '自拍']
   },
   'sea-lake': {
@@ -354,7 +403,7 @@ const strictCategoryProfiles = {
     excludeTerms: ['自拍', '正面']
   },
   'props-action': {
-    includeTerms: ['道具', '手拿', '拿着', '捧花', '捧杯', '捧书', '相机', '书本', '花束', '雨伞', '帽子', '杯子', '银杏叶', '叶子', '包', '行李箱', '扇'],
+    includeTerms: ['道具', '手拿', '拿着', '捧花', '捧杯', '捧书', '相机', '书本', '花束', '雨伞', '帽子', '杯子', '饮品', '甜品', '手机', '筷子', '叉子', '勺子', '碗', '餐盘', '面条', '西瓜', '银杏叶', '叶子', '包', '行李箱', '扇'],
     excludeTerms: []
   },
   'cafe-table': {
@@ -363,7 +412,7 @@ const strictCategoryProfiles = {
     manualOnly: true
   },
   'sitting-life': {
-    includeTerms: ['坐姿', '坐在', '坐地', '侧坐', '端坐', '盘坐', '倚坐', '坐靠', '静坐', '长椅坐', '椅上', '椅边', '椅背', '石凳', '野餐'],
+    includeTerms: ['坐姿', '坐在', '坐地', '侧坐', '端坐', '盘坐', '倚坐', '坐靠', '静坐', '长椅坐', '椅上', '椅边', '椅背', '石凳', '野餐', '桌边', '桌前', '餐桌'],
     excludeTerms: ['站在', '站立', '侧立', '站姿', '行走', '漫步', '迈步', '扶栏', '倚靠', '蹲姿', '趴', '躺'],
     excludePoseNumbers: [141, 227, 233, 234, 301, 360, 362, 367, 368, 370, 372, 373, 375, 376, 379, 381, 383, 388]
   },
@@ -386,7 +435,11 @@ const strictCategoryProfiles = {
   }
 }
 
-const getPoseByNumber = (number) => poseTemplates.find((pose) => getPoseNumber(pose.id) === number)
+const poseNumberMap = poseTemplates.reduce((map, pose) => {
+  map.set(getPoseNumber(pose.id), pose)
+  return map
+}, new Map())
+const getPoseByNumber = (number) => poseNumberMap.get(number)
 const getStrictPoseText = (number) => getPoseSearchText(getPoseByNumber(number))
 
 const countMatchedTerms = (searchText, terms = []) => (

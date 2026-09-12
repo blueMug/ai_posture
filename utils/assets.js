@@ -3,22 +3,26 @@ const USE_REMOTE_ASSETS = true
 const REMOTE_ASSET_SOURCE = 'gitee'
 const JSDELIVR_ASSET_BASE = 'https://cdn.jsdelivr.net/gh/blueMug/posture_assets@main'
 const GITEE_ASSET_BASE = 'https://gitee.com/blueMug/posture_assets/raw/main'
+const JSDELIVR_ASSET_BASE_V2 = 'https://cdn.jsdelivr.net/gh/blueMug/posture_assets_v2@main'
+const GITEE_ASSET_BASE_V2 = 'https://gitee.com/blueMug/posture_assets_v2/raw/main'
+const REMOTE_ASSET_VERSION = '02f7e25'
+const REMOTE_ASSET_VERSION_V2 = '4828e28'
+const V2_POSE_NUMBER_START = 1143
 const REMOTE_ASSET_BASES = {
   jsdelivr: JSDELIVR_ASSET_BASE,
   gitee: GITEE_ASSET_BASE
 }
+const REMOTE_ASSET_BASES_V2 = {
+  jsdelivr: JSDELIVR_ASSET_BASE_V2,
+  gitee: GITEE_ASSET_BASE_V2
+}
 const REMOTE_ASSET_BASE = REMOTE_ASSET_BASES[REMOTE_ASSET_SOURCE] || JSDELIVR_ASSET_BASE
-const REMOTE_ASSET_BASE_LIST = Array.from(new Set(Object.values(REMOTE_ASSET_BASES)))
+const REMOTE_ASSET_BASE_V2 = REMOTE_ASSET_BASES_V2[REMOTE_ASSET_SOURCE] || JSDELIVR_ASSET_BASE_V2
+const REMOTE_ASSET_BASE_LIST = Array.from(new Set([
+  ...Object.values(REMOTE_ASSET_BASES),
+  ...Object.values(REMOTE_ASSET_BASES_V2)
+]))
 const LOCAL_PACKED_PREFIXES = []
-const SHARE_IMAGE_DEMO_FALLBACK_RANGES = [
-  [136, 150],
-  [160, 175],
-  [192, 264],
-  [318, 326],
-  [567, 567],
-  [569, 590],
-  [612, 620]
-]
 const REMOTE_ONLY_ASSET_PATHS = new Set([
   '/static/pose_pairs/custom74/custom74_r01_g01_demo.jpg',
   '/static/pose_thumbs/custom74/custom74_r01_g01_thumb.jpg'
@@ -138,15 +142,17 @@ const HOME_LOCAL_ASSET_FOLDERS = new Set([
   'custom131',
 ])
 const isRemoteUrl = (path) => /^https?:\/\//.test(path)
+const getPoseNumberFromPath = (path = '') => {
+  const match = String(path).match(/\/custom(\d+)\//)
+
+  return match ? Number(match[1]) : 0
+}
+const usesV2AssetRepo = (path = '') => getPoseNumberFromPath(path) >= V2_POSE_NUMBER_START
 const getPoseFolder = (path) => {
-  const match = path.match(/^\/static\/(?:pose_(?:pairs|guides|thumbs)|recommend_(?:guides|thumbs)|home_guides)\/([^/]+)\//)
+  const match = path.match(/^\/static\/(?:pose_(?:pairs|guides|thumbs)|recommend_guides|home_guides)\/([^/]+)\//)
   return match ? match[1] : ''
 }
 const isPackedLocalAsset = (path) => {
-  if (path.startsWith('/static/recommend_thumbs/')) {
-    return false
-  }
-
   return LOCAL_PACKED_PREFIXES.some((prefix) => path.startsWith(prefix))
 }
 const isPoseContour = (path) => (
@@ -160,23 +166,8 @@ const isPoseContour = (path) => (
 )
 const isPoseThumb = (path) => (
   (path.startsWith('/static/pose_thumbs/') && /_thumb\.jpg$/.test(path)) ||
-  (path.startsWith('/static/recommend_thumbs/') && /_thumb\.jpg$/.test(path)) ||
   (path.startsWith('/static/pose_pairs/') && /_demo\.jpg$/.test(path))
 )
-const getCustomPoseNumberFromPath = (path = '') => {
-  const match = String(path).match(/\/custom(\d+)\//)
-
-  return match ? Number(match[1]) : 0
-}
-const shouldUseDemoForShareImage = (path = '') => {
-  if (!/^\/static\/share_images\/custom\d+\/custom\d+_r01_g01_share\.jpg$/.test(path)) {
-    return false
-  }
-
-  const poseNumber = getCustomPoseNumberFromPath(path)
-
-  return SHARE_IMAGE_DEMO_FALLBACK_RANGES.some(([start, end]) => poseNumber >= start && poseNumber <= end)
-}
 const normalizeRemoteAssetPath = (path = '') => {
   if (isPoseContour(path)) {
     return path
@@ -185,14 +176,11 @@ const normalizeRemoteAssetPath = (path = '') => {
       .replace('/static/home_guides/', '/static/pose_pairs/')
   }
 
-  if (shouldUseDemoForShareImage(path)) {
-    return path
-      .replace('/static/share_images/', '/static/pose_pairs/')
-      .replace(/_share\.jpg$/, '_demo.jpg')
+  if (path.startsWith('/static/pose_pairs/') && /_thumb\.jpg$/.test(path)) {
+    return path.replace('/static/pose_pairs/', '/static/pose_thumbs/')
   }
 
   return path
-    .replace('/static/recommend_thumbs/', '/static/pose_thumbs/')
 }
 const toHomeGuidePath = (path = '') => (
   path
@@ -207,9 +195,14 @@ const normalizeAssetPath = (path) => {
 
   const matchedBase = REMOTE_ASSET_BASE_LIST.find((base) => path.startsWith(`${base}/`))
 
-  return matchedBase
-    ? `/${path.slice(matchedBase.length + 1)}`
-    : path
+  if (!matchedBase) {
+    return path
+  }
+
+  const remotePath = path.slice(matchedBase.length + 1)
+  const assetPath = remotePath.split(/[?#]/, 1)[0]
+
+  return `/${assetPath}`
 }
 
 const cdnAssetUrl = (path) => {
@@ -218,8 +211,14 @@ const cdnAssetUrl = (path) => {
   }
 
   const remotePath = normalizeRemoteAssetPath(path)
+  const useV2Repo = usesV2AssetRepo(remotePath)
+  const remoteBase = useV2Repo ? REMOTE_ASSET_BASE_V2 : REMOTE_ASSET_BASE
+  const remoteVersion = useV2Repo ? REMOTE_ASSET_VERSION_V2 : REMOTE_ASSET_VERSION
+  const url = `${remoteBase}/${remotePath.replace(/^\/+/, '')}`
 
-  return `${REMOTE_ASSET_BASE}/${remotePath.replace(/^\/+/, '')}`
+  return remoteVersion
+    ? `${url}${url.includes('?') ? '&' : '?'}v=${remoteVersion}`
+    : url
 }
 
 const assetUrl = (path) => {
@@ -264,12 +263,11 @@ const homeLocalAssetUrl = (path) => {
   }
 
   if (isPoseThumb(localPath)) {
-    const recommendThumbPath = localPath
-      .replace('/static/pose_pairs/', '/static/recommend_thumbs/')
-      .replace('/static/pose_thumbs/', '/static/recommend_thumbs/')
+    const poseThumbPath = localPath
+      .replace('/static/pose_pairs/', '/static/pose_thumbs/')
       .replace(/_demo\.jpg$/, '_thumb.jpg')
 
-    return cdnAssetUrl(recommendThumbPath)
+    return cdnAssetUrl(poseThumbPath)
   }
 
   return assetUrl(localPath)
@@ -284,7 +282,13 @@ module.exports = {
   normalizeAssetPath,
   USE_REMOTE_ASSETS,
   REMOTE_ASSET_SOURCE,
+  REMOTE_ASSET_VERSION,
+  REMOTE_ASSET_VERSION_V2,
   REMOTE_ASSET_BASE,
+  REMOTE_ASSET_BASE_V2,
   GITEE_ASSET_BASE,
-  JSDELIVR_ASSET_BASE
+  GITEE_ASSET_BASE_V2,
+  JSDELIVR_ASSET_BASE,
+  JSDELIVR_ASSET_BASE_V2,
+  V2_POSE_NUMBER_START
 }

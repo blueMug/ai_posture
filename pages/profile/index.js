@@ -240,7 +240,7 @@ Page({
     }
 
     wx.navigateTo({
-      url: `/pages/pose-detail/index?poseId=${poseId}`
+      url: `/subpackages/pose-detail/index?poseId=${poseId}`
     })
   },
 
@@ -258,13 +258,13 @@ Page({
     }
 
     wx.navigateTo({
-      url: `/pages/camera/index?poseId=${poseId}`
+      url: `/subpackages/camera/index?poseId=${poseId}`
     })
   },
 
   openPrivacy() {
     wx.navigateTo({
-      url: '/pages/privacy/index'
+      url: '/subpackages/privacy/index'
     })
   },
 
@@ -280,7 +280,7 @@ Page({
     }
 
     wx.navigateTo({
-      url: '/pages/feedback/index'
+      url: '/subpackages/feedback/index'
     })
   },
 

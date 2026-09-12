@@ -39,7 +39,6 @@ const toGalleryThumbnailImage = (assetPath = '') => {
   const galleryPath = toLocalAssetPath(assetPath)
     .replace('/static/pose_pairs/', '/static/gallery_thumbs/')
     .replace('/static/pose_thumbs/', '/static/gallery_thumbs/')
-    .replace('/static/recommend_thumbs/', '/static/gallery_thumbs/')
 
   if (/_demo\.jpg$/.test(galleryPath)) {
     return galleryPath.replace(/_demo\.jpg$/, '_gallery_thumb.jpg')
@@ -56,7 +55,6 @@ const toFallbackThumbnailImage = (assetPath = '') => {
   const thumbPath = toLocalAssetPath(assetPath)
     .replace('/static/pose_pairs/', '/static/pose_thumbs/')
     .replace('/static/gallery_thumbs/', '/static/pose_thumbs/')
-    .replace('/static/recommend_thumbs/', '/static/pose_thumbs/')
 
   if (/_demo\.jpg$/.test(thumbPath)) {
     return thumbPath.replace(/_demo\.jpg$/, '_thumb.jpg')
@@ -508,7 +506,7 @@ Page({
     }
 
     wx.navigateTo({
-      url: `/pages/pose-detail/index?poseId=${poseId}`
+      url: `/subpackages/pose-detail/index?poseId=${poseId}`
     })
   },
 
@@ -526,7 +524,7 @@ Page({
     }
 
     wx.navigateTo({
-      url: `/pages/camera/index?poseId=${poseId}`
+      url: `/subpackages/camera/index?poseId=${poseId}`
     })
   },
 

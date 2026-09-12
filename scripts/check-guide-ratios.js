@@ -2,7 +2,7 @@ const fs = require('fs')
 const { execFileSync } = require('child_process')
 const { poseTemplates } = require('../utils/poses')
 const { normalizeAssetPath } = require('../utils/assets')
-const { getGuideImageSize } = require('../utils/guideImageSizes')
+const { getGuideImageSize } = require('../subpackages/camera/guideImageSizes')
 
 const RATIO_DIFF_THRESHOLD = 0.01
 
@@ -45,7 +45,8 @@ const readPngSizeFromBuffer = (buffer) => {
 const readHeadPngSize = (file) => {
   try {
     return readPngSizeFromBuffer(execFileSync('git', ['show', `HEAD:${file}`], {
-      maxBuffer: 20 * 1024 * 1024
+      maxBuffer: 20 * 1024 * 1024,
+      stdio: ['ignore', 'pipe', 'ignore']
     }))
   } catch (error) {
     return null

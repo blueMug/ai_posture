@@ -1,5 +1,5 @@
 const { poseTemplates, poseCategories } = require('../../utils/poses')
-const { cacheImageFields, cachePoseCategories, queueImagePreload } = require('../../utils/imageCache')
+const { cacheImageFields, queueImagePreload } = require('../../utils/imageCache')
 const {
   cdnAssetUrl,
   homeLocalAssetUrl,
@@ -25,6 +25,7 @@ const { buildHomeShare } = require('../../utils/shareCopy')
 
 const GALLERY_TARGET_CATEGORY_KEY = 'galleryTargetCategoryId'
 const RECOMMEND_LIMIT_PER_CATEGORY = 4
+const SEARCH_RESULT_LIMIT_PER_CATEGORY = 8
 const SCENE_ADVISOR_PLAN_LIMIT = 3
 const HOME_TOPIC_PREVIEW_LIMIT = 4
 const HOME_SCENE_TOPIC_IDS = [
@@ -35,8 +36,8 @@ const HOME_SCENE_TOPIC_IDS = [
 ]
 const HOME_LANDMARK_TOPIC_IDS = [
   'imported-tiandan',
-  'shanghai-bund',
-  'imported-yinta',
+  'tobecheck-shanghai-landmarks',
+  'tobecheck-greece-coast',
   'changsha-orange-island'
 ]
 const HOME_TOPIC_CARD_COPY = {
@@ -45,8 +46,8 @@ const HOME_TOPIC_CARD_COPY = {
   'imported-caodi': '草地坐姿、躺姿和撑地动作，拍出松弛自然感。',
   'beach-vacation': '沙滩、海浪和背影拍法，适合旅行度假氛围照。',
   'imported-tiandan': '祈年殿、红墙和栏杆构图，古建筑合影更稳。',
-  'shanghai-bund': '东方明珠、江景和街头机位，外滩夜景白天都能拍。',
-  'imported-yinta': '白塔、镜面水景和拱门构图，芒市银塔更容易出片。',
+  'tobecheck-shanghai-landmarks': '东方明珠、外滩和陆家嘴高楼，上海地标一次拍全。',
+  'tobecheck-greece-coast': '白色建筑、石堤和蓝海构图，拍出简洁地中海旅拍感。',
   'changsha-orange-island': '雕塑前、江边和广场打卡，橘子洲头照着拍更稳。'
 }
 const DEFAULT_PAGE_TOP_PX = 52
@@ -651,14 +652,16 @@ const buildSearchResultCategories = (keyword = '') => {
 
   return poseCategories
     .map((category) => {
-      const matchedPoses = category.poses
+      const allMatchedPoses = category.poses
         .filter((pose) => isPoseMatchedSearch(pose, category, query))
+      const matchedPoses = allMatchedPoses
+        .slice(0, SEARCH_RESULT_LIMIT_PER_CATEGORY)
         .map(withHomeCardAssets)
         .filter((pose) => pose.thumbnailImage)
 
       return {
         ...category,
-        totalPoseCount: matchedPoses.length,
+        totalPoseCount: allMatchedPoses.length,
         poses: matchedPoses
       }
     })
@@ -836,7 +839,9 @@ Page({
       landmarkTopics: buildLandmarkTopicCards(),
       typeEntries: buildTypeEntries()
     })
+
     this.refreshDailyRecommend()
+
     this.setData({
       poseCategories: [],
       hasSearchResult: true
@@ -896,30 +901,13 @@ Page({
   },
 
   setPoseCategories(nextCategories, extraData = {}) {
-    const requestId = (this.poseCategoryRequestId || 0) + 1
-    this.poseCategoryRequestId = requestId
     const favoritePoseIds = extraData.favoritePoseIds || getFavoritePoseIds()
     const nextCategoriesWithFavorites = withFavoriteStateCategories(nextCategories, favoritePoseIds)
 
-    if (!nextCategoriesWithFavorites.length) {
-      this.setData({
-        ...extraData,
-        favoritePoseIds,
-        poseCategories: nextCategoriesWithFavorites
-      })
-      return
-    }
-
-    cachePoseCategories(nextCategoriesWithFavorites, ['thumbnailImage']).then((cachedCategories) => {
-      if (this.poseCategoryRequestId !== requestId) {
-        return
-      }
-
-      this.setData({
-        ...extraData,
-        favoritePoseIds,
-        poseCategories: cachedCategories
-      }, () => this.queueHomeImagePreload())
+    this.setData({
+      ...extraData,
+      favoritePoseIds,
+      poseCategories: nextCategoriesWithFavorites
     })
   },
 
@@ -1024,7 +1012,7 @@ Page({
     }
 
     wx.navigateTo({
-      url: `/pages/scene-topic/index?topicId=${topicId}`
+      url: `/subpackages/scene-topic/index?topicId=${topicId}`
     })
   },
 
@@ -1033,7 +1021,7 @@ Page({
     const type = topicType === 'landmark' ? 'landmark' : 'scene'
 
     wx.navigateTo({
-      url: `/pages/topic-library/index?type=${type}`
+      url: `/subpackages/topic-library/index?type=${type}`
     })
   },
 
@@ -1145,7 +1133,7 @@ Page({
     }
 
     wx.navigateTo({
-      url: `/pages/pose-detail/index?poseId=${poseId}`
+      url: `/subpackages/pose-detail/index?poseId=${poseId}`
     })
   },
 
@@ -1165,7 +1153,7 @@ Page({
     const shouldUseHomeLocalAssets = homeLocal === '1' && isHomeLocalPose({ id: poseId })
 
     wx.navigateTo({
-      url: `/pages/camera/index?poseId=${poseId}${shouldUseHomeLocalAssets ? '&homeLocal=1' : ''}`
+      url: `/subpackages/camera/index?poseId=${poseId}${shouldUseHomeLocalAssets ? '&homeLocal=1' : ''}`
     })
   },
 

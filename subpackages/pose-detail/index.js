@@ -1102,7 +1102,7 @@ Page({
       : ''
 
     wx.navigateTo({
-      url: `/pages/camera/index?poseId=${this.data.poseId}${topicQuery}`
+      url: `/subpackages/camera/index?poseId=${this.data.poseId}${topicQuery}`
     })
   },
 
@@ -1309,7 +1309,7 @@ Page({
         poseId,
         role: 'photographer',
         preferredImage,
-        path: `/pages/camera/index?poseId=${poseId}`
+        path: `/subpackages/camera/index?poseId=${poseId}`
       })
     }
 

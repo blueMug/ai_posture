@@ -3,6 +3,17 @@ const { homeLocalAssetUrl } = require('../../utils/assets')
 const { sceneTopics, isLandmarkTopic } = require('../../utils/sceneTopics')
 
 const DEFAULT_PAGE_TOP_PX = 52
+const DEFERRED_DAILY_TOPIC_IDS = new Set([
+  'old-town-street',
+  'imported-hongqiang'
+])
+const DEFERRED_LANDMARK_TOPIC_IDS = new Set([
+  'imported-heshun',
+  'imported-mangshi',
+  'imported-rehai',
+  'imported-tengchong',
+  'imported-yinta'
+])
 
 const poseTemplateMap = poseTemplates.reduce((map, pose) => {
   map.set(pose.id, pose)
@@ -48,11 +59,20 @@ const getTopicPoseCount = (topic) => {
   return new Set(poseIds.filter((poseId) => poseTemplateMap.has(poseId))).size
 }
 
+const moveDeferredTopicsBack = (topics, deferredTopicIds) => [
+  ...topics.filter((topic) => !deferredTopicIds.has(topic.id)),
+  ...topics.filter((topic) => deferredTopicIds.has(topic.id))
+]
+
 const buildTopicCards = (type = 'scene') => {
   const shouldUseLandmark = type === 'landmark'
-
-  return sceneTopics
+  const matchedTopics = sceneTopics
     .filter((topic) => isLandmarkTopic(topic.id) === shouldUseLandmark)
+  const orderedTopics = shouldUseLandmark
+    ? moveDeferredTopicsBack(matchedTopics, DEFERRED_LANDMARK_TOPIC_IDS)
+    : moveDeferredTopicsBack(matchedTopics, DEFERRED_DAILY_TOPIC_IDS)
+
+  return orderedTopics
     .map((topic) => ({
       id: topic.id,
       title: topic.shortTitle || topic.title,
@@ -108,7 +128,7 @@ Page({
     }
 
     wx.navigateTo({
-      url: `/pages/scene-topic/index?topicId=${topicId}`
+      url: `/subpackages/scene-topic/index?topicId=${topicId}`
     })
   },
 

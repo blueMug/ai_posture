@@ -25,13 +25,17 @@ Main data flow:
 - `project.config.json`: mini app packaging ignores many `static/*` asset folders.
 - `docs/add_pose_image_guide.md`: longer project-specific maintenance notes.
 
-Remote asset base:
+Remote asset repositories:
 
 ```js
+// custom1 through custom1142
 https://gitee.com/blueMug/posture_assets/raw/main
+
+// custom1143 and all later pose numbers
+https://gitee.com/blueMug/posture_assets_v2/raw/main
 ```
 
-Many local `static/...` directories are ignored from mini app packaging. New pose photos, guide contours, thumbnails, gallery thumbnails, and share images must be published to the remote Gitee repo `blueMug/posture_assets` with the same `static/...` path.
+Many local `static/...` directories are ignored from mini app packaging. Pose photos, guide contours, thumbnails, gallery thumbnails, and share images must be published with the same `static/...` path. Treat `custom1143` as the permanent repository boundary: assets through `custom1142` stay in `blueMug/posture_assets`; assets starting at `custom1143` go to `blueMug/posture_assets_v2`. Never copy the old repository history into v2.
 
 ## Required Clarifications
 
@@ -267,20 +271,24 @@ Tune `threshold` only after visually checking the output. The goal is not to pre
 
 9. Handle the remote Gitee asset repo.
 
-   Ensure the same files exist in:
+   Choose the repository from the numeric pose ID before copying or pushing:
 
    ```text
-   blueMug/posture_assets/static/...
+   custom1-custom1142  -> blueMug/posture_assets/static/...
+   custom1143 onward  -> blueMug/posture_assets_v2/static/...
    ```
 
-   The local repo path and Gitee path should match after removing the leading slash, for example:
+   Both repositories use the same directory structure. The local path and Gitee path should match after removing the leading slash, for example:
 
    ```text
    /static/pose_pairs/custom106/custom106_r01_g01_contour.png
    https://gitee.com/blueMug/posture_assets/raw/main/static/pose_pairs/custom106/custom106_r01_g01_contour.png
+
+   /static/pose_pairs/custom1143/custom1143_r01_g01_contour.png
+   https://gitee.com/blueMug/posture_assets_v2/raw/main/static/pose_pairs/custom1143/custom1143_r01_g01_contour.png
    ```
 
-   If you cannot access or update the remote repo, explicitly report that the code is wired locally but Gitee publication remains pending.
+   Do not push `custom1143` or later assets to the legacy repository. Update the matching cache version in `utils/assets.js`: `REMOTE_ASSET_VERSION` for the legacy repository or `REMOTE_ASSET_VERSION_V2` for v2. If you cannot access or update the selected remote repo, explicitly report that the code is wired locally but Gitee publication remains pending.
 
 10. Verify.
 
@@ -321,7 +329,8 @@ Tune `threshold` only after visually checking the output. The goal is not to pre
 - Changing a guide image without updating `utils/guideImageSizes.js`.
 - Treating camera `3:4` preview as a requirement that every contour PNG canvas must be `3:4`.
 - Forgetting that many `static/*` folders are ignored by mini app packaging and must exist in the remote Gitee asset repo.
-- Assuming local existence implies production availability. If `assetUrl()` maps a path to Gitee, production depends on `blueMug/posture_assets`.
+- Assuming local existence implies production availability. If `assetUrl()` maps a path to Gitee, production depends on the repository selected by the `custom1143` boundary.
+- Publishing `custom1143` or later assets to the legacy `blueMug/posture_assets` repository instead of `blueMug/posture_assets_v2`.
 - Adding a category but leaving the number in `removedPoseNumbers`.
 
 ## Response Expectations
@@ -333,5 +342,5 @@ When using this skill, finish with:
 - Contour transparency status, including whether conversion was needed.
 - Structured metadata, keyword maps, and category placement changed.
 - Code/data files changed.
-- Gitee publication status for `blueMug/posture_assets`.
+- Gitee publication status for the repository selected by the `custom1143` boundary.
 - Verification commands run and results.

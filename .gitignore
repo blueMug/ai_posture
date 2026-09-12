@@ -4,3 +4,4 @@ miniprogram_npm/
 project.private.config.json
 *.log
 tmp/
+pose_generation_workspace/

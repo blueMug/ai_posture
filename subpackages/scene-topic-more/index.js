@@ -23,7 +23,6 @@ const toGalleryThumbnailImage = (assetPath = '') => {
   const galleryPath = toLocalAssetPath(assetPath)
     .replace('/static/pose_pairs/', '/static/gallery_thumbs/')
     .replace('/static/pose_thumbs/', '/static/gallery_thumbs/')
-    .replace('/static/recommend_thumbs/', '/static/gallery_thumbs/')
 
   if (/_demo\.jpg$/.test(galleryPath)) {
     return galleryPath.replace(/_demo\.jpg$/, '_gallery_thumb.jpg')
@@ -40,7 +39,6 @@ const toFallbackThumbnailImage = (assetPath = '') => {
   const thumbPath = toLocalAssetPath(assetPath)
     .replace('/static/pose_pairs/', '/static/pose_thumbs/')
     .replace('/static/gallery_thumbs/', '/static/pose_thumbs/')
-    .replace('/static/recommend_thumbs/', '/static/pose_thumbs/')
 
   if (/_demo\.jpg$/.test(thumbPath)) {
     return thumbPath.replace(/_demo\.jpg$/, '_thumb.jpg')
@@ -234,7 +232,7 @@ Page({
     wx.navigateBack({
       fail: () => {
         wx.redirectTo({
-          url: `/pages/scene-topic/index?topicId=${this.data.topic ? this.data.topic.id : ''}`
+          url: `/subpackages/scene-topic/index?topicId=${this.data.topic ? this.data.topic.id : ''}`
         })
       }
     })
@@ -259,7 +257,7 @@ Page({
     }
 
     wx.navigateTo({
-      url: `/pages/pose-detail/index?poseId=${poseId}&topicId=${this.data.topic.id}`
+      url: `/subpackages/pose-detail/index?poseId=${poseId}&topicId=${this.data.topic.id}`
     })
   },
 
@@ -308,7 +306,7 @@ Page({
 
     return {
       title: topic.shareTitle || topic.title || '更多日常场景拍照姿势',
-      path: `/pages/scene-topic-more/index?topicId=${topic.id || ''}`,
+      path: `/subpackages/scene-topic-more/index?topicId=${topic.id || ''}`,
       imageUrl: topic.shareImage || topic.cachedShareImage || ''
     }
   }

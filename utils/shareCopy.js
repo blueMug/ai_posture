@@ -16,8 +16,8 @@ const fillTemplate = (template = '', values = {}) => Object.keys(values).reduce(
   text.replace(new RegExp(`\\{${key}\\}`, 'g'), values[key])
 ), template)
 const getPoseShareImage = (pose = {}, fallbackImage = '', preferredImage = '') => (
-  pose.shareImage ||
   pose.cachedShareImage ||
+  pose.shareImage ||
   preferredImage ||
   pose.thumbnailImage ||
   pose.detailImage ||
@@ -127,7 +127,7 @@ const buildPoseShare = (pose = {}, options = {}) => {
   const poseName = getPoseName(pose)
   const poseId = options.poseId || pose.id || ''
   const sceneTitle = compactText(options.sceneTitle)
-  const path = options.path || (poseId ? `/pages/pose-detail/index?poseId=${poseId}` : '/pages/pose-gallery/index')
+  const path = options.path || (poseId ? `/subpackages/pose-detail/index?poseId=${poseId}` : '/pages/pose-gallery/index')
   const roleTemplates = POSE_SHARE_TITLES[options.role] || POSE_SHARE_TITLES.detail
   const title = options.title || fillTemplate(pickRandom(roleTemplates), {
     poseName,
@@ -151,7 +151,7 @@ const buildPhotographerTask = (pose = {}, options = {}) => {
     title: fillTemplate(pickRandom(PHOTOGRAPHER_TASK_TITLES), { poseName }),
     desc: '发给拍照搭子，对方点开相机就能按轮廓对齐。',
     buttonText: '发搭子',
-    path: poseId ? `/pages/camera/index?poseId=${poseId}` : '/pages/pose-gallery/index'
+    path: poseId ? `/subpackages/camera/index?poseId=${poseId}` : '/pages/pose-gallery/index'
   }
 }
 
@@ -164,9 +164,9 @@ const buildSceneShare = (topic = {}) => {
 
   return {
     title,
-    path: `/pages/scene-topic/index?topicId=${topic.id || ''}`,
-    imageUrl: topic.shareImage ||
-      topic.cachedShareImage ||
+    path: `/subpackages/scene-topic/index?topicId=${topic.id || ''}`,
+    imageUrl: topic.cachedShareImage ||
+      topic.shareImage ||
       topic.coverImage ||
       topic.preferredShareImage ||
       DEFAULT_HOME_SHARE_IMAGE
@@ -191,8 +191,8 @@ const buildResultShareCard = (previewPose = {}, previewShareSource = {}) => {
       desc: previewShareSource.reason || '不知道怎么拍时，直接选场景照着拍。',
       buttonText: '分享拍法',
       path: poseId
-        ? `/pages/pose-detail/index?poseId=${poseId}&topicId=${topicId}`
-        : `/pages/scene-topic/index?topicId=${topicId}`
+        ? `/subpackages/pose-detail/index?poseId=${poseId}&topicId=${topicId}`
+        : `/subpackages/scene-topic/index?topicId=${topicId}`
     }
   }
 
@@ -203,7 +203,7 @@ const buildResultShareCard = (previewPose = {}, previewShareSource = {}) => {
       title: fillTemplate(pickRandom(RESULT_CARD_TITLES), { poseName }),
       desc: '想要同款效果，点开直接照着姿势拍。',
       buttonText: '分享同款',
-      path: `/pages/pose-detail/index?poseId=${poseId}`
+      path: `/subpackages/pose-detail/index?poseId=${poseId}`
     }
   }
 

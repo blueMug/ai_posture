@@ -6,7 +6,7 @@ const { isPoseFavorite, recordPoseUsage } = require('../../utils/userData')
 const { ensurePrivacyNotice, hasAcceptedPrivacyNotice } = require('../../utils/privacy')
 const { cacheFavoritePoseAssets } = require('../../utils/favoriteAssetCache')
 const { SCENE_TOPIC_DETAIL_KEY, getSceneTopic, sceneTopics } = require('../../utils/sceneTopics')
-const { getGuideImageSize } = require('../../utils/guideImageSizes')
+const { getGuideImageSize } = require('./guideImageSizes')
 
 const GUIDE_CONFIRM_STORAGE_KEY = 'keepGuideForConfirm'
 const GUIDE_MODE_STORAGE_KEY = 'cameraGuideMode'
@@ -18,7 +18,7 @@ const GALLERY_SCROLL_TOP_KEY = 'galleryScrollTopOnShow'
 const CACHE_TEMPLATE_SUPPORT_IMAGE_FIELDS = ['thumbnailImage']
 const POSE_GALLERY_ROUTE = 'pages/pose-gallery/index'
 const POSE_GALLERY_URL = `/${POSE_GALLERY_ROUTE}`
-const SCENE_TOPIC_MORE_ROUTE = 'pages/scene-topic-more/index'
+const SCENE_TOPIC_MORE_ROUTE = 'subpackages/scene-topic-more/index'
 const CAMERA_MIN_ZOOM = 1
 const CAMERA_DEFAULT_MAX_ZOOM = 10
 const GUIDE_FALLBACK_MAX_OFFSET_X = 120
@@ -195,7 +195,6 @@ const toGalleryThumbnailImage = (src = '') => {
   const galleryPath = localStaticPath
     .replace('/static/pose_pairs/', '/static/gallery_thumbs/')
     .replace('/static/pose_thumbs/', '/static/gallery_thumbs/')
-    .replace('/static/recommend_thumbs/', '/static/gallery_thumbs/')
 
   if (/_demo\.jpg$/.test(galleryPath)) {
     return galleryPath.replace(/_demo\.jpg$/, '_gallery_thumb.jpg')
@@ -1800,10 +1799,10 @@ Page({
     }
 
     wx.redirectTo({
-      url: `/pages/scene-topic-more/index?topicId=${topicId}`,
+      url: `/subpackages/scene-topic-more/index?topicId=${topicId}`,
       fail: () => {
         wx.navigateTo({
-          url: `/pages/scene-topic-more/index?topicId=${topicId}`,
+          url: `/subpackages/scene-topic-more/index?topicId=${topicId}`,
           fail: () => {
             wx.removeStorageSync(GALLERY_TARGET_CATEGORY_KEY)
             wx.setStorageSync(GALLERY_SCROLL_TOP_KEY, true)
@@ -1987,7 +1986,7 @@ Page({
         }
 
         wx.navigateTo({
-          url: '/pages/preview/index',
+          url: '/subpackages/preview/index',
           complete: () => {
             this.finishCapturing()
           }
@@ -2050,7 +2049,7 @@ Page({
 
   openPreviewForCapturedPhoto() {
     wx.navigateTo({
-      url: '/pages/preview/index'
+      url: '/subpackages/preview/index'
     })
   },
 

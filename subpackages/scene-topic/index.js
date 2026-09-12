@@ -40,7 +40,6 @@ const toGalleryThumbnailImage = (path = '') => {
   const galleryPath = toLocalAssetPath(path)
     .replace('/static/pose_pairs/', '/static/gallery_thumbs/')
     .replace('/static/pose_thumbs/', '/static/gallery_thumbs/')
-    .replace('/static/recommend_thumbs/', '/static/gallery_thumbs/')
 
   if (/_demo\.jpg$/.test(galleryPath)) {
     return galleryPath.replace(/_demo\.jpg$/, '_gallery_thumb.jpg')
@@ -250,7 +249,7 @@ Page({
     }
 
     wx.navigateTo({
-      url: `/pages/pose-detail/index?poseId=${poseId}&topicId=${this.data.topic.id}`
+      url: `/subpackages/pose-detail/index?poseId=${poseId}&topicId=${this.data.topic.id}`
     })
   },
 
@@ -275,7 +274,7 @@ Page({
     const shouldUseHomeLocalAssets = isHomeLocalPose({ id: poseId })
 
     wx.navigateTo({
-      url: `/pages/camera/index?poseId=${poseId}&topicId=${this.data.topic.id}${shouldUseHomeLocalAssets ? '&homeLocal=1' : ''}`
+      url: `/subpackages/camera/index?poseId=${poseId}&topicId=${this.data.topic.id}${shouldUseHomeLocalAssets ? '&homeLocal=1' : ''}`
     })
   },
 
@@ -299,7 +298,7 @@ Page({
     }
 
     wx.navigateTo({
-      url: `/pages/scene-topic-more/index?topicId=${topic.id}`
+      url: `/subpackages/scene-topic-more/index?topicId=${topic.id}`
     })
   },
 

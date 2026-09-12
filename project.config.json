@@ -16,6 +16,10 @@
         "type": "folder"
       },
       {
+        "value": ".pai",
+        "type": "folder"
+      },
+      {
         "value": "tmp",
         "type": "folder"
       },
@@ -32,7 +36,11 @@
         "type": "folder"
       },
       {
-        "value": "static/recommend_thumbs",
+        "value": "marketing",
+        "type": "folder"
+      },
+      {
+        "value": "scripts",
         "type": "folder"
       },
       {

@@ -184,7 +184,6 @@
 
 以下目录当前也不应随新增姿势进入主包：
 
-- `static/recommend_thumbs/`
 - `static/home_guides/`
 - `static/pose_pairs/`
 - `static/pose_guides/`
@@ -196,7 +195,7 @@
 首页图片映射规则：
 
 - 轮廓图从 `static/pose_pairs`、`static/pose_guides` 或 `static/recommend_guides` 解析为 Gitee 上的 `static/pose_guides`。
-- 缩略图从 `static/pose_pairs`、`static/pose_thumbs` 或 `static/recommend_thumbs` 解析为 Gitee 上的 `static/pose_thumbs`。
+- 缩略图从 `static/pose_pairs` 或 `static/pose_thumbs` 解析为 Gitee 上的 `static/pose_thumbs`。
 - `_demo.jpg` 会映射为 `_thumb.jpg`。
 
 首页出现过的姿势，即使用户没有点进详情页，也需要在后台预加载详情大图；远程图应依赖缓存流程提升进入详情页和拍照页速度。
@@ -221,11 +220,10 @@
 
 首页推荐卡片：
 
-1. 首页本地 `recommend_thumbs`
+1. `thumbnailImage`
 2. `detailImage`
 3. `modelImage`
-4. `thumbnailImage`
-5. `guideImage`
+4. `guideImage`
 
 姿势分类页：
 
@@ -288,7 +286,7 @@
 命名和目录要求：
 
 - 同一姿势的缩略图、轮廓图、真人图和详情图命名要能互相对应。
-- 首页本地轻量图放入 `static/recommend_thumbs/`，首页拍照入口需要本地加载的轮廓放入 `static/home_guides/`。
+- 首页推荐缩略图使用 Gitee 上的 `static/pose_thumbs/`，首页拍照入口需要本地加载的轮廓放入 `static/home_guides/`。
 - 姿势原始展示图和轮廓图按现有 `static/pose_*`、`assets/pose_pairs` 等目录组织。
 - 新增资源时，应同步更新姿势元数据中的 `guideImage`、`thumbnailImage`、`modelImage` 和 `detailImage` 字段。
 
@@ -324,7 +322,7 @@
 缓存实现规则：
 
 - 只缓存 HTTP/HTTPS 远程图片；本地路径直接返回。
-- `queueImagePreload()` 应过滤非远程 URL，避免把 `/static/home_guides/...`、`/static/recommend_thumbs/...` 等本地路径送入下载流程。
+- `queueImagePreload()` 应过滤非远程 URL，避免把 `/static/home_guides/...` 等本地路径送入下载流程。
 - 后台预加载必须进入统一队列顺序执行，避免启动、首页、分类页各自开队列造成并发抢资源。
 - 用户主动进入详情页或拍照页时，当前页面必需图片可以直接加载，不应被后台预加载队列阻塞。
 - 下载成功后使用微信 `saveFile` 保存到本地文件系统。
