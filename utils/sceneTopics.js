@@ -14,7 +14,9 @@ const LANDMARK_TOPIC_IDS = new Set([
   'shanghai-bund',
   'tobecheck-greece-coast',
   'tobecheck-jeju-seaside',
+  'tobecheck-qingdao-citywalk',
   'tobecheck-shanghai-landmarks',
+  'tobecheck-shanghai-streetwear',
   'tobecheck-xinjiang-grassland'
 ])
 

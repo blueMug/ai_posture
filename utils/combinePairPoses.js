@@ -12899,6 +12899,10 @@ const getPoseSearchKeywords = (pairId) => [
   ...(poseSceneKeywordOverrides[pairId] || [])
 ].filter((keyword) => !genericPoseNamePattern.test(keyword))
 
+const getPoseStrictSearchKeywords = (pairId) => (
+  poseSearchKeywordOverrides[pairId] || []
+).filter((keyword) => !genericPoseNamePattern.test(keyword))
+
 const combinePairPoses = combinePairIds.map((pairId, index) => {
   const folder = pairId.split('_')[0]
   const poseNumber = Number(folder.replace('custom', '')) || index + 1
@@ -12924,7 +12928,8 @@ const combinePairPoses = combinePairIds.map((pairId, index) => {
     parts: [],
     ...metadata,
     ...actionNameOverride,
-    searchKeywords: getPoseSearchKeywords(pairId)
+    searchKeywords: getPoseSearchKeywords(pairId),
+    strictSearchKeywords: getPoseStrictSearchKeywords(pairId)
   }
 })
 

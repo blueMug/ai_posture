@@ -104,7 +104,7 @@ const splitGuideLines = (text = '') => {
   }
 
   const sentenceParts = value
-    .split(/[。.!！?？]/)
+    .split(/[。!！?？]|\.(?!\d)/)
     .map((item) => trimGuideText(item))
     .filter(Boolean)
 
@@ -218,9 +218,16 @@ const isSceneOnlyActionPoint = (text = '') => {
   return /^(人物|画面中.*人物)?(?:站|坐|蹲|行走|置身)?在.+(?:前|中|旁|边|里|下|上)$/.test(value) ||
     /完成[“"][^”"]+[”"]动作|动作重点包括/.test(value) ||
     /背景|古建|地标|环境特征|旅行打卡氛围|适合作为|专题/.test(value) ||
+    /^(这组|整组|这个姿势|没有手意味着)/.test(value) ||
     /^(黑色|白色|红色|蓝色|绿色|黄色|米色|灰色|芥末黄|身着|佩戴|长发|短发|裙|西装|衬衫|项链|耳环|帽子)/.test(value)
 }
-const hasActionSignal = (text = '') => /手|臂|肘|身体|侧身|背对|正面|回眸|回头|头部|侧头|低头|仰头|眼神|视线|表情|嘴|肩|腰|腿|脚|坐|蹲|站|走|靠|扶|倚|举|抬|托|捧|持|拿|握|插兜|叉腰|提裙|转身|前倾|后仰|踮脚/.test(text)
+const hasActionSignal = (text = '') => /手|臂|肘|身体|侧身|背对|正面|回眸|回头|头部|头往|侧头|低头|仰头|眼睛|眼神|视线|表情|嘴|肩|腰|腿|脚|坐|蹲|站|走|靠|扶|倚|举|抬|托|捧|持|拿|握|插兜|叉腰|提裙|转身|前倾|后仰|踮脚/.test(text)
+const isCameraSetupPoint = (text = '') => {
+  const value = compactText(text)
+
+  return /^(镜头|手机(?:镜头)?|参考站位|机位|景深|背景|画面|构图|取景|焦段|倍率|透视|\d+(?:\.\d+)?x)/i.test(value) ||
+    /^(让|把).*(?:画面|背景|横线|构图|镜头)/.test(value)
+}
 const dedupeActionPoints = (points = []) => {
   const seen = new Set()
 
@@ -401,7 +408,6 @@ const trimActionPoint = (text = '') => {
     .replace(/^(拍摄时|关键动作|角度要点|注意事项|人物|身体|高处的手|低处的手)[:：]?/, '')
     .replace(/[，,]?适合拍.*$/, '')
     .replace(/^(最适合|适合).*/, '')
-    .replace(/\s*\d+°\s*/g, '')
     .replace(/的手臂/g, '手臂')
     .replace(/另一只手/g, '一手')
     .replace(/一只手/g, '一手')
@@ -418,7 +424,12 @@ const splitActionPoints = (text = '') => {
   const points = value
     .split(/[、，,；;。.!！?？]/)
     .map((item) => trimActionPoint(item))
-    .filter((item) => item && hasActionSignal(item) && !isSceneOnlyActionPoint(item))
+    .filter((item) => (
+      item &&
+      hasActionSignal(item) &&
+      !isCameraSetupPoint(item) &&
+      !isSceneOnlyActionPoint(item)
+    ))
 
   return dedupeActionPoints(points).slice(0, MAX_ACTION_POINTS)
 }

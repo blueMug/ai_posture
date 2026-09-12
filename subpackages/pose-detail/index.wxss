@@ -285,7 +285,8 @@
   line-height: 1.45;
   font-weight: 700;
   white-space: normal;
-  word-break: break-word;
+  word-break: normal;
+  overflow-wrap: break-word;
   overflow: visible;
 }
 
@@ -392,7 +393,8 @@
   color: rgba(255, 255, 255, 0.84);
   font-size: 24rpx;
   line-height: 1.5;
-  word-break: break-word;
+  word-break: normal;
+  overflow-wrap: break-word;
 }
 
 .guide-item.avoid .guide-text {
